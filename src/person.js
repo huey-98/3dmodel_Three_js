@@ -72,7 +72,22 @@ export function createPerson() {
   let phase = 0;    // 步行动画相位
   let swing = 0;    // 当前摆幅（平滑过渡用）
 
-  function update(dt, moving) {
+  function update(dt, moving, rowPhase) {
+    // 划桨坐姿：双腿前伸，手臂随桨前后摆动
+    if (rowPhase !== undefined) {
+      const s = Math.sin(rowPhase);
+      armL.rotation.x = -0.55 + s * 0.4;
+      armR.rotation.x = -0.55 - s * 0.4;
+      armL.rotation.z = -0.5;
+      armR.rotation.z = 0.5;
+      legL.rotation.x = -1.35;
+      legR.rotation.x = -1.35;
+      legL.rotation.z = 0.1;
+      legR.rotation.z = -0.1;
+      swing = 0;
+      rig.position.y = 0;
+      return;
+    }
     const targetAmp = moving ? 0.6 : 0;
     swing += (targetAmp - swing) * Math.min(dt * 10, 1);
     if (moving) phase += dt * 9;
@@ -81,6 +96,8 @@ export function createPerson() {
     legR.rotation.x = -s;
     armL.rotation.x = -s * 0.85;
     armR.rotation.x = s * 0.85;
+    armL.rotation.z = 0;
+    armR.rotation.z = 0;
     // 行走时身体轻微起伏（作用于内层 rig，不影响跳跃高度）
     rig.position.y = moving ? Math.abs(Math.cos(phase)) * 0.04 * (swing / 0.6) : 0;
   }
