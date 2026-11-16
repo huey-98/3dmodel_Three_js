@@ -4,7 +4,7 @@ import * as THREE from 'three';
 const W = 12;        // 外墙宽（x）
 const D = 9;         // 外墙深（z）
 const T = 0.3;       // 墙厚
-const FLOOR_H = 3.2; // 层高
+export const FLOOR_H = 3.2; // 层高
 const FLOORS = 3;    // 层数
 const DOOR_W = 1.8;  // 门宽
 const DOOR_H = 2.5;  // 门高
@@ -14,6 +14,21 @@ const TOP_Y = FLOOR_H * FLOORS;
 
 // 建筑占地范围
 export const BUILDING_FOOTPRINT = { minX: -HALF_W, maxX: HALF_W, minZ: -HALF_D, maxZ: HALF_D };
+
+// 室内可活动区域
+export const INTERIOR = { minX: -HALF_W + T, maxX: HALF_W - T, minZ: -HALF_D + T, maxZ: HALF_D - T };
+
+// 楼梯段：沿 z 方向从 z0(y0) 升到 z1(y1)，x 限制在 [xMin,xMax]
+// from/to 表示连接的第几层（0 = 一层地面）
+export const STAIRS = [
+  { xMin: -5.6, xMax: -3.6, z0: -4.1, z1: 2.6, y0: 0, y1: FLOOR_H, from: 0, to: 1, openX: -3.6 },
+  { xMin: 3.6, xMax: 5.6, z0: -4.1, z1: 2.6, y0: FLOOR_H, y1: FLOOR_H * 2, from: 1, to: 2, openX: 3.6 },
+];
+
+// 楼梯栏杆碰撞（开敞侧，底部留出上下楼入口）
+export const STAIR_RAILS = STAIRS.map((s) => ({
+  minX: s.openX - 0.15, maxX: s.openX + 0.15, minZ: -3.0, maxZ: 2.6,
+}));
 
 // 墙体碰撞矩形（与实际墙体位置对应）
 export const WALL_RECTS = [
@@ -27,8 +42,12 @@ export const WALL_RECTS = [
 // 门口通道：门关闭时视为障碍
 export const DOOR_GAP = { minX: -DOOR_W / 2, maxX: DOOR_W / 2, minZ: HALF_D - T, maxZ: HALF_D };
 
-// 门前交互点（人物靠近此位置可按 F 开关门）
+// 门前交互点（人物靠近此位置可按 F 开关门、按 G 进屋）
 export const DOOR_ANCHOR = new THREE.Vector3(0, 0, HALF_D + 1.2);
+// 门内停留点（自动进屋的终点）
+export const INSIDE_POINT = new THREE.Vector3(0, 0, HALF_D - 1.8);
+// 门外停留点（自动出门的终点）
+export const OUTSIDE_POINT = new THREE.Vector3(0, 0, HALF_D + 2.6);
 
 export function createBuilding() {
   const group = new THREE.Group();
@@ -41,7 +60,7 @@ export function createBuilding() {
   const matFrame = new THREE.MeshStandardMaterial({ color: 0xfaf7f0, roughness: 0.6 });
   const matGlass = new THREE.MeshStandardMaterial({ color: 0x3f6b85, roughness: 0.12, metalness: 0.5 });
   const matWood = new THREE.MeshStandardMaterial({ color: 0x8a5a2e, roughness: 0.75 });
-  const matWoodDark = new THREE.MeshStandardMaterial({ color: 0x6a4423, roughness: 0.8 });
+  const matWoodDark = new THREE.MeshStandardMaterial({ color: 0x6a4423, roughness: 0.85 });
   const matRoof = new THREE.MeshStandardMaterial({ color: 0x9c4f3c, roughness: 0.85 });
   const matRoofDark = new THREE.MeshStandardMaterial({ color: 0x7d3f30, roughness: 0.9 });
   const matStone = new THREE.MeshStandardMaterial({ color: 0xa39c92, roughness: 0.95 });
@@ -117,7 +136,7 @@ export function createBuilding() {
       addWindow(x, y, HALF_D + 0.06, 0);
       addWindow(x, y, -HALF_D - 0.06, Math.PI);
     }
-    for (const x of [0]) addWindow(x, y, -HALF_D - 0.06, Math.PI);
+    addWindow(0, y, -HALF_D - 0.06, Math.PI);
     for (const z of [-3, -1, 1, 3]) {
       addWindow(HALF_W + 0.06, y, z, Math.PI / 2);
       addWindow(-HALF_W - 0.06, y, z, -Math.PI / 2);
@@ -133,12 +152,10 @@ export function createBuilding() {
     for (let i = 0; i <= 14; i++) {
       group.add(box(0.09, 0.92, 0.09, matTrim, -w / 2 + 0.3 + i * ((w - 0.6) / 14), deckY + 0.55, HALF_D + 1.32));
     }
-    // 侧栏杆
     for (const sx of [-1, 1]) {
       group.add(box(0.12, 0.1, 1.4, matTrim, sx * (w / 2 - 0.06), deckY + 1.0, HALF_D + 0.7));
       group.add(box(0.1, 0.92, 0.1, matTrim, sx * (w / 2 - 0.06), deckY + 0.55, HALF_D + 1.32));
     }
-    // 阳台花箱
     for (const sx of [-1, 1]) {
       const x = sx * 2.4;
       group.add(box(1.1, 0.34, 0.3, matWood, x, deckY + 0.26, HALF_D + 1.24));
@@ -154,7 +171,7 @@ export function createBuilding() {
   addBalcony(FLOOR_H * 2);
 
   // ---------- 门廊 ----------
-  group.add(box(4.6, 0.22, 1.7, matRoofDark, 0, 2.9, HALF_D + 0.8));   // 雨棚
+  group.add(box(4.6, 0.22, 1.7, matRoofDark, 0, 2.9, HALF_D + 0.8));
   for (const sx of [-1, 1]) {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 2.85, 12), matStone);
     col.position.set(sx * 1.85, 1.43, HALF_D + 1.4);
@@ -162,39 +179,30 @@ export function createBuilding() {
     group.add(col);
     group.add(box(0.5, 0.14, 0.5, matStone, sx * 1.85, 2.78, HALF_D + 1.4));
   }
-  group.add(box(3.2, 0.18, 0.55, matStone, 0, 0.09, HALF_D + 1.35));   // 台阶
+  group.add(box(3.2, 0.18, 0.55, matStone, 0, 0.09, HALF_D + 1.35));
   group.add(box(3.8, 0.12, 0.6, matStone, 0, 0.06, HALF_D + 1.95));
-  group.add(box(1.5, 0.05, 0.9, matWoodDark, 0, 0.03, HALF_D + 0.65)); // 门垫
+  group.add(box(1.5, 0.05, 0.9, matWoodDark, 0, 0.03, HALF_D + 0.65));
 
   // ---------- 门 ----------
-  // 门框
   for (const sx of [-1, 1]) {
     group.add(box(0.18, DOOR_H, 0.4, matTrim, sx * (DOOR_W / 2 + 0.09), DOOR_H / 2, HALF_D + 0.05));
   }
   group.add(box(DOOR_W + 0.36, 0.2, 0.4, matTrim, 0, DOOR_H + 0.1, HALF_D + 0.05));
 
-  // 门轴（左边缘为旋转中心）
   const doorPivot = new THREE.Group();
   doorPivot.position.set(-DOOR_W / 2, 0, HALF_D + 0.03);
   const leafW = DOOR_W - 0.04;
   doorPivot.add(box(leafW, DOOR_H - 0.06, 0.09, matWood, leafW / 2, DOOR_H / 2, 0));
-  // 门板凹格
-  for (const [px, py, pw, ph] of [
-    [leafW / 2, DOOR_H * 0.74, leafW - 0.3, DOOR_H * 0.32],
-    [leafW / 2, DOOR_H * 0.26, leafW - 0.3, DOOR_H * 0.32],
-  ]) {
-    doorPivot.add(box(pw, ph, 0.03, matWoodDark, px, py, 0.05));
+  for (const [py, ph] of [[DOOR_H * 0.74, DOOR_H * 0.32], [DOOR_H * 0.26, DOOR_H * 0.32]]) {
+    doorPivot.add(box(leafW - 0.3, ph, 0.03, matWoodDark, leafW / 2, py, 0.05));
   }
-  // 门把手
   doorPivot.add(box(0.16, 0.05, 0.05, matMetal, leafW - 0.16, 1.05, 0.1));
   doorPivot.add(box(0.06, 0.06, 0.06, matMetal, leafW - 0.16, 1.05, 0.07));
-  // 合页
   for (const hy of [0.45, DOOR_H - 0.45]) {
     doorPivot.add(box(0.1, 0.22, 0.12, matMetal, 0.03, hy, 0));
   }
   group.add(doorPivot);
 
-  // 门旁壁灯
   const lantern = box(0.26, 0.34, 0.26, matLamp, 1.55, 2.1, HALF_D + 0.2);
   group.add(lantern);
   group.add(box(0.34, 0.08, 0.34, matRoofDark, 1.55, 2.31, HALF_D + 0.2));
@@ -212,33 +220,67 @@ export function createBuilding() {
   roof.receiveShadow = true;
   group.add(roof);
 
-  // 烟囱
   group.add(box(0.8, 1.7, 0.8, matRoofDark, -3.6, TOP_Y + 1.6, -1.4));
   group.add(box(1.0, 0.22, 1.0, matStone, -3.6, TOP_Y + 2.5, -1.4));
-  // 空调外机
   for (const [ax, az] of [[HALF_W + 0.28, -1.8], [HALF_W + 0.28, 1.2]]) {
     group.add(box(0.5, 0.62, 0.9, matStone, ax, 4.6, az));
   }
 
-  // ---------- 室内 ----------
-  group.add(box(W - 2 * T - 0.1, 0.08, D - 2 * T - 0.1, matWoodDark, 0, 0.04, 0)); // 一层地面
-  for (let i = 1; i < FLOORS; i++) {
-    group.add(box(W - 2 * T, 0.18, D - 2 * T, matSlab, 0, i * FLOOR_H - 0.09, 0)); // 楼板
+  // ---------- 室内结构：地面、楼板（带楼梯开口）、楼梯 ----------
+  const inX0 = INTERIOR.minX, inX1 = INTERIOR.maxX;
+  const inZ0 = INTERIOR.minZ, inZ1 = INTERIOR.maxZ;
+  const slabT = 0.18;
+
+  // 一层地面
+  group.add(box(inX1 - inX0, 0.08, inZ1 - inZ0, matWoodDark, (inX0 + inX1) / 2, 0.04, (inZ0 + inZ1) / 2));
+
+  // 二层楼板：左侧为楼梯井开口
+  {
+    const hole = STAIRS[0];
+    const rightW = inX1 - hole.xMax;
+    group.add(box(rightW, slabT, inZ1 - inZ0, matSlab, hole.xMax + rightW / 2, FLOOR_H - slabT / 2, (inZ0 + inZ1) / 2));
+    const frontZ = inZ1 - hole.z1;
+    group.add(box(hole.xMax - inX0, slabT, frontZ, matSlab, (inX0 + hole.xMax) / 2, FLOOR_H - slabT / 2, hole.z1 + frontZ / 2));
   }
-  // 楼梯
-  for (let i = 0; i < 10; i++) {
-    const h = (i + 1) * (FLOOR_H / 10);
-    group.add(box(1.6, h, 0.5, matWood, -4.2, h / 2, -2.5 + i * 0.5));
+  // 三层楼板：右侧为楼梯井开口
+  {
+    const hole = STAIRS[1];
+    const leftW = hole.xMin - inX0;
+    group.add(box(leftW, slabT, inZ1 - inZ0, matSlab, inX0 + leftW / 2, FLOOR_H * 2 - slabT / 2, (inZ0 + inZ1) / 2));
+    const frontZ = inZ1 - hole.z1;
+    group.add(box(hole.xMax - inX0, slabT, frontZ, matSlab, (hole.xMin + inX1) / 2, FLOOR_H * 2 - slabT / 2, hole.z1 + frontZ / 2));
   }
-  // 接待台与地毯
-  group.add(box(2.6, 1.0, 0.65, matWood, 3.2, 0.5, 1.4));
-  group.add(box(2.8, 0.04, 1.6, matRoofDark, 3.2, 0.07, 2.6));
+
+  // 楼梯：踏步 + 栏杆
+  const STEPS = 16;
+  for (const s of STAIRS) {
+    const dz = (s.z1 - s.z0) / STEPS;
+    const rise = (s.y1 - s.y0) / STEPS;
+    for (let i = 0; i < STEPS; i++) {
+      const z = s.z0 + (i + 0.5) * dz;
+      const h = (i + 1) * rise;
+      group.add(box(s.xMax - s.xMin, h, Math.abs(dz), matWood, (s.xMin + s.xMax) / 2, s.y0 + h / 2, z));
+    }
+    // 扶手（沿坡度倾斜）
+    const len = Math.hypot(s.z1 - s.z0, s.y1 - s.y0);
+    const angle = -Math.atan2(s.y1 - s.y0, s.z1 - s.z0);
+    const rail = box(0.12, 0.12, len, matWoodDark, s.openX, (s.y0 + s.y1) / 2 + 0.95, (s.z0 + s.z1) / 2);
+    rail.rotation.x = angle;
+    group.add(rail);
+    for (let i = 0; i < STEPS; i += 1) {
+      const z = s.z0 + (i + 0.5) * dz;
+      const top = s.y0 + (i + 1) * rise;
+      group.add(box(0.08, 0.95, 0.08, matWoodDark, s.openX, top + 0.475, z));
+    }
+  }
+
+  // 室内暖光（开门时点亮）
   const innerLight = new THREE.PointLight(0xffcf8a, 0, 14, 2);
   innerLight.position.set(0, 2.4, 1.2);
   group.add(innerLight);
 
   // ---------- 门动画 ----------
-  let doorCur = 0;    // 0 关闭 / 1 全开
+  let doorCur = 0;
   let doorTarget = 0;
 
   function update(dt) {
