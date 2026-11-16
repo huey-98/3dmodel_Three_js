@@ -1,15 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createBuilding, BUILDING_BOUNDS } from './building.js';
+import { createBuilding, WALL_RECTS, DOOR_GAP } from './building.js';
+import { createEnvironment, ENV_RECTS } from './environment.js';
 import { createPerson } from './person.js';
 
 // ---------- 场景 / 相机 / 渲染器 ----------
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 70, 180);
+scene.fog = new THREE.Fog(0x87ceeb, 70, 190);
 
 const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 500);
-camera.position.set(20, 14, 30);
+camera.position.set(19, 12, 33);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -33,67 +34,45 @@ sun.shadow.camera.far = 120;
 sun.shadow.bias = -0.0005;
 scene.add(sun);
 
-// ---------- 地面 ----------
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(240, 240),
-  new THREE.MeshStandardMaterial({ color: 0x7cb35c, roughness: 1 })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
+// ---------- 环境（地面、河流、桥、树木花草石头） ----------
+const environment = createEnvironment();
+scene.add(environment.group);
 
 // ---------- 楼房 ----------
-scene.add(createBuilding());
-
-// ---------- 树木 ----------
-function createTree(x, z, s = 1) {
-  const t = new THREE.Group();
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.18, 0.26, 1.4, 8),
-    new THREE.MeshStandardMaterial({ color: 0x6b4a2f, roughness: 0.9 })
-  );
-  trunk.position.y = 0.7;
-  trunk.castShadow = true;
-  const leaves = new THREE.Mesh(
-    new THREE.ConeGeometry(1.3, 3, 8),
-    new THREE.MeshStandardMaterial({ color: 0x3e7c3a, roughness: 0.9 })
-  );
-  leaves.position.y = 2.6;
-  leaves.castShadow = true;
-  t.add(trunk, leaves);
-  t.position.set(x, 0, z);
-  t.scale.setScalar(s);
-  return t;
-}
-[
-  [-13, -9], [-16, 5], [12, -13], [17, 5], [-9, 15],
-  [9, 17], [-19, -3], [19, -7], [14, 12], [-14, 12],
-].forEach(([x, z]) => scene.add(createTree(x, z, 0.8 + Math.random() * 0.5)));
+const building = createBuilding();
+scene.add(building.group);
 
 // ---------- 人物 ----------
 const person = createPerson();
-person.group.position.set(10, 0, 16);
+person.group.position.set(4, 0, 12);
 scene.add(person.group);
 
 // ---------- 鼠标视角控制 ----------
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(10, 1.2, 16);
+controls.target.set(4, 1.2, 12);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.maxPolarAngle = Math.PI / 2 - 0.03; // 不允许钻到地面以下
 controls.minDistance = 3;
-controls.maxDistance = 60;
+controls.maxDistance = 70;
 
 // ---------- 键盘输入 ----------
 const keys = new Set();
-let jumpRequested = false; // 空格起跳请求（按下瞬间触发）
+let jumpRequested = false;    // 空格起跳请求
+let interactRequested = false; // F 键交互请求
 addEventListener('keydown', (e) => {
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
   if (e.code === 'Space') jumpRequested = true;
+  if (e.code === 'KeyF') interactRequested = true;
   keys.add(e.code);
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
+
+// ---------- 碰撞检测 ----------
+const SOLIDS = [...WALL_RECTS, ...ENV_RECTS];
+const inside = (x, z, r) => x > r.minX && x < r.maxX && z > r.minZ && z < r.maxZ;
+let doorOpen = false;
 
 // ---------- 跳跃物理 ----------
 const GRAVITY = 24;   // 重力加速度
@@ -101,9 +80,18 @@ const JUMP_SPEED = 8; // 起跳初速度（约 1.33m 跳跃高度）
 let vy = 0;           // 当前垂直速度
 let grounded = true;  // 是否站在地面
 
-// ---------- 碰撞检测（人物不能穿墙） ----------
-const B = BUILDING_BOUNDS;
-const blocked = (x, z) => x > B.minX && x < B.maxX && z > B.minZ && z < B.maxZ;
+function isBlocked(x, z) {
+  for (const r of SOLIDS) {
+    if (inside(x, z, r)) return true;
+  }
+  // 门口通道：门关着时不能进屋
+  if (!doorOpen && inside(x, z, DOOR_GAP)) return true;
+  return false;
+}
+
+// ---------- 交互提示 ----------
+const promptEl = document.getElementById('prompt');
+const doorAnchor = building.doorAnchor;
 
 // ---------- 主循环 ----------
 const clock = new THREE.Clock();
@@ -115,6 +103,7 @@ const followTarget = new THREE.Vector3();
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
 
   // 读取输入
   let ix = 0, iz = 0;
@@ -123,6 +112,8 @@ function animate() {
   if (keys.has('KeyA') || keys.has('ArrowLeft')) ix -= 1;
   if (keys.has('KeyD') || keys.has('ArrowRight')) ix += 1;
   const moving = ix !== 0 || iz !== 0;
+
+  const p = person.group.position;
 
   if (moving) {
     // 移动方向相对相机朝向：W 永远朝屏幕里走
@@ -137,16 +128,15 @@ function animate() {
       .normalize();
 
     const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7 : 3.5;
-    const p = person.group.position;
     const nx = p.x + move.x * speed * dt;
     const nz = p.z + move.z * speed * dt;
     // 撞墙时尝试沿单轴滑动
-    if (!blocked(nx, nz)) {
+    if (!isBlocked(nx, nz)) {
       p.x = nx;
       p.z = nz;
-    } else if (!blocked(nx, p.z)) {
+    } else if (!isBlocked(nx, p.z)) {
       p.x = nx;
-    } else if (!blocked(p.x, nz)) {
+    } else if (!isBlocked(p.x, nz)) {
       p.z = nz;
     }
     p.x = THREE.MathUtils.clamp(p.x, -100, 100);
@@ -166,16 +156,36 @@ function animate() {
   }
   if (!grounded) {
     vy -= GRAVITY * dt;
-    person.group.position.y += vy * dt;
-    if (person.group.position.y <= 0) {
-      person.group.position.y = 0;
+    p.y += vy * dt;
+    if (p.y <= 0) {
+      p.y = 0;
       vy = 0;
       grounded = true;
     }
   }
 
+  // 开门交互：靠近门口时按 F
+  const nearDoor = Math.hypot(p.x - doorAnchor.x, p.z - doorAnchor.z) < 3.2;
+  if (interactRequested) {
+    if (nearDoor) {
+      doorOpen = !doorOpen;
+      building.setDoorOpen(doorOpen);
+    }
+    interactRequested = false;
+  }
+  if (nearDoor) {
+    promptEl.style.display = 'block';
+    const text = doorOpen ? '按 F 关门' : '按 F 开门';
+    if (promptEl.textContent !== text) promptEl.textContent = text;
+  } else {
+    promptEl.style.display = 'none';
+  }
+
+  // 场景动画
+  building.update(dt);
+  environment.updateWater(t);
+
   // 相机跟随人物（保持当前轨道偏移）
-  const p = person.group.position;
   followTarget.set(p.x, p.y + 1.2, p.z);
   const dx = followTarget.x - controls.target.x;
   const dy = followTarget.y - controls.target.y;
