@@ -2,7 +2,9 @@ import * as THREE from 'three';
 
 // 用基础几何体拼一个简易小人，四肢带关节枢轴，可摆动
 export function createPerson() {
-  const group = new THREE.Group();
+  const group = new THREE.Group(); // 外层：位置、朝向、跳跃高度
+  const rig = new THREE.Group();   // 内层：走路起伏动画
+  group.add(rig);
 
   const skinMat = new THREE.MeshStandardMaterial({ color: 0xf0c8a0, roughness: 0.8 });
   const shirtMat = new THREE.MeshStandardMaterial({ color: 0x3b6fd4, roughness: 0.85 });
@@ -23,7 +25,7 @@ export function createPerson() {
     const m = mesh(geo, mat);
     m.position.y = offsetY;
     pivot.add(m);
-    group.add(pivot);
+    rig.add(pivot);
     return pivot;
   };
 
@@ -42,18 +44,18 @@ export function createPerson() {
   // 躯干
   const body = mesh(new THREE.BoxGeometry(0.52, 0.6, 0.3), shirtMat);
   body.position.y = 1.05;
-  group.add(body);
+  rig.add(body);
 
   // 头与头发
   const head = mesh(new THREE.SphereGeometry(0.21, 24, 16), skinMat);
   head.position.y = 1.58;
-  group.add(head);
+  rig.add(head);
   const hair = mesh(
     new THREE.SphereGeometry(0.215, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2.2),
     hairMat
   );
   hair.position.y = 1.6;
-  group.add(hair);
+  rig.add(hair);
 
   // 手臂与手
   const armGeo = new THREE.BoxGeometry(0.14, 0.58, 0.14);
@@ -79,8 +81,8 @@ export function createPerson() {
     legR.rotation.x = -s;
     armL.rotation.x = -s * 0.85;
     armR.rotation.x = s * 0.85;
-    // 行走时身体轻微起伏
-    group.position.y = moving ? Math.abs(Math.cos(phase)) * 0.04 * (swing / 0.6) : 0;
+    // 行走时身体轻微起伏（作用于内层 rig，不影响跳跃高度）
+    rig.position.y = moving ? Math.abs(Math.cos(phase)) * 0.04 * (swing / 0.6) : 0;
   }
 
   return { group, update };

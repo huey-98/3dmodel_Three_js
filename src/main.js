@@ -86,12 +86,20 @@ controls.maxDistance = 60;
 
 // ---------- 键盘输入 ----------
 const keys = new Set();
+let jumpRequested = false; // 空格起跳请求（按下瞬间触发）
 addEventListener('keydown', (e) => {
-  if (e.code.startsWith('Arrow')) e.preventDefault();
+  if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
+  if (e.code === 'Space') jumpRequested = true;
   keys.add(e.code);
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
+
+// ---------- 跳跃物理 ----------
+const GRAVITY = 24;   // 重力加速度
+const JUMP_SPEED = 8; // 起跳初速度（约 1.33m 跳跃高度）
+let vy = 0;           // 当前垂直速度
+let grounded = true;  // 是否站在地面
 
 // ---------- 碰撞检测（人物不能穿墙） ----------
 const B = BUILDING_BOUNDS;
@@ -147,6 +155,24 @@ function animate() {
     person.group.rotation.y = Math.atan2(move.x, move.z);
   }
   person.update(dt, moving);
+
+  // 跳跃：起跳 → 抛物线下落 → 落地
+  if (jumpRequested) {
+    if (grounded) {
+      vy = JUMP_SPEED;
+      grounded = false;
+    }
+    jumpRequested = false;
+  }
+  if (!grounded) {
+    vy -= GRAVITY * dt;
+    person.group.position.y += vy * dt;
+    if (person.group.position.y <= 0) {
+      person.group.position.y = 0;
+      vy = 0;
+      grounded = true;
+    }
+  }
 
   // 相机跟随人物（保持当前轨道偏移）
   const p = person.group.position;
