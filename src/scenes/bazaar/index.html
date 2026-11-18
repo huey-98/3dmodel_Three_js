@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 场景 - B 点街巷</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #c5ccc8; }
+    canvas { display: block; }
+    #info {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      color: #fff;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 10px 14px;
+      border-radius: 8px;
+      pointer-events: none;
+      user-select: none;
+    }
+    #home {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: #fff;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    敞开的绿篷棚子，地面中心有红色 <b>X</b><br />
+    <b>WASD</b>：相对视角移动（Shift 加速）&nbsp;|&nbsp;<b>方向键</b>：固定方向<br />
+    <b>空格</b>：跳跃 &nbsp;|&nbsp; <b>鼠标拖拽</b>：旋转视角 &nbsp;|&nbsp; <b>滚轮</b>：缩放
+  </div>
+  <a id="home" href="/">返回目录</a>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
