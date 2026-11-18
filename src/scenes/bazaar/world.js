@@ -363,51 +363,38 @@ export function createBazaar() {
   volume(B.x0, B.x1, beamY, beamY + 0.12, cz - 0.08, cz + 0.08, kit.beam);
 
   // ---------- 左：粉墙 ----------
-  const pink = { x0: -15.5, x1: -6.05, z0: -5.25, z1: 8.45, h: 7.35 };
+  // 西贴边界墙，北贴北墙；南端北收，给加长阳台和白车通道留空。
+  const pink = { x0: -15.5, x1: -9.625, z0: -14.6, z1: 0.3, h: 7.35 };
+  const pinkCx = (pink.x0 + pink.x1) / 2;
   block(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.pink);
   skirt(pink.x0, pink.x1, pink.z0, pink.z1, kit.skirtPink);
   parapet(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.pink);
   volume(pink.x0 - 0.06, pink.x1 + 0.06, pink.h - 0.08, pink.h + 0.08, pink.z0 - 0.06, pink.z1 + 0.06, kit.trim);
 
-  for (const x of [-13.6, -11.2, -8.7, -7.15]) {
-    placeWindow(x, 0.4, pink.z1 + 0.03, 1.12, 2.28, 0, true);
-  }
-  for (const x of [-14.4, -12.4, -9.5, -7.3]) {
-    placeWindow(x, 4.35, pink.z1 + 0.03, 0.82, 1.15, 0, false);
-  }
-  placeWindow(-10.7, 3.95, pink.z1 + 0.03, 0.78, 1.7, 0, false);
-  const balcony = new THREE.Group();
-  balcony.position.set(-10.7, 3.82, pink.z1);
-  const slab = new THREE.Mesh(makeBox(2.3, 0.1, 0.95), kit.concrete);
-  slab.position.set(0, 0, 0.48);
-  balcony.add(slab);
-  const rail = new THREE.Mesh(makeBox(2.3, 0.06, 0.05), kit.metalDark);
-  rail.position.set(0, 0.72, 0.9);
-  balcony.add(rail);
-  for (const x of [-1.05, 0, 1.05]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.72, 5), kit.metalDark);
-    post.position.set(x, 0.36, 0.9);
-    balcony.add(post);
-  }
-  group.add(balcony);
+  const balX0 = pink.x0 + 0.4;
+  const balX1 = pink.x1 - 0.4;
+  const SOUTH_WALL_Z = 12.4;
+  const vanHalf = 2.06;
+  const vanZ = SOUTH_WALL_Z - vanHalf;
+  const balD = 3.5;
+  const balTop = 3.92;
+  volume(balX0, balX1, 0, balTop, pink.z1 - 0.05, pink.z1 + balD, kit.pink);
+  solid(balX0, balX1, pink.z1 - 0.05, pink.z1 + balD);
+  placeWindow((balX0 + balX1) / 2, balTop, pink.z1 + 0.03, balX1 - balX0 - 0.45, 2.15, 0, false);
 
-  for (const z of [-3.5, -0.9, 1.8, 4.5, 6.9]) {
-    placeWindow(pink.x1 + 0.03, 0.42, z, 1.05, 2.2, Math.PI / 2, true);
-  }
-  for (const z of [-2.4, 0.4, 3.2, 5.7]) {
+  for (const z of [-13.1, -10.8, -8.5, -6.2, -3.9, -1.6, 0.05]) {
     placeWindow(pink.x1 + 0.03, 4.4, z, 0.78, 1.05, Math.PI / 2, false);
   }
-  box(0.34, 0.36, 0.7, kit.ac, pink.x1 + 0.18, 3.55, 2.6);
+  box(0.34, 0.36, 0.7, kit.ac, pink.x1 + 0.18, 3.55, -2.2);
   const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, pink.h, 6), kit.metalDark);
   spout.position.set(pink.x1 + 0.08, pink.h / 2, pink.z1 - 0.2);
   add(spout);
 
-  // ---------- 后：白楼 ----------
+  // ---------- 后：白楼（贴北墙的薄条，北墙与棚屋之间留大片空地） ----------
   const backs = [
-    { x0: -15.5, x1: -5.85, z0: -14.6, z1: -5.2, h: 10.7 },
-    { x0: -5.85, x1: 1.7, z0: -13.6, z1: -5.32, h: 8.15 },
-    { x0: 1.7, x1: 7.3, z0: -14.3, z1: -5.12, h: 9.45 },
-    { x0: 7.3, x1: 13.6, z0: -13.1, z1: -5.28, h: 7.55 },
+    { x0: -9.625, x1: -2.05, z0: -14.6, z1: -13.15, h: 9.4 },
+    { x0: -2.05, x1: 3.35, z0: -14.6, z1: -13.4, h: 7.8 },
+    { x0: 3.35, x1: 8.05, z0: -14.6, z1: -13.05, h: 8.9 },
   ];
   for (const bld of backs) {
     block(bld.x0, bld.x1, bld.z0, bld.z1, bld.h, kit.white);
@@ -415,49 +402,43 @@ export function createBazaar() {
     parapet(bld.x0, bld.x1, bld.z0, bld.z1, bld.h, kit.white);
   }
   const windows = [
-    [-12.4, 1.3, -5.17, 0.7, 1.05],
-    [-10.2, 3.4, -5.17, 0.85, 1.3],
-    [-8.6, 1.1, -5.17, 0.7, 1.4, true],
-    [-7.2, 5.2, -5.17, 0.75, 1.15],
-    [-4.2, 1.5, -5.29, 0.9, 1.5, true],
-    [-2.4, 4.3, -5.29, 0.7, 1.0],
-    [-0.4, 1.2, -5.29, 0.65, 1.2],
-    [0.7, 3.6, -5.29, 0.8, 1.15],
-    [3.1, 1.4, -5.09, 0.85, 1.45, true],
-    [4.6, 4.5, -5.09, 0.7, 1.05],
-    [6.2, 2.2, -5.09, 0.75, 1.2],
-    [9.0, 1.3, -5.25, 0.8, 1.35],
-    [11.1, 3.3, -5.25, 0.7, 1.1],
+    [-7.6, 1.35, -13.12, 0.75, 1.15],
+    [-5.7, 3.4, -13.12, 0.82, 1.28, true],
+    [-3.5, 1.25, -13.12, 0.7, 1.08],
+    [-0.6, 1.45, -13.37, 0.88, 1.42, true],
+    [1.3, 3.9, -13.37, 0.7, 1.05],
+    [4.7, 1.35, -13.02, 0.8, 1.28],
+    [6.5, 3.45, -13.02, 0.7, 1.08],
   ];
   for (const [x, y, z, w, h, arch] of windows) {
     placeWindow(x, y, z, w, h, 0, !!arch);
   }
 
-  box(1.28, 0.68, 0.06, kit.trim, -4.55, 4.25, -5.27);
+  box(1.28, 0.68, 0.06, kit.trim, 0.4, 4.15, -13.37);
   const arrow = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 0.58), kit.arrow);
-  arrow.position.set(-4.55, 4.25, -5.22);
+  arrow.position.set(0.4, 4.15, -13.32);
   add(arrow);
 
-  volume(-13.2, -11.1, 10.7, 12.6, -12.2, -10.1, kit.white);
-  placeWindow(-12.15, 10.85, -10.07, 0.55, 0.8, 0, false);
+  volume(-7.6, -5.5, 9.4, 11.3, -14.45, -13.4, kit.white);
+  placeWindow(-6.55, 9.55, -13.37, 0.55, 0.8, 0, false);
   const tank = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 1.2, 14), kit.tank);
-  tank.position.set(-2.2, 8.8, -8.4);
+  tank.position.set(0.5, 8.45, -13.95);
   add(tank);
   const dish = new THREE.Mesh(
     new THREE.SphereGeometry(0.4, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.5),
     kit.metal,
   );
-  dish.position.set(5.4, 9.7, -7.6);
+  dish.position.set(5.7, 9.35, -13.75);
   dish.rotation.x = 0.7;
   dish.rotation.y = 0.6;
   add(dish);
   const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 1.7, 5), kit.metal);
-  antenna.position.set(3.4, 10.3, -8.8);
+  antenna.position.set(3.7, 9.85, -13.75);
   add(antenna);
-  box(0.95, 0.03, 0.03, kit.metal, 3.4, 10.95, -8.8);
+  box(0.95, 0.03, 0.03, kit.metal, 3.7, 10.5, -13.75);
 
   // ---------- 右：蓝墙 ----------
-  const blue = { x0: 8.05, x1: 14.4, z0: -0.85, z1: 11.2, h: 6.55 };
+  const blue = { x0: 8.05, x1: 14.48, z0: -14.6, z1: 12.42, h: 6.55 };
   block(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
   skirt(blue.x0, blue.x1, blue.z0, blue.z1, kit.skirtBlue);
   parapet(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
@@ -466,14 +447,21 @@ export function createBazaar() {
   placeWindow(blue.x0 - 0.03, 4.25, 8.7, 0.9, 1.05, -Math.PI / 2, false);
   placeWindow(blue.x0 - 0.03, 1.55, 1.4, 0.85, 1.25, -Math.PI / 2, false);
   placeWindow(blue.x0 - 0.03, 4.15, 1.7, 0.7, 0.95, -Math.PI / 2, false);
+  placeWindow(blue.x0 - 0.03, 1.4, -11.2, 0.85, 1.25, -Math.PI / 2, false);
+  placeWindow(blue.x0 - 0.03, 4.1, -10.9, 0.7, 0.95, -Math.PI / 2, false);
+  placeWindow(blue.x0 - 0.03, 1.5, -7.4, 0.9, 1.35, -Math.PI / 2, true);
+  placeWindow(blue.x0 - 0.03, 4.2, -4.2, 0.75, 1.05, -Math.PI / 2, false);
+  placeWindow(blue.x0 - 0.03, 1.45, -1.2, 0.8, 1.2, -Math.PI / 2, false);
   placeWindow(10.4, 1.3, blue.z1 + 0.03, 0.9, 1.6, 0, true);
   placeWindow(12.6, 3.6, blue.z1 + 0.03, 0.75, 1.05, 0, false);
   box(0.7, 0.34, 0.32, kit.ac, blue.x0 - 0.02, 3.15, 3.2);
 
   // ---------- 货车 ----------
-  const vanRot = Math.PI;
+  // 竖放：中心 X 与红楼对齐，车头紧贴南侧围墙。
+  const vanRot = 0;
+  const vanX = pinkCx;
   const van = new THREE.Group();
-  van.position.set(6.9, 0, 7.55);
+  van.position.set(vanX, 0, vanZ);
   van.rotation.y = vanRot;
   const body = new THREE.Mesh(makeBox(1.78, 1.62, 4.05), kit.van);
   body.position.y = 1.28;
@@ -515,8 +503,8 @@ export function createBazaar() {
     const s = Math.abs(Math.sin(vanRot));
     const hx = 0.95;
     const hz = 2.15;
-    const vx = 6.9;
-    const vz = 7.55;
+    const vx = vanX;
+    const vz = vanZ;
     solid(vx - (hx * c + hz * s), vx + (hx * c + hz * s), vz - (hx * s + hz * c), vz + (hx * s + hz * c));
   }
 
@@ -524,11 +512,11 @@ export function createBazaar() {
   palm(-3.4, 0, -4.9, 7.6, kit.leaf, 0.05);
   palm(0.6, 0, -4.95, 8.3, kit.leafDry, -0.04);
   palm(6.7, 0, -4.75, 7.1, kit.leaf, 0.06);
-  palm(11.3, 0, -3.15, 7.4, kit.leafDry, -0.05);
-  palm(-11.2, pink.h, 1.2, 4.6, kit.leaf, 0.08);
-  palm(-9.5, backs[0].h, -9.2, 5.2, kit.leaf);
-  palm(-1.2, backs[1].h, -9.4, 4.8, kit.leafDry, 0.05);
-  palm(4.6, backs[2].h, -9.1, 5.4, kit.leaf, -0.06);
+  palm(6.4, 0, -8.4, 7.4, kit.leafDry, -0.05);
+  palm(pinkCx, pink.h, (pink.z0 + pink.z1) / 2, 4.6, kit.leaf, 0.08);
+  palm(-5.9, backs[0].h, -13.85, 5.2, kit.leaf);
+  palm(0.5, backs[1].h, -14.0, 4.8, kit.leafDry, 0.05);
+  palm(5.7, backs[2].h, -13.8, 5.4, kit.leaf, -0.06);
 
   const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 8.4, 6), kit.beam);
   mast.position.set(-5.72, 4.2, -4.85);
@@ -536,17 +524,17 @@ export function createBazaar() {
   solid(-5.86, -5.58, -5.0, -4.7);
   box(0.7, 0.06, 0.06, kit.beam, -5.72, 8.15, -4.85);
 
-  wire(-11, 8.0, 2.2, -8, 11.2, -8, 0.85);
-  wire(-8, 11.1, -8, 3.5, 9.8, -7.5, 0.7);
-  wire(3.5, 9.7, -7.5, 11, 7.0, 2, 0.9);
-  wire(-5.72, 8.35, -4.85, -12.5, 7.7, 4.5, 0.55);
-  wire(-5.72, 8.3, -4.85, 4.2, 9.6, -5.4, 1.15);
+  wire(pinkCx, pink.h + 0.3, -7.2, -6.2, 9.8, -13.9, 0.75);
+  wire(-6.2, 9.7, -13.9, 0.6, 8.3, -14.0, 0.4);
+  wire(0.6, 8.2, -14.0, 11.2, 6.9, 1.6, 0.9);
+  wire(-5.72, 8.35, -4.85, pinkCx, pink.h + 0.25, -1.8, 0.55);
+  wire(-5.72, 8.3, -4.85, 4.4, 9.2, -13.5, 1.15);
   wire(-6.1, 7.6, -1.5, 9.2, 6.8, 5.5, 1.25);
-  wire(2, 8.4, -5.3, 12.5, 6.9, -0.2, 0.8);
+  wire(2.2, 8.5, -13.3, 12.5, 6.9, -0.2, 0.8);
 
   hangCloth(
-    new THREE.Vector3(2.7, 6.55, -5.05),
-    new THREE.Vector3(5.25, 5.45, -4.2),
+    new THREE.Vector3(-0.5, 5.45, -4.18),
+    new THREE.Vector3(3.5, 5.35, -4.18),
     1.05,
   );
 
@@ -561,11 +549,17 @@ export function createBazaar() {
     mesh.userData.noReceive = true;
   });
 
-  // 场地边界，避免走出雾里
-  solid(-20, 20, 12.4, 13.2);
-  solid(-20, 20, -16.2, -14.7);
-  solid(-16.4, -15.5, -16, 13);
-  solid(14.4, 15.3, -16, 13);
+  // 场地边界：黄色实墙，代替原来的空气墙
+  const yellowWall = new THREE.MeshStandardMaterial({ color: 0xb5a898, roughness: 0.9 });
+  const wallH = 3.2;
+  function barrier(x0, x1, z0, z1) {
+    volume(x0, x1, 0, wallH, z0, z1, yellowWall);
+    solid(x0, x1, z0, z1);
+  }
+  barrier(-20, 20, 12.4, 13.2);
+  barrier(-20, 20, -16.2, -14.7);
+  barrier(-16.4, -15.5, -16, 13);
+  barrier(14.4, 15.3, -16, 13);
 
   const barrel = new THREE.Group();
   barrel.position.set(7.55, 0, 10.35);
