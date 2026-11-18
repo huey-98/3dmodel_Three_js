@@ -2,13 +2,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
   createBuilding, WALL_RECTS, DOOR_GAP, DOOR_ANCHOR,
-  INSIDE_POINT, OUTSIDE_POINT, STAIRS, STAIR_RAILS, INTERIOR, FLOOR_H,
+  INSIDE_POINT, OUTSIDE_POINT, STAIRS, STAIR_RAILS, STAIR_WELLS, INTERIOR, FLOOR_H,
+  stairSurfaceY,
 } from './building.js';
 import {
   createEnvironment, ENV_RECTS, BRIDGE, RIVER_Z0, RIVER_Z1, WATER_Y, PIER_RECTS, waterHeight,
 } from './environment.js';
 import { createBoat } from './boat.js';
-import { createInterior } from './interior.js';
+import { createInterior, FURNITURE_RECTS } from './interior.js';
 import { createPerson } from './person.js';
 
 // ---------- 场景 / 相机 / 渲染器 ----------
@@ -23,12 +24,13 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 document.body.appendChild(renderer.domElement);
 
 // ---------- 光照 ----------
-scene.add(new THREE.HemisphereLight(0xffffff, 0x7cb35c, 0.7));
+scene.add(new THREE.HemisphereLight(0xfff8ef, 0xe7d5bc, 0.74));
 const sun = new THREE.DirectionalLight(0xfff1d6, 1.8);
 sun.position.set(28, 45, 22);
 sun.castShadow = true;
@@ -47,7 +49,8 @@ scene.add(environment.group);
 
 const building = createBuilding();
 scene.add(building.group);
-scene.add(createInterior());
+const interior = createInterior();
+scene.add(interior.group);
 
 // ---------- 小船 ----------
 const boat = createBoat();
@@ -68,6 +71,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(4, 1.2, 12);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
+controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI / 2 - 0.03;
 controls.minDistance = 3;
 controls.maxDistance = 70;
@@ -79,34 +83,65 @@ let interactRequested = false; // F 开关门 / 上船
 let enterRequested = false;    // G 进屋/出门
 addEventListener('keydown', (e) => {
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
+  keys.add(e.code);
+  if (e.repeat) return;
   if (e.code === 'Space') jumpRequested = true;
   if (e.code === 'KeyF') interactRequested = true;
   if (e.code === 'KeyG') enterRequested = true;
-  keys.add(e.code);
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
 
 // ---------- 碰撞检测 ----------
-const SOLIDS = [...WALL_RECTS, ...ENV_RECTS, ...STAIR_RAILS];
-const inside = (x, z, r) => x > r.minX && x < r.maxX && z > r.minZ && z < r.maxZ;
+const SOLIDS = [...WALL_RECTS, ...ENV_RECTS];
+const PERSON_R = 0.32;
 let doorOpen = false;
+
+function overlaps(x, z, r, pad = PERSON_R) {
+  return x > r.minX - pad && x < r.maxX + pad && z > r.minZ - pad && z < r.maxZ + pad;
+}
+
+function railApplies(r) {
+  if (floorIndex === r.from || floorIndex === r.to) return true;
+  return lastRamp != null && lastRamp.from === r.from && lastRamp.to === r.to;
+}
 
 function isBlocked(x, z) {
   for (const r of SOLIDS) {
-    if (inside(x, z, r)) return true;
+    if (overlaps(x, z, r)) return true;
   }
-  // 门口通道：门关着时不能进屋
-  if (!doorOpen && inside(x, z, DOOR_GAP)) return true;
+  for (const r of STAIR_RAILS) {
+    if (railApplies(r) && overlaps(x, z, r)) return true;
+  }
+  if (overlaps(x, z, DOOR_GAP)) {
+    // 二层以上门洞是过梁实体；一层仅在关门时挡住
+    if (floorIndex > 0 || !doorOpen) return true;
+  }
+  // 上层楼梯井：未走楼梯时不能踏空穿到楼下
+  for (let i = 0; i < STAIRS.length; i++) {
+    const s = STAIRS[i];
+    if (s.to !== floorIndex) continue;
+    const hole = STAIR_WELLS[i];
+    if (!overlaps(x, z, hole, 0)) continue;
+    if (lastRamp === s) continue;
+    const t = (z - s.z0) / (s.z1 - s.z0);
+    if (t < 0.82) return true;
+  }
+  if (!lastRamp) {
+    for (const r of FURNITURE_RECTS) {
+      if (r.floor !== floorIndex) continue;
+      if (overlaps(x, z, r)) return true;
+    }
+  }
   return false;
 }
 
-// 船只在河内行驶，并避开桥墩
+// 船只在河内行驶，并避开桥墩（垫量按船体半宽 / 半长）
 function boatBlocked(x, z) {
-  if (z < RIVER_Z0 + 1 || z > RIVER_Z1 - 1) return true;
+  if (z < RIVER_Z0 + 1.15 || z > RIVER_Z1 - 1.15) return true;
   if (Math.abs(x) > 78) return true;
   for (const r of PIER_RECTS) {
-    if (x > r.minX - 0.7 && x < r.maxX + 0.7 && z > r.minZ - 0.9 && z < r.maxZ + 0.9) return true;
+    if (x > r.minX - 0.5 && x < r.maxX + 0.5 && z > r.minZ - 1.55 && z < r.maxZ + 1.55) return true;
   }
   return false;
 }
@@ -141,9 +176,14 @@ function resolveGroundY(x, z) {
       if (x < s.xMin || x > s.xMax) continue;
       if (z < Math.min(s.z0, s.z1) || z > Math.max(s.z0, s.z1)) continue;
       const t = THREE.MathUtils.clamp((z - s.z0) / (s.z1 - s.z0), 0, 1);
+      // 只能从楼梯底部或顶部踏上，避免一层走进楼梯顶端被抬到二楼
+      const onThisRamp = lastRamp === s;
+      const nearBottom = floorIndex === s.from && t < 0.22;
+      const nearTop = floorIndex === s.to && t > 0.78;
+      if (!onThisRamp && !nearBottom && !nearTop) continue;
       lastRamp = s;
       lastT = t;
-      return s.y0 + (s.y1 - s.y0) * t;
+      return stairSurfaceY(s, z);
     }
     // 离开楼梯：按上楼梯的位置决定落到哪一层
     if (lastRamp) {
@@ -152,6 +192,8 @@ function resolveGroundY(x, z) {
     }
     return floorIndex * FLOOR_H;
   }
+  lastRamp = null;
+  floorIndex = 0;
   return bridgeHeight(x, z);
 }
 
@@ -176,16 +218,21 @@ function focusCamera(ox, oy, oz) {
 }
 
 // ---------- 上船 / 下船 ----------
+let boatInteractLock = 0;
+
 // 船靠岸时才有上下船的位置（离岸超过 2.5m 无法上下船）
 function boatDock() {
+  const bx = boat.group.position.x;
   const bz = boat.group.position.z;
-  if (bz < RIVER_Z0 + 2.5) {
-    return new THREE.Vector3(boat.group.position.x + 1.1, 0, RIVER_Z0 - 0.7);
+  let shoreZ = null;
+  if (bz < RIVER_Z0 + 2.5) shoreZ = RIVER_Z0 - 1.6;
+  else if (bz > RIVER_Z1 - 2.5) shoreZ = RIVER_Z1 + 1.6;
+  else return null;
+  for (const dx of [1.8, -1.8, 2.6, -2.6, 3.4, -3.4, 0]) {
+    const x = bx + dx;
+    if (!isBlocked(x, shoreZ)) return new THREE.Vector3(x, 0, shoreZ);
   }
-  if (bz > RIVER_Z1 - 2.5) {
-    return new THREE.Vector3(boat.group.position.x + 1.1, 0, RIVER_Z1 + 0.7);
-  }
-  return null;
+  return new THREE.Vector3(bx + 2.8, 0, shoreZ);
 }
 
 function boardBoat() {
@@ -194,6 +241,8 @@ function boardBoat() {
   person.group.rotation.set(0, Math.PI, 0);
   inBoat = true;
   boatSpeed = 0;
+  jumpRequested = false;
+  boatInteractLock = 0.45;
 }
 
 function leaveBoat() {
@@ -204,6 +253,7 @@ function leaveBoat() {
   person.group.rotation.set(0, 0, 0);
   inBoat = false;
   boatSpeed = 0;
+  boatInteractLock = 1.0;
 }
 
 // ---------- 交互提示 ----------
@@ -217,6 +267,56 @@ const right = new THREE.Vector3();
 const move = new THREE.Vector3();
 const followTarget = new THREE.Vector3();
 const worldPos = new THREE.Vector3();
+const camDir = new THREE.Vector3();
+
+function maxRayInside(origin, dir, box) {
+  let tExit = Infinity;
+  const axes = [
+    ['x', box.minX, box.maxX],
+    ['y', box.minY, box.maxY],
+    ['z', box.minZ, box.maxZ],
+  ];
+  for (const [axis, min, max] of axes) {
+    const o = origin[axis];
+    const d = dir[axis];
+    if (Math.abs(d) < 1e-8) {
+      if (o < min || o > max) return 0;
+      continue;
+    }
+    const tFar = Math.max((min - o) / d, (max - o) / d);
+    tExit = Math.min(tExit, tFar);
+  }
+  return Number.isFinite(tExit) ? Math.max(0, tExit) : 0;
+}
+
+function rayHitT(origin, dir, box) {
+  let tmin = 0;
+  let tmax = Infinity;
+  const axes = [
+    ['x', box.minX, box.maxX],
+    ['y', box.minY, box.maxY],
+    ['z', box.minZ, box.maxZ],
+  ];
+  for (const [axis, min, max] of axes) {
+    const o = origin[axis];
+    const d = dir[axis];
+    if (Math.abs(d) < 1e-8) {
+      if (o < min || o > max) return Infinity;
+      continue;
+    }
+    let t1 = (min - o) / d;
+    let t2 = (max - o) / d;
+    if (t1 > t2) {
+      const tmp = t1;
+      t1 = t2;
+      t2 = tmp;
+    }
+    tmin = Math.max(tmin, t1);
+    tmax = Math.min(tmax, t2);
+    if (tmin > tmax) return Infinity;
+  }
+  return tmin;
+}
 
 function animate() {
   requestAnimationFrame(animate);
@@ -224,8 +324,7 @@ function animate() {
   const t = clock.elapsedTime;
 
   const p = person.group.position;              // 局部坐标
-  person.group.getWorldPosition(worldPos);      // 世界坐标（在船上时随船移动）
-  const wp = worldPos;
+  if (boatInteractLock > 0) boatInteractLock = Math.max(0, boatInteractLock - dt);
 
   // 读取键盘输入：方向键为固定世界方向，WASD 相对相机朝向
   const arrowX = (keys.has('ArrowRight') ? 1 : 0) - (keys.has('ArrowLeft') ? 1 : 0);
@@ -244,6 +343,7 @@ function animate() {
 
   if (inBoat) {
     // ---------- 划船 ----------
+    jumpRequested = false;
     const thrust = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0)
       - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
     const turn = (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0)
@@ -251,28 +351,33 @@ function animate() {
     boatSpeed += thrust * 3.8 * dt;
     boatSpeed *= 1 - Math.min(dt * 1.5, 1);
     boatSpeed = THREE.MathUtils.clamp(boatSpeed, -1.8, 4.5);
-    if (Math.abs(boatSpeed) > 0.05 && turn !== 0) {
-      boatHeading += turn * 0.95 * dt * Math.sign(boatSpeed);
+    if (turn !== 0) {
+      const steer = Math.abs(boatSpeed) > 0.05 ? Math.sign(boatSpeed) : 1;
+      boatHeading += turn * 0.95 * dt * steer;
     }
     const nx = boat.group.position.x + Math.sin(boatHeading) * boatSpeed * dt;
     const nz = boat.group.position.z + Math.cos(boatHeading) * boatSpeed * dt;
     if (!boatBlocked(nx, nz)) {
       boat.group.position.x = nx;
       boat.group.position.z = nz;
+    } else if (!boatBlocked(nx, boat.group.position.z)) {
+      boat.group.position.x = nx;
+      boatSpeed *= 1 - Math.min(dt * 4, 0.8);
+    } else if (!boatBlocked(boat.group.position.x, nz)) {
+      boat.group.position.z = nz;
+      boatSpeed *= 1 - Math.min(dt * 4, 0.8);
     } else {
-      boatSpeed *= 0.2;
+      boatSpeed *= 1 - Math.min(dt * 8, 0.9);
     }
     boat.group.rotation.y = boatHeading;
-    // 随水面起伏
     boat.group.position.y = WATER_Y
-      + waterHeight(boat.group.position.x, boat.group.position.z, t)
-      + Math.sin(t * 2.0) * 0.04;
+      + waterHeight(boat.group.position.x, boat.group.position.z, t);
     boat.group.rotation.z = Math.sin(t * 1.6) * 0.05;
     boat.group.rotation.x = Math.sin(t * 2.3) * 0.035;
-    // 划桨动作
-    rowPhase += dt * (3.0 + Math.abs(boatSpeed) * 1.6);
-    boat.setRowPhase(rowPhase);
-    person.update(dt, false, rowPhase);
+    const rowing = thrust !== 0 || Math.abs(boatSpeed) > 0.18;
+    if (rowing) rowPhase += dt * (2.4 + Math.abs(boatSpeed) * 1.6);
+    boat.setRowPhase(rowPhase, rowing);
+    person.update(dt, false, { phase: rowPhase, active: rowing });
   } else {
     // ---------- 人物移动 ----------
     let moving = false;
@@ -358,17 +463,21 @@ function animate() {
     }
   }
 
+  person.group.getWorldPosition(worldPos);
+  const wp = worldPos;
+
   // 门口交互
-  const nearDoor = Math.hypot(wp.x - DOOR_ANCHOR.x, wp.z - DOOR_ANCHOR.z) < 3.6;
+  const nearDoor = floorIndex === 0
+    && Math.hypot(wp.x - DOOR_ANCHOR.x, wp.z - DOOR_ANCHOR.z) < 3.6;
   const insideHouse = wp.x > INTERIOR.minX && wp.x < INTERIOR.maxX
     && wp.z > INTERIOR.minZ && wp.z < INTERIOR.maxZ;
   const dock = boatDock();
-  const nearBoat = !inBoat && !!dock
-    && Math.hypot(wp.x - boat.group.position.x, wp.z - boat.group.position.z) < 3.6;
+  const nearBoat = !inBoat && !!dock && boatInteractLock <= 0
+    && Math.hypot(wp.x - dock.x, wp.z - dock.z) < 2.4;
 
   if (interactRequested) {
     interactRequested = false;
-    if (inBoat) {
+    if (inBoat && boatInteractLock <= 0) {
       leaveBoat();
     } else if (nearBoat) {
       // 先走到岸边的登船点再上船
@@ -385,7 +494,7 @@ function animate() {
       if (insideHouse) {
         startAutoMove([DOOR_OUTSIDE, OUTSIDE_POINT], () => focusCamera(4, 4, 5));
       } else {
-        startAutoMove([DOOR_OUTSIDE, INSIDE_POINT], () => focusCamera(-2.8, 2.2, -3.6));
+        startAutoMove([DOOR_OUTSIDE, INSIDE_POINT], () => focusCamera(-3.4, 2.6, -4.4));
       }
     }
   }
@@ -416,6 +525,7 @@ function animate() {
 
   // 场景动画
   building.update(dt);
+  interior.update(t);
   environment.updateWater(t);
 
   // 相机跟随人物（保持当前轨道偏移）
@@ -428,16 +538,51 @@ function animate() {
   camera.position.y += dy;
   camera.position.z += dz;
 
-  // 人在屋内时把相机限制在屋内，避免被外墙挡住
+  const onStairs = lastRamp != null;
   if (insideHouse && !inBoat) {
-    const dir = camera.position.clone().sub(controls.target);
-    dir.setLength(Math.min(dir.length(), 4.2));
-    camera.position.copy(controls.target).add(dir);
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, INTERIOR.minX + 0.4, INTERIOR.maxX - 0.4);
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, INTERIOR.minZ + 0.4, INTERIOR.maxZ - 0.4);
-    camera.position.y = THREE.MathUtils.clamp(camera.position.y, wp.y + 0.9, wp.y + 2.7);
+    controls.minDistance = onStairs ? 1.7 : 1.4;
+    controls.maxDistance = onStairs ? 3.4 : 6.4;
+    controls.minPolarAngle = 0.16;
+    controls.maxPolarAngle = Math.PI * 0.72;
+  } else {
+    controls.minDistance = 3;
+    controls.maxDistance = 70;
+    controls.minPolarAngle = 0;
+    controls.maxPolarAngle = Math.PI / 2 - 0.03;
   }
   controls.update();
+
+  // 屋内只沿视线缩短距离，保留旋转角度；上楼时相机跟着人抬高，避免被下层楼板夹进身体
+  if (insideHouse && !inBoat) {
+    const room = {
+      minX: INTERIOR.minX + 0.2,
+      maxX: INTERIOR.maxX - 0.2,
+      minZ: INTERIOR.minZ + 0.2,
+      maxZ: INTERIOR.maxZ - 0.2,
+      minY: wp.y + 0.5,
+      maxY: onStairs
+        ? wp.y + 2.55
+        : Math.min(wp.y + FLOOR_H - 0.45, (floorIndex + 1) * FLOOR_H - 0.22),
+    };
+    camDir.copy(camera.position).sub(controls.target);
+    const dist = camDir.length();
+    if (dist > 1e-4) {
+      camDir.multiplyScalar(1 / dist);
+      let maxD = maxRayInside(controls.target, camDir, room) - 0.08;
+      if (!onStairs) {
+        for (const r of FURNITURE_RECTS) {
+          if (r.floor !== floorIndex) continue;
+          const t = rayHitT(controls.target, camDir, {
+            minX: r.minX, maxX: r.maxX,
+            minZ: r.minZ, maxZ: r.maxZ,
+            minY: wp.y, maxY: wp.y + 1.55,
+          });
+          if (t > 0.3 && t < maxD) maxD = t - 0.06;
+        }
+      }
+      camera.position.copy(controls.target).addScaledVector(camDir, Math.min(dist, Math.max(0.55, maxD)));
+    }
+  }
 
   renderer.render(scene, camera);
 }
@@ -449,3 +594,4 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
+

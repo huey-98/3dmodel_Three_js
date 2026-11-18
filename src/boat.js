@@ -69,9 +69,9 @@ export function createBoat() {
   const oarL = createOar(-1);
   const oarR = createOar(1);
 
-  // 划桨循环：桨叶入水后向后拉
-  function setRowPhase(phase) {
-    const s = Math.sin(phase);
+  // 划桨循环：桨叶入水后向后拉；停桨时回到水平
+  function setRowPhase(phase, active) {
+    const s = active ? Math.sin(phase) : 0;
     oarL.rotation.z = 0.25 - s * 0.28;
     oarL.rotation.y = s * 0.5;
     oarR.rotation.z = -0.25 + s * 0.28;

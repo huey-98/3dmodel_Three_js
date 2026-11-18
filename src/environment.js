@@ -16,10 +16,12 @@ export const BRIDGE = {
   rampZ0: 15.5, deckZ0: 19.5, deckZ1: 36.5, rampZ1: 40.5,
 };
 
-// 桥墩（水下障碍，船只需从中间水道穿过）
+// 桥墩分列两侧，中间留出航道供船只穿过
 export const PIER_RECTS = [
-  { minX: -1.5, maxX: 1.5, minZ: 23.8, maxZ: 25.2 },
-  { minX: -1.5, maxX: 1.5, minZ: 30.8, maxZ: 32.2 },
+  { minX: -1.85, maxX: -1.15, minZ: 23.7, maxZ: 25.3 },
+  { minX: 1.15, maxX: 1.85, minZ: 23.7, maxZ: 25.3 },
+  { minX: -1.85, maxX: -1.15, minZ: 30.7, maxZ: 32.3 },
+  { minX: 1.15, maxX: 1.85, minZ: 30.7, maxZ: 32.3 },
 ];
 
 export const ENV_RECTS = [
@@ -43,9 +45,12 @@ function isReserved(x, z) {
   return false;
 }
 
-// 水面高度（与顶点波动保持一致）
+const WATER_MID_Z = (RIVER_Z0 + RIVER_Z1) / 2;
+
+// 水面高度（世界坐标，与顶点波动保持一致）
 export function waterHeight(x, z, t) {
-  return Math.sin(x * 0.32 + t * 1.5) * 0.09 + Math.sin(z * 0.55 - t * 1.1) * 0.05;
+  const lz = z - WATER_MID_Z;
+  return Math.sin(x * 0.32 + t * 1.5) * 0.09 + Math.sin(lz * 0.55 - t * 1.1) * 0.05;
 }
 
 export function createEnvironment() {
@@ -54,7 +59,10 @@ export function createEnvironment() {
   // ---------- 材质 ----------
   const matGrass = new THREE.MeshStandardMaterial({ color: 0x7cb35c, roughness: 1 });
   const matSoil = new THREE.MeshStandardMaterial({ color: 0x8a7f63, roughness: 1 });
-  const matBank = new THREE.MeshStandardMaterial({ color: 0x9c8a63, roughness: 1 });
+  const matBank = new THREE.MeshStandardMaterial({
+    color: 0x9c8a63, roughness: 1,
+    polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+  });
   const matPath = new THREE.MeshStandardMaterial({ color: 0xa39a8c, roughness: 0.95 });
   const matWood = new THREE.MeshStandardMaterial({ color: 0x8a5a2e, roughness: 0.8 });
   const matWoodDark = new THREE.MeshStandardMaterial({ color: 0x6a4423, roughness: 0.85 });
@@ -93,10 +101,25 @@ export function createEnvironment() {
   bed.position.set(0, -1.3, (RIVER_Z0 + RIVER_Z1) / 2);
   bed.receiveShadow = true;
   group.add(bed);
-  group.add(new THREE.Mesh(new THREE.BoxGeometry(GROUND * 2, 1.3, 0.5), matBank)
-    .translateY(-0.65).translateZ(RIVER_Z0 - 0.25));
-  group.add(new THREE.Mesh(new THREE.BoxGeometry(GROUND * 2, 1.3, 0.5), matBank)
-    .translateY(-0.65).translateZ(RIVER_Z1 + 0.25));
+  // 河岸完全放进河道内侧，顶面低于地面，避免与草地共面闪烁
+  const bankH = 1.22;
+  const bankSouth = new THREE.Mesh(new THREE.BoxGeometry(GROUND * 2, bankH, 0.9), matBank);
+  bankSouth.position.set(0, -bankH / 2 - 0.05, RIVER_Z0 + 0.45);
+  bankSouth.receiveShadow = true;
+  group.add(bankSouth);
+  const bankNorth = new THREE.Mesh(new THREE.BoxGeometry(GROUND * 2, bankH, 0.9), matBank);
+  bankNorth.position.set(0, -bankH / 2 - 0.05, RIVER_Z1 - 0.45);
+  bankNorth.receiveShadow = true;
+  group.add(bankNorth);
+  // 草地包边略高于地面，盖住挖河边缘
+  const lipS = new THREE.Mesh(new THREE.BoxGeometry(GROUND * 2, 0.06, 1.05), matGrass);
+  lipS.position.set(0, 0.05, RIVER_Z0 - 0.32);
+  lipS.receiveShadow = true;
+  group.add(lipS);
+  const lipN = new THREE.Mesh(new THREE.BoxGeometry(GROUND * 2, 0.06, 1.05), matGrass);
+  lipN.position.set(0, 0.05, RIVER_Z1 + 0.32);
+  lipN.receiveShadow = true;
+  group.add(lipN);
 
   // ---------- 河水（带波动动画） ----------
   const waterGeo = new THREE.PlaneGeometry(GROUND * 2, RIVER_Z1 - RIVER_Z0, 120, 10);
@@ -114,18 +137,20 @@ export function createEnvironment() {
 
   function updateWater(t) {
     const attr = waterGeo.attributes.position;
+    const midZ = water.position.z;
     for (let i = 0; i < attr.count; i++) {
       const x = waterBase[i * 3];
-      const z = waterBase[i * 3 + 2];
+      const z = waterBase[i * 3 + 2] + midZ;
       attr.setY(i, waterHeight(x, z, t));
     }
     attr.needsUpdate = true;
   }
 
   // ---------- 小路 ----------
-  const pathLen = BRIDGE.rampZ0 - 6.5;
+  const pathStart = BUILDING_FOOTPRINT.maxZ + 2.6;
+  const pathLen = Math.max(0.5, BRIDGE.rampZ0 - pathStart);
   const pathN = new THREE.Mesh(new THREE.BoxGeometry(PATH_HALF * 2, 0.06, pathLen), matPath);
-  pathN.position.set(0, 0.03, 6.5 + pathLen / 2);
+  pathN.position.set(0, 0.03, pathStart + pathLen / 2);
   pathN.receiveShadow = true;
   group.add(pathN);
 
@@ -133,12 +158,14 @@ export function createEnvironment() {
   const bridge = new THREE.Group();
   const b = BRIDGE;
   const deckLen = b.deckZ1 - b.deckZ0;
-  // 桥墩
+  // 桥墩（两侧各一根，中间留出航道）
   for (const z of [24.5, 31.5]) {
-    const pier = new THREE.Mesh(new THREE.BoxGeometry(3.0, 3.3, 1.4), matStone);
-    pier.position.set(0, 0.35, z);
-    pier.castShadow = true;
-    bridge.add(pier);
+    for (const x of [-1.5, 1.5]) {
+      const pier = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.3, 1.4), matStone);
+      pier.position.set(x, 0.35, z);
+      pier.castShadow = true;
+      bridge.add(pier);
+    }
   }
   // 主桥面
   const deck = new THREE.Mesh(new THREE.BoxGeometry(b.x1 - b.x0, 0.26, deckLen), matWoodDark);
@@ -203,8 +230,11 @@ export function createEnvironment() {
   road.position.set(0, 0.05, roadZ);
   road.receiveShadow = true;
   group.add(road);
-  const spur = new THREE.Mesh(new THREE.BoxGeometry(7, 0.1, b.rampZ1 - 40.5 + 0.5), matRoad);
-  spur.position.set(0, 0.05, (b.rampZ1 + 44.5) / 2);
+  const roadHalf = 3.5;
+  const roadNorth = roadZ - roadHalf;
+  const spurLen = Math.max(0.2, roadNorth - b.rampZ1);
+  const spur = new THREE.Mesh(new THREE.BoxGeometry(7, 0.1, spurLen), matRoad);
+  spur.position.set(0, 0.05, (b.rampZ1 + roadNorth) / 2);
   spur.receiveShadow = true;
   group.add(spur);
   for (let x = -80; x < 80; x += 5) {
@@ -353,7 +383,7 @@ export function createEnvironment() {
   const bushMat = new THREE.MeshStandardMaterial({ color: 0x4f8f43, roughness: 0.9 });
   for (let i = 0; i < 14; i++) {
     const a = (i / 14) * Math.PI * 2;
-    const r = 9 + Math.random() * 4;
+    const r = 13 + Math.random() * 4;
     const bush = new THREE.Group();
     for (let k = 0; k < 3; k++) {
       const s = 0.45 + Math.random() * 0.45;
