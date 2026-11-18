@@ -480,7 +480,8 @@ export function createBazaarKit() {
     van: new THREE.MeshStandardMaterial({ color: 0xe6e2d8, roughness: 0.52, metalness: 0.04 }),
     vanTrim: new THREE.MeshStandardMaterial({ color: 0xb9b4a8, roughness: 0.6 }),
     rubber: new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.92 }),
-    barrel: new THREE.MeshStandardMaterial({ color: 0x6a7378, metalness: 0.4, roughness: 0.5 }),
+    bin: new THREE.MeshStandardMaterial({ color: 0x5b6d52, metalness: 0.12, roughness: 0.72 }),
+    binLid: new THREE.MeshStandardMaterial({ color: 0x3c4540, metalness: 0.28, roughness: 0.5 }),
     tank: new THREE.MeshStandardMaterial({ color: 0xd5d8dc, roughness: 0.45, metalness: 0.25 }),
     ac: new THREE.MeshStandardMaterial({ color: 0xd8d4cc, roughness: 0.6, metalness: 0.15 }),
     sandPile: new THREE.MeshStandardMaterial({

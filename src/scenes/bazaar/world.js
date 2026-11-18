@@ -420,17 +420,9 @@ export function createBazaar() {
   block(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
   skirt(blue.x0, blue.x1, blue.z0, blue.z1, kit.skirtBlue);
   parapet(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
-  placeWindow(blue.x0 - 0.03, 0.42, 8.7, 2.2, 3.3, -Math.PI / 2, true);
-  box(0.32, 0.12, 2.5, kit.concrete, blue.x0 - 0.2, 0.46, 8.7);
-  placeWindow(blue.x0 - 0.03, 4.25, 8.7, 0.9, 1.05, -Math.PI / 2, false);
-  placeWindow(blue.x0 - 0.03, 1.55, 1.4, 0.85, 1.25, -Math.PI / 2, false);
-  placeWindow(blue.x0 - 0.03, 4.15, 1.7, 0.7, 0.95, -Math.PI / 2, false);
-  placeWindow(blue.x0 - 0.03, 1.5, -7.4, 0.9, 1.35, -Math.PI / 2, true);
-  placeWindow(blue.x0 - 0.03, 4.2, -4.2, 0.75, 1.05, -Math.PI / 2, false);
-  placeWindow(blue.x0 - 0.03, 1.45, -1.2, 0.8, 1.2, -Math.PI / 2, false);
-  placeWindow(blue.x0 + 2.35, 1.3, blue.z1 + 0.03, 0.9, 1.6, 0, true);
-  placeWindow(blue.x0 + 4.55, 3.6, blue.z1 + 0.03, 0.75, 1.05, 0, false);
-  box(0.7, 0.34, 0.32, kit.ac, blue.x0 - 0.02, 3.15, 3.2);
+  placeWindow(blue.x0 - 0.03, 0.42, 8.7, 3.6, 5.75, -Math.PI / 2, true);
+  box(0.32, 0.12, 3.9, kit.concrete, blue.x0 - 0.2, 0.46, 8.7);
+  placeWindow(blue.x0 - 0.03, 1.2, 0.25, 3.9, 4.2, -Math.PI / 2, false);
 
   // ---------- 货车 ----------
   // 竖放：中心 X 与红楼对齐，车头紧贴南侧围墙。
@@ -528,19 +520,36 @@ export function createBazaar() {
   barrier(-16.4, -15.5, -16, 13);
   barrier(blue.x1 - 0.08, blue.x1 + 0.82, -16, 13);
 
-  const barrel = new THREE.Group();
-  barrel.position.set(7.55, 0, 10.35);
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.86, 12), kit.barrel);
-  drum.position.y = 0.43;
-  barrel.add(drum);
-  for (const y of [0.2, 0.7]) {
-    const rib = new THREE.Mesh(new THREE.TorusGeometry(0.29, 0.025, 6, 14), kit.metalDark);
-    rib.rotation.x = Math.PI / 2;
-    rib.position.y = y;
-    barrel.add(rib);
-  }
-  group.add(barrel);
-  solid(7.22, 7.88, 10.02, 10.68);
+  const canR = 0.5;
+  const canH = 1.18;
+  const canX = blue.x0 - canR - 0.12;
+  const canZ = SOUTH_WALL_Z - canR - 0.12;
+  const bin = new THREE.Group();
+  bin.position.set(canX, 0, canZ);
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(canR * 0.92, canR, canH, 18), kit.bin);
+  drum.position.y = canH / 2;
+  bin.add(drum);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(canR + 0.03, canR + 0.04, 0.07, 18), kit.metalDark);
+  foot.position.y = 0.035;
+  bin.add(foot);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(canR * 0.96, canR * 0.94, 0.08, 18), kit.metalDark);
+  rim.position.y = canH - 0.02;
+  bin.add(rim);
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(canR * 1.04, canR * 1.02, 0.07, 18), kit.binLid);
+  lid.position.y = canH + 0.04;
+  bin.add(lid);
+  const dome = new THREE.Mesh(
+    new THREE.SphereGeometry(canR * 0.78, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.48),
+    kit.binLid,
+  );
+  dome.position.y = canH + 0.06;
+  bin.add(dome);
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.02, 8, 14, Math.PI), kit.metal);
+  handle.position.y = canH + 0.28;
+  handle.rotation.z = Math.PI / 2;
+  bin.add(handle);
+  group.add(bin);
+  solid(canX - canR, canX + canR, canZ - canR, canZ + canR);
 
   group.traverse((obj) => {
     if (!obj.isMesh) return;
