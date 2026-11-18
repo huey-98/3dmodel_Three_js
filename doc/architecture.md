@@ -59,7 +59,7 @@ src/scenes/bazaar/         荒漠街区
 
 方向键和空格会 `preventDefault`，避免页面滚动。窗口失焦时清空按键集合。
 
-相机每帧把 `OrbitControls.target` 设到角色头顶附近，并把相机平移同样的位移，从而保持玩家当前的轨道偏移。平移被关掉（荒漠迷城显式 `enablePan = false`；别墅使用 OrbitControls 默认，跟随逻辑会盖掉平移结果）。
+相机每帧把 `OrbitControls.target` 设到角色头顶附近，并把相机平移同样的位移，从而保持玩家当前的轨道偏移。荒漠迷城设置了 `enablePan = false`。别墅没有关闭平移；同一套跟随会在下一帧把目标拉回角色，平移留不住。
 
 水平移动先试完整位移，被挡住再试只改 X、只改 Z，形成沿墙滑动。
 
@@ -74,9 +74,11 @@ src/scenes/bazaar/         荒漠街区
 `createPerson()` 和 `createWhaleMaid()` 都返回 `{ group, update }`。
 
 ```text
-update(dt, moving = false, row = null)
+update(dt, moving, row)
 ```
+
+`createWhaleMaid()` 给后两个参数写了默认值 `false` 和 `null`。`createPerson()` 没有默认值；少传时 `moving` 为 `undefined`，按停下处理。
 
 - `moving` 为真时摆腿，幅度从 0 平滑到目标值。
 - `row` 为 `{ phase, active }` 时进入划船坐姿，腿前伸，手臂随 `sin(phase)` 摆动。
-- 女仆多返回 `rig`、`hair`、`tail` 和四肢枢轴，供展示或调试；别墅主循环只用 `group` 和 `update`。
+- 女仆多返回 `rig`、`hair`、`tail` 和四肢枢轴；别墅主循环只用 `group` 和 `update`。调用点在别墅、荒漠迷城和女仆展示页。

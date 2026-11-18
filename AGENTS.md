@@ -56,11 +56,11 @@ src/scenes/<name>/ 单个场景的页面和逻辑
 
 ### 操作与碰撞
 
-可走动场景沿用同一套输入，细节见 [doc/architecture.md](doc/architecture.md)：
+可走动场景沿用同一套输入。速度、重力和角色半径见 [doc/architecture.md](doc/architecture.md)。
 
 - WASD 相对相机，方向键是世界方向且优先于 WASD。
-- Shift 加速，空格跳跃（重力 24，初速度 8）。方向键和空格要 `preventDefault`。窗口失焦时清空按键。
-- 水平碰撞是 AABB：`{ minX, maxX, minZ, maxZ }`，角色半径 `0.32`。先试整步，再试只改 X、只改 Z。
+- Shift 加速，空格跳跃。方向键和空格要 `preventDefault`。窗口失焦时清空按键。
+- 水平碰撞是 AABB：`{ minX, maxX, minZ, maxZ }`。先试整步，再试只改 X、只改 Z。
 - 高度单独计算。荒漠迷城地面为 0；别墅的楼层、踏步和桥面见 [doc/villa.md](doc/villa.md)。
 
 ### 角色与船
@@ -68,13 +68,13 @@ src/scenes/<name>/ 单个场景的页面和逻辑
 `createPerson()` 和 `createWhaleMaid()` 都提供：
 
 ```text
-update(dt, moving = false, row = null)
+update(dt, moving, row)
 ```
 
-`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改两处实现，以及别墅、荒漠迷城里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
+`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`createPerson()` 没有默认值，少传时按停下处理。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改两处实现，以及别墅、荒漠迷城和女仆展示页里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
 
 ### 改完代码之后
 
 - 行为有变化时，更新上表里对应的 `doc/*.md`，让文档继续描述当前代码。
 - 只写已经实现的行为。计划中的功能不要写进 `doc/`。
-- 别墅开窗时先看 [doc/villa.md](doc/villa.md) 的「实现注意」：洞数据字段是 `along`，挖墙代码读的是 `at`。
+- 别墅开窗时先看 [doc/villa.md](doc/villa.md) 的「实现注意」：洞数据字段是 `along`，挖墙代码读的是 `at`，重叠高度上的整条墙网格会缺失。
