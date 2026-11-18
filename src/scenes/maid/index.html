@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 场景 - 鲸尾女仆</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #eef2f7; }
+    canvas { display: block; }
+    #info {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      color: #1c2a4a;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.78);
+      padding: 10px 14px;
+      border-radius: 8px;
+      pointer-events: none;
+      user-select: none;
+    }
+    #home {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: #1c2a4a;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.78);
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">
+    根据设定图还原的鲸尾女仆<br />
+    <b>鼠标拖拽</b>：旋转 &nbsp;|&nbsp; <b>滚轮</b>：缩放
+  </div>
+  <a id="home" href="/">返回目录</a>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

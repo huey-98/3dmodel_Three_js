@@ -79,7 +79,8 @@ export function createBoat() {
   }
 
   // 人物落座位置（船体局部坐标，船头朝 +z）
-  const seatPosition = new THREE.Vector3(0, -0.26, 0.6);
+  // y 按女仆髋高 (~0.48) 对齐座板 (0.44)
+  const seatPosition = new THREE.Vector3(0, 0.02, 0.6);
 
   return { group, setRowPhase, seatPosition };
 }

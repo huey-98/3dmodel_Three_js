@@ -8,9 +8,9 @@ import {
 import {
   createEnvironment, ENV_RECTS, BRIDGE, RIVER_Z0, RIVER_Z1, WATER_Y, PIER_RECTS, waterHeight,
 } from './environment.js';
-import { createBoat } from './boat.js';
+import { createBoat } from '@shared/boat.js';
 import { createInterior, FURNITURE_RECTS } from './interior.js';
-import { createPerson } from './person.js';
+import { createWhaleMaid } from '@shared/whaleMaid.js';
 
 // ---------- 场景 / 相机 / 渲染器 ----------
 const scene = new THREE.Scene();
@@ -61,8 +61,8 @@ let boatSpeed = 0;    // 前进速度（负数为倒行）
 let boatHeading = 0;  // 船头朝向
 let rowPhase = 0;     // 划桨相位
 
-// ---------- 人物 ----------
-const person = createPerson();
+// ---------- 人物（鲸女仆，替换原来的简易小人） ----------
+const person = createWhaleMaid();
 person.group.position.set(4, 0, 12);
 scene.add(person.group);
 
