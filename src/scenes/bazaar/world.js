@@ -331,16 +331,25 @@ export function createBazaar() {
   parapet(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.pink);
   volume(pink.x0 - 0.06, pink.x1 + 0.06, pink.h - 0.08, pink.h + 0.08, pink.z0 - 0.06, pink.z1 + 0.06, kit.trim);
 
-  const balX0 = pink.x0 + 0.4;
-  const balX1 = pink.x1 - 0.4;
+  const balX0 = pink.x0;
+  const balX1 = pink.x1;
   const SOUTH_WALL_Z = 12.4;
   const vanHalf = 2.06;
   const vanZ = SOUTH_WALL_Z - vanHalf;
   const balD = 3.5;
   const balTop = 3.92;
+  const storyH = pink.h - balTop;
   volume(balX0, balX1, 0, balTop, pink.z1 - 0.05, pink.z1 + balD, kit.pink);
   solid(balX0, balX1, pink.z1 - 0.05, pink.z1 + balD);
-  placeWindow((balX0 + balX1) / 2, balTop, pink.z1 + 0.03, balX1 - balX0 - 0.45, 2.15, 0, false);
+  placeWindow(
+    (balX0 + balX1) / 2,
+    balTop,
+    pink.z1 + 0.03,
+    (balX1 - balX0) - 0.2,
+    storyH - 0.14,
+    0,
+    false,
+  );
 
   for (const z of [-11.1, -8.8, -6.5, -4.2, -1.9, 0.4, 2.05]) {
     placeWindow(pink.x1 + 0.03, 4.4, z, 0.78, 1.05, Math.PI / 2, false);
