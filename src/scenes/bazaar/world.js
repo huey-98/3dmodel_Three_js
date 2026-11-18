@@ -220,46 +220,6 @@ export function createBazaar() {
     add(mesh);
   }
 
-  function palm(x, y, z, h, mat, leanZ = 0) {
-    const root = new THREE.Group();
-    root.position.set(x, y, z);
-    root.rotation.z = leanZ;
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.22, 1, 7), kit.bark);
-    trunk.scale.y = h;
-    trunk.position.y = h / 2;
-    root.add(trunk);
-    const leafGeo = palm.leafGeo;
-    for (let i = 0; i < 8; i++) {
-      const piv = new THREE.Group();
-      piv.rotation.y = (i / 8) * Math.PI * 2;
-      piv.rotation.x = 0.5 + (i % 3) * 0.16;
-      const leaf = new THREE.Mesh(leafGeo, mat);
-      leaf.position.y = 1.05;
-      leaf.userData.noShadow = true;
-      const leaf2 = leaf.clone();
-      leaf2.rotation.y = 0.7;
-      piv.add(leaf, leaf2);
-      root.add(piv);
-      piv.position.y = h - 0.05;
-      animated.push({ mode: 'frond', obj: piv, base: piv.rotation.x, phase: i * 0.8 + x });
-    }
-    for (let i = 0; i < 3; i++) {
-      const piv = new THREE.Group();
-      piv.position.y = h - 0.05;
-      piv.rotation.y = i * 2.1;
-      piv.rotation.x = 0.16;
-      const leaf = new THREE.Mesh(leafGeo, mat);
-      leaf.position.y = 1.15;
-      leaf.scale.set(0.62, 0.82, 1);
-      leaf.userData.noShadow = true;
-      piv.add(leaf);
-      root.add(piv);
-    }
-    group.add(root);
-    if (y < 0.2) solid(x - 0.18, x + 0.18, z - 0.18, z + 0.18);
-  }
-  palm.leafGeo = new THREE.PlaneGeometry(0.7, 2.3);
-
   function crate(x, z, w, h, d, color, y = 0) {
     box(w, h, d, kit.crate(color), x, y + h / 2, z);
     solid(x - w / 2, x + w / 2, z - d / 2, z + d / 2);
@@ -363,8 +323,8 @@ export function createBazaar() {
   volume(B.x0, B.x1, beamY, beamY + 0.12, cz - 0.08, cz + 0.08, kit.beam);
 
   // ---------- 左：粉墙 ----------
-  // 西贴边界墙，北贴北墙；南端北收，给加长阳台和白车通道留空。
-  const pink = { x0: -15.5, x1: -9.625, z0: -14.6, z1: 0.3, h: 7.35 };
+  // 西贴边界墙；整体南移，北侧与北墙留空，南端给阳台和白车通道留空。
+  const pink = { x0: -15.5, x1: -9.625, z0: -12.6, z1: 2.3, h: 7.35 };
   const pinkCx = (pink.x0 + pink.x1) / 2;
   block(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.pink);
   skirt(pink.x0, pink.x1, pink.z0, pink.z1, kit.skirtPink);
@@ -382,10 +342,10 @@ export function createBazaar() {
   solid(balX0, balX1, pink.z1 - 0.05, pink.z1 + balD);
   placeWindow((balX0 + balX1) / 2, balTop, pink.z1 + 0.03, balX1 - balX0 - 0.45, 2.15, 0, false);
 
-  for (const z of [-13.1, -10.8, -8.5, -6.2, -3.9, -1.6, 0.05]) {
+  for (const z of [-11.1, -8.8, -6.5, -4.2, -1.9, 0.4, 2.05]) {
     placeWindow(pink.x1 + 0.03, 4.4, z, 0.78, 1.05, Math.PI / 2, false);
   }
-  box(0.34, 0.36, 0.7, kit.ac, pink.x1 + 0.18, 3.55, -2.2);
+  box(0.34, 0.36, 0.7, kit.ac, pink.x1 + 0.18, 3.55, -0.2);
   const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, pink.h, 6), kit.metalDark);
   spout.position.set(pink.x1 + 0.08, pink.h / 2, pink.z1 - 0.2);
   add(spout);
@@ -438,7 +398,16 @@ export function createBazaar() {
   box(0.95, 0.03, 0.03, kit.metal, 3.7, 10.5, -13.75);
 
   // ---------- 右：蓝墙 ----------
-  const blue = { x0: 8.05, x1: 14.48, z0: -14.6, z1: 12.42, h: 6.55 };
+  // 东移；北侧留空，宽度与红楼阳台到南墙相当。
+  const blueDx = 2.5;
+  const northGap = SOUTH_WALL_Z - (pink.z1 + balD);
+  const blue = {
+    x0: 8.05 + blueDx,
+    x1: 14.48 + blueDx,
+    z0: -14.7 + northGap,
+    z1: 12.42,
+    h: 6.55,
+  };
   block(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
   skirt(blue.x0, blue.x1, blue.z0, blue.z1, kit.skirtBlue);
   parapet(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
@@ -447,13 +416,11 @@ export function createBazaar() {
   placeWindow(blue.x0 - 0.03, 4.25, 8.7, 0.9, 1.05, -Math.PI / 2, false);
   placeWindow(blue.x0 - 0.03, 1.55, 1.4, 0.85, 1.25, -Math.PI / 2, false);
   placeWindow(blue.x0 - 0.03, 4.15, 1.7, 0.7, 0.95, -Math.PI / 2, false);
-  placeWindow(blue.x0 - 0.03, 1.4, -11.2, 0.85, 1.25, -Math.PI / 2, false);
-  placeWindow(blue.x0 - 0.03, 4.1, -10.9, 0.7, 0.95, -Math.PI / 2, false);
   placeWindow(blue.x0 - 0.03, 1.5, -7.4, 0.9, 1.35, -Math.PI / 2, true);
   placeWindow(blue.x0 - 0.03, 4.2, -4.2, 0.75, 1.05, -Math.PI / 2, false);
   placeWindow(blue.x0 - 0.03, 1.45, -1.2, 0.8, 1.2, -Math.PI / 2, false);
-  placeWindow(10.4, 1.3, blue.z1 + 0.03, 0.9, 1.6, 0, true);
-  placeWindow(12.6, 3.6, blue.z1 + 0.03, 0.75, 1.05, 0, false);
+  placeWindow(blue.x0 + 2.35, 1.3, blue.z1 + 0.03, 0.9, 1.6, 0, true);
+  placeWindow(blue.x0 + 4.55, 3.6, blue.z1 + 0.03, 0.75, 1.05, 0, false);
   box(0.7, 0.34, 0.32, kit.ac, blue.x0 - 0.02, 3.15, 3.2);
 
   // ---------- 货车 ----------
@@ -508,29 +475,20 @@ export function createBazaar() {
     solid(vx - (hx * c + hz * s), vx + (hx * c + hz * s), vz - (hx * s + hz * c), vz + (hx * s + hz * c));
   }
 
-  // ---------- 棕榈、电线、橙布 ----------
-  palm(-3.4, 0, -4.9, 7.6, kit.leaf, 0.05);
-  palm(0.6, 0, -4.95, 8.3, kit.leafDry, -0.04);
-  palm(6.7, 0, -4.75, 7.1, kit.leaf, 0.06);
-  palm(6.4, 0, -8.4, 7.4, kit.leafDry, -0.05);
-  palm(pinkCx, pink.h, (pink.z0 + pink.z1) / 2, 4.6, kit.leaf, 0.08);
-  palm(-5.9, backs[0].h, -13.85, 5.2, kit.leaf);
-  palm(0.5, backs[1].h, -14.0, 4.8, kit.leafDry, 0.05);
-  palm(5.7, backs[2].h, -13.8, 5.4, kit.leaf, -0.06);
-
+  // ---------- 电线、橙布 ----------
   const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 8.4, 6), kit.beam);
   mast.position.set(-5.72, 4.2, -4.85);
   add(mast);
   solid(-5.86, -5.58, -5.0, -4.7);
   box(0.7, 0.06, 0.06, kit.beam, -5.72, 8.15, -4.85);
 
-  wire(pinkCx, pink.h + 0.3, -7.2, -6.2, 9.8, -13.9, 0.75);
+  wire(pinkCx, pink.h + 0.3, (pink.z0 + pink.z1) / 2, -6.2, 9.8, -13.9, 0.75);
   wire(-6.2, 9.7, -13.9, 0.6, 8.3, -14.0, 0.4);
-  wire(0.6, 8.2, -14.0, 11.2, 6.9, 1.6, 0.9);
-  wire(-5.72, 8.35, -4.85, pinkCx, pink.h + 0.25, -1.8, 0.55);
+  wire(0.6, 8.2, -14.0, blue.x0 + 3.15, blue.h + 0.35, 1.6, 0.9);
+  wire(-5.72, 8.35, -4.85, pinkCx, pink.h + 0.25, pink.z1 - 2.1, 0.55);
   wire(-5.72, 8.3, -4.85, 4.4, 9.2, -13.5, 1.15);
-  wire(-6.1, 7.6, -1.5, 9.2, 6.8, 5.5, 1.25);
-  wire(2.2, 8.5, -13.3, 12.5, 6.9, -0.2, 0.8);
+  wire(-6.1, 7.6, -1.5, blue.x0 + 1.15, blue.h + 0.25, 5.5, 1.25);
+  wire(2.2, 8.5, -13.3, blue.x0 + 4.45, blue.h + 0.35, -0.2, 0.8);
 
   hangCloth(
     new THREE.Vector3(-0.5, 5.45, -4.18),
@@ -556,10 +514,10 @@ export function createBazaar() {
     volume(x0, x1, 0, wallH, z0, z1, yellowWall);
     solid(x0, x1, z0, z1);
   }
-  barrier(-20, 20, 12.4, 13.2);
-  barrier(-20, 20, -16.2, -14.7);
+  barrier(-20, blue.x1 + 0.82, 12.4, 13.2);
+  barrier(-20, blue.x1 + 0.82, -16.2, -14.7);
   barrier(-16.4, -15.5, -16, 13);
-  barrier(14.4, 15.3, -16, 13);
+  barrier(blue.x1 - 0.08, blue.x1 + 0.82, -16, 13);
 
   const barrel = new THREE.Group();
   barrel.position.set(7.55, 0, 10.35);
@@ -583,10 +541,6 @@ export function createBazaar() {
 
   function update(t) {
     for (const item of animated) {
-      if (item.mode === 'frond') {
-        item.obj.rotation.x = item.base + Math.sin(t * 1.15 + item.phase) * 0.035;
-        continue;
-      }
       const pos = item.geo.attributes.position;
       const base = item.base;
       if (item.mode === 'tarp') {
