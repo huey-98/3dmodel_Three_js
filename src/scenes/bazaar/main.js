@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createPerson } from '@shared/person.js';
+import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createBazaar } from './world.js';
 
 const scene = new THREE.Scene();
@@ -54,6 +55,12 @@ controls.maxPolarAngle = Math.PI / 2 - 0.04;
 controls.minDistance = 3;
 controls.maxDistance = 42;
 controls.enablePan = false;
+const view = createFirstPersonView({
+  camera,
+  domElement: renderer.domElement,
+  controls,
+  subject: person.group,
+});
 
 const keys = new Set();
 let jumpRequested = false;
@@ -110,6 +117,7 @@ const right = new THREE.Vector3();
 const move = new THREE.Vector3();
 const followTarget = new THREE.Vector3();
 const camDir = new THREE.Vector3();
+const eye = new THREE.Vector3();
 let last = performance.now();
 let elapsed = 0;
 
@@ -176,27 +184,36 @@ function animate(now) {
 
   world.update(elapsed);
 
+  if (view.isActive()) person.group.rotation.y = view.facingYaw();
+
   followTarget.set(p.x, p.y + 1.35, p.z);
-  const dx = followTarget.x - controls.target.x;
-  const dy = followTarget.y - controls.target.y;
-  const dz = followTarget.z - controls.target.z;
-  controls.target.copy(followTarget);
-  camera.position.x += dx;
-  camera.position.y += dy;
-  camera.position.z += dz;
+  if (view.isActive()) {
+    controls.target.copy(followTarget);
+    eye.set(0, 1.55, 0);
+    person.group.localToWorld(eye);
+    view.apply(eye);
+  } else {
+    const dx = followTarget.x - controls.target.x;
+    const dy = followTarget.y - controls.target.y;
+    const dz = followTarget.z - controls.target.z;
+    controls.target.copy(followTarget);
+    camera.position.x += dx;
+    camera.position.y += dy;
+    camera.position.z += dz;
 
-  const inside = insideBooth(p.x, p.z);
-  controls.maxDistance = inside ? 5.2 : 42;
-  controls.minDistance = inside ? 1.6 : 3;
-  controls.update();
+    const inside = insideBooth(p.x, p.z);
+    controls.maxDistance = inside ? 5.2 : 42;
+    controls.minDistance = inside ? 1.6 : 3;
+    controls.update();
 
-  if (inside) {
-    camDir.copy(camera.position).sub(controls.target);
-    const dist = camDir.length();
-    if (dist > 1e-4) {
-      camDir.multiplyScalar(1 / dist);
-      const maxD = maxRayInside(controls.target, camDir, ROOM) - 0.12;
-      camera.position.copy(controls.target).addScaledVector(camDir, Math.min(dist, Math.max(0.6, maxD)));
+    if (inside) {
+      camDir.copy(camera.position).sub(controls.target);
+      const dist = camDir.length();
+      if (dist > 1e-4) {
+        camDir.multiplyScalar(1 / dist);
+        const maxD = maxRayInside(controls.target, camDir, ROOM) - 0.12;
+        camera.position.copy(controls.target).addScaledVector(camDir, Math.min(dist, Math.max(0.6, maxD)));
+      }
     }
   }
 

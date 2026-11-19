@@ -50,3 +50,18 @@
 `seatPosition` 是船体局部坐标 `(0, 0.02, 0.6)`。`0.02` 是角色原点的高度：女仆髋大约在 0.48，座板在 0.44，原点放在这个高度时髋落在座板上。上船时场景把人物 `group` 加进船的 `group`，再把位置设到这个座位，并让人物面向船尾（局部 Y 旋转 π），背对船头 +Z。
 
 船本身没有物理。浮沉、航向和是否可通行都由别墅主循环驱动。
+
+## 第一人称 `firstPerson.js`
+
+`createFirstPersonView({ camera, domElement, controls, subject })` 给别墅和荒漠迷城用。女仆展示页不创建它。
+
+返回 `{ isActive, apply, facingYaw, addYaw, setReturnOffset }`。模块自己监听 `KeyV`（忽略按住连发，以及 Ctrl / Alt / Meta）。
+
+- 进入时记下相机相对 `controls.target` 的偏移，供退出时还原；偏移过短时改记成 `(3.5, 2.2, 5)`。水平角对齐 `subject` 局部 +Z 的世界朝向，俯仰为 0，不沿用轨道镜头的俯角。然后 `controls.enabled = false`，`subject.visible = false`，显示 `#crosshair`，并请求指针锁定。
+- `#crosshair` 是加到 `document.body` 的固定定位十字，四条白线带深色描边，不接收指针事件。屏幕中心留空。
+- 指针锁定时用 `movementX/Y` 转向，灵敏度 `0.0026` 弧度/像素。未锁定时只用落在 `domElement` 上的鼠标位移，单次超过 150 像素的跳变忽略。俯仰限制为 `±(π/2 - 0.02)`。鼠标右移增加朝右的水平角，鼠标下移降低俯仰。
+- `apply(eyeWorld)` 把相机放到该世界坐标，并看向由水平角和俯仰组成的方向。未处于第一人称时直接返回 `false`。
+- `facingYaw()` 是水平视线对应的角色 `rotation.y`（角色局部 +Z 为面朝方向）。
+- `addYaw(delta)` 在此基础上再转一个水平角。别墅用它把船头的航向增量加进视线。
+- `setReturnOffset(px, py, pz, tx, ty, tz)` 改写退出时要恢复的相机偏移，不移动当前相机。
+- 退出时先清掉轨道控制上未完成的拖拽和残余旋转，把相机放到当前 `target` 加上记下的偏移，调用一次 `controls.update()`，再解开指针锁定、隐藏准星、显示角色。Esc 只释放鼠标，不退出第一人称；光标在未锁定时为 `crosshair`，锁定后由浏览器隐藏。

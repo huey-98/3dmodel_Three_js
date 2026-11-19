@@ -9,6 +9,7 @@ import {
   createEnvironment, ENV_RECTS, BRIDGE, RIVER_Z0, RIVER_Z1, WATER_Y, PIER_RECTS, waterHeight,
 } from './environment.js';
 import { createBoat } from '@shared/boat.js';
+import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createInterior, FURNITURE_RECTS } from './interior.js';
 import { createWhaleMaid } from '@shared/whaleMaid.js';
 
@@ -59,6 +60,7 @@ scene.add(boat.group);
 let inBoat = false;
 let boatSpeed = 0;    // 前进速度（负数为倒行）
 let boatHeading = 0;  // 船头朝向
+let boatLookHeading = null; // 第一人称时用来跟随船头的上一帧航向
 let rowPhase = 0;     // 划桨相位
 
 // ---------- 人物（鲸女仆，替换原来的简易小人） ----------
@@ -75,6 +77,12 @@ controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI / 2 - 0.03;
 controls.minDistance = 3;
 controls.maxDistance = 70;
+const view = createFirstPersonView({
+  camera,
+  domElement: renderer.domElement,
+  controls,
+  subject: person.group,
+});
 
 // ---------- 键盘输入 ----------
 const keys = new Set();
@@ -212,6 +220,10 @@ const DOOR_OUTSIDE = new THREE.Vector3(DOOR_ANCHOR.x, 0, DOOR_ANCHOR.z);
 // 相机机位：进屋后切到屋内视角，出门后切回屋外
 function focusCamera(ox, oy, oz) {
   const p = person.group.position;
+  if (view.isActive()) {
+    view.setReturnOffset(p.x + ox, p.y + oy, p.z + oz, p.x, p.y + 1.2, p.z);
+    return;
+  }
   camera.position.set(p.x + ox, p.y + oy, p.z + oz);
   controls.target.set(p.x, p.y + 1.2, p.z);
   controls.update();
@@ -268,6 +280,7 @@ const move = new THREE.Vector3();
 const followTarget = new THREE.Vector3();
 const worldPos = new THREE.Vector3();
 const camDir = new THREE.Vector3();
+const eye = new THREE.Vector3();
 
 function maxRayInside(origin, dir, box) {
   let tExit = Infinity;
@@ -528,59 +541,78 @@ function animate() {
   interior.update(t);
   environment.updateWater(t);
 
-  // 相机跟随人物（保持当前轨道偏移）
-  followTarget.set(wp.x, wp.y + 1.2, wp.z);
-  const dx = followTarget.x - controls.target.x;
-  const dy = followTarget.y - controls.target.y;
-  const dz = followTarget.z - controls.target.z;
-  controls.target.set(followTarget.x, followTarget.y, followTarget.z);
-  camera.position.x += dx;
-  camera.position.y += dy;
-  camera.position.z += dz;
-
-  const onStairs = lastRamp != null;
-  if (insideHouse && !inBoat) {
-    controls.minDistance = onStairs ? 1.7 : 1.4;
-    controls.maxDistance = onStairs ? 3.4 : 6.4;
-    controls.minPolarAngle = 0.16;
-    controls.maxPolarAngle = Math.PI * 0.72;
+  // 第一人称：身体朝向跟着水平视线；船上时水平视角跟着船头转
+  if (!inBoat && view.isActive()) person.group.rotation.y = view.facingYaw();
+  if (view.isActive() && inBoat) {
+    if (boatLookHeading == null) boatLookHeading = boatHeading;
+    else {
+      view.addYaw(boatHeading - boatLookHeading);
+      boatLookHeading = boatHeading;
+    }
   } else {
-    controls.minDistance = 3;
-    controls.maxDistance = 70;
-    controls.minPolarAngle = 0;
-    controls.maxPolarAngle = Math.PI / 2 - 0.03;
+    boatLookHeading = null;
   }
-  controls.update();
 
-  // 屋内只沿视线缩短距离，保留旋转角度；上楼时相机跟着人抬高，避免被下层楼板夹进身体
-  if (insideHouse && !inBoat) {
-    const room = {
-      minX: INTERIOR.minX + 0.2,
-      maxX: INTERIOR.maxX - 0.2,
-      minZ: INTERIOR.minZ + 0.2,
-      maxZ: INTERIOR.maxZ - 0.2,
-      minY: wp.y + 0.5,
-      maxY: onStairs
-        ? wp.y + 2.55
-        : Math.min(wp.y + FLOOR_H - 0.45, (floorIndex + 1) * FLOOR_H - 0.22),
-    };
-    camDir.copy(camera.position).sub(controls.target);
-    const dist = camDir.length();
-    if (dist > 1e-4) {
-      camDir.multiplyScalar(1 / dist);
-      let maxD = maxRayInside(controls.target, camDir, room) - 0.08;
-      if (!onStairs) {
-        for (const r of FURNITURE_RECTS) {
-          if (r.floor !== floorIndex) continue;
-          const t = rayHitT(controls.target, camDir, {
-            minX: r.minX, maxX: r.maxX,
-            minZ: r.minZ, maxZ: r.maxZ,
-            minY: wp.y, maxY: wp.y + 1.55,
-          });
-          if (t > 0.3 && t < maxD) maxD = t - 0.06;
+  // 第三人称保持轨道偏移；第一人称把相机放在眼睛高度
+  followTarget.set(wp.x, wp.y + 1.2, wp.z);
+  if (view.isActive()) {
+    controls.target.copy(followTarget);
+    eye.set(0, person.rig.position.y + 1.5, 0);
+    person.group.localToWorld(eye);
+    view.apply(eye);
+  } else {
+    const dx = followTarget.x - controls.target.x;
+    const dy = followTarget.y - controls.target.y;
+    const dz = followTarget.z - controls.target.z;
+    controls.target.set(followTarget.x, followTarget.y, followTarget.z);
+    camera.position.x += dx;
+    camera.position.y += dy;
+    camera.position.z += dz;
+
+    const onStairs = lastRamp != null;
+    if (insideHouse && !inBoat) {
+      controls.minDistance = onStairs ? 1.7 : 1.4;
+      controls.maxDistance = onStairs ? 3.4 : 6.4;
+      controls.minPolarAngle = 0.16;
+      controls.maxPolarAngle = Math.PI * 0.72;
+    } else {
+      controls.minDistance = 3;
+      controls.maxDistance = 70;
+      controls.minPolarAngle = 0;
+      controls.maxPolarAngle = Math.PI / 2 - 0.03;
+    }
+    controls.update();
+
+    // 屋内只沿视线缩短距离，保留旋转角度；上楼时相机跟着人抬高，避免被下层楼板夹进身体
+    if (insideHouse && !inBoat) {
+      const room = {
+        minX: INTERIOR.minX + 0.2,
+        maxX: INTERIOR.maxX - 0.2,
+        minZ: INTERIOR.minZ + 0.2,
+        maxZ: INTERIOR.maxZ - 0.2,
+        minY: wp.y + 0.5,
+        maxY: onStairs
+          ? wp.y + 2.55
+          : Math.min(wp.y + FLOOR_H - 0.45, (floorIndex + 1) * FLOOR_H - 0.22),
+      };
+      camDir.copy(camera.position).sub(controls.target);
+      const dist = camDir.length();
+      if (dist > 1e-4) {
+        camDir.multiplyScalar(1 / dist);
+        let maxD = maxRayInside(controls.target, camDir, room) - 0.08;
+        if (!onStairs) {
+          for (const r of FURNITURE_RECTS) {
+            if (r.floor !== floorIndex) continue;
+            const tHit = rayHitT(controls.target, camDir, {
+              minX: r.minX, maxX: r.maxX,
+              minZ: r.minZ, maxZ: r.maxZ,
+              minY: wp.y, maxY: wp.y + 1.55,
+            });
+            if (tHit > 0.3 && tHit < maxD) maxD = tHit - 0.06;
+          }
         }
+        camera.position.copy(controls.target).addScaledVector(camDir, Math.min(dist, Math.max(0.55, maxD)));
       }
-      camera.position.copy(controls.target).addScaledVector(camDir, Math.min(dist, Math.max(0.55, maxD)));
     }
   }
 
