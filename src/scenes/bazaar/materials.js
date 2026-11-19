@@ -109,20 +109,23 @@ function drawStucco(ctx, s, base, dark, light, peel) {
 
 function drawCobble(ctx, s) {
   const rnd = mulberry32(42);
-  ctx.fillStyle = '#8d7b64';
+  ctx.fillStyle = '#7a6640';
   ctx.fillRect(0, 0, s, s);
-  const n = 9;
+  const n = 4;
+  const gap = Math.max(4, s * 0.02);
   const cell = s / n;
   for (let j = 0; j < n; j++) {
-    const rowShift = (j % 2) * cell * 0.45;
-    for (let i = -1; i < n + 1; i++) {
-      const w = cell * (0.72 + rnd() * 0.22);
-      const h = cell * (0.62 + rnd() * 0.28);
-      const x = i * cell + rowShift + (rnd() - 0.5) * 6;
-      const y = j * cell + (rnd() - 0.5) * 6;
-      const shade = 168 + Math.floor(rnd() * 62);
-      ctx.fillStyle = `rgb(${shade}, ${shade - 18 - (rnd() * 16) | 0}, ${shade - 42})`;
-      roundRect(ctx, x, y, w, h, 3 + rnd() * 5);
+    for (let i = 0; i < n; i++) {
+      const x = i * cell + gap * 0.5;
+      const y = j * cell + gap * 0.5;
+      const tw = cell - gap;
+      const th = cell - gap;
+      const tone = 188 + Math.floor(rnd() * 32);
+      const r = tone;
+      const g = tone - 24 - ((rnd() * 10) | 0);
+      const b = Math.max(48, tone - 92 - ((rnd() * 12) | 0));
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      roundRect(ctx, x, y, tw, th, 5);
       ctx.fill();
     }
   }
@@ -333,42 +336,18 @@ function drawLeaf(ctx, s) {
 
 function drawMarkB(ctx, w, h) {
   ctx.clearRect(0, 0, w, h);
-  const rnd = mulberry32(99);
-  function blob(color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(w * 0.16, h * 0.08, w * 0.24, h * 0.84);
-    ctx.beginPath();
-    ctx.ellipse(w * 0.46, h * 0.3, w * 0.3, h * 0.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(w * 0.48, h * 0.66, w * 0.36, h * 0.25, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  blob('#9e241f');
-  ctx.save();
-  ctx.translate(3, 2);
-  blob('#d2352e');
-  ctx.restore();
-  ctx.globalCompositeOperation = 'destination-out';
+  const cx = w * 0.5;
+  const cy = h * 0.5;
+  ctx.strokeStyle = '#d21f18';
+  ctx.lineWidth = Math.max(8, w * 0.055);
   ctx.beginPath();
-  ctx.ellipse(w * 0.5, h * 0.3, w * 0.13, h * 0.09, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(w * 0.52, h * 0.66, w * 0.16, h * 0.11, 0, 0, Math.PI * 2);
-  ctx.fill();
-  for (let i = 0; i < 70; i++) {
-    ctx.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2);
-  }
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = '#b4231e';
-  ctx.fillRect(w * 0.28, h * 0.9, 7, 16 + rnd() * 10);
-  ctx.fillRect(w * 0.62, h * 0.88, 5, 12);
-  ctx.fillStyle = 'rgba(210, 50, 42, 0.85)';
-  for (let i = 0; i < 40; i++) {
-    ctx.beginPath();
-    ctx.arc(rnd() * w, rnd() * h, rnd() * 2.2, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  ctx.arc(cx, cy, w * 0.42, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = '#d21f18';
+  ctx.font = `bold ${Math.floor(h * 0.52)}px "Arial Black", "Microsoft YaHei", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('B', cx, cy + h * 0.02);
 }
 
 function drawArrow(ctx, w, h) {
@@ -406,13 +385,13 @@ function mapped(map, opts = {}) {
 }
 
 export function createBazaarKit() {
-  const stuccoSand = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#d7c09a', '#b08960', '#efe0c6'));
+  const stuccoSand = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#d6c07a', '#b89a58', '#ead89a'));
   const stuccoPink = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#e3a898', '#c47d72', '#f0d2c6', '#d5cdc2'));
   const stuccoWhite = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#e7e1d6', '#bdb6aa', '#f7f4ee', '#cfc6b8'));
   const stuccoBlue = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#7ea4c6', '#688eae', '#c5d4e2', '#e3d2b4'));
   const panel = makeTex(512, drawPanel);
   const cobbleMap = makeTex(512, drawCobble);
-  cobbleMap.repeat.set(78, 78);
+  cobbleMap.repeat.set(22, 22);
   const woodMap = makeTex(256, drawWood);
   const tarpTorn = makeTex(1024, (ctx, s) => drawTarp(ctx, s, true), { repeat: false });
   const tarpSolid = makeTex(512, (ctx, s) => drawTarp(ctx, s, false));
@@ -421,7 +400,7 @@ export function createBazaarKit() {
   const barkMap = makeTex(256, drawBark);
   barkMap.repeat.set(2, 3);
   const leafMap = makeTex(256, drawLeaf, { repeat: false });
-  const markB = makeRectTex(256, 320, drawMarkB);
+  const markB = makeRectTex(512, 512, drawMarkB);
   const arrow = makeRectTex(256, 128, drawArrow);
 
   const wood = (color, roughness) => new THREE.MeshStandardMaterial({
@@ -464,7 +443,7 @@ export function createBazaarKit() {
     arrow: mapped(arrow, { roughness: 0.5 }),
     trim: new THREE.MeshStandardMaterial({ color: 0xefe4d2, roughness: 0.86 }),
     concrete: new THREE.MeshStandardMaterial({ color: 0xc9bfae, roughness: 0.94 }),
-    skirtSand: new THREE.MeshStandardMaterial({ color: 0xb08960, roughness: 0.96 }),
+    skirtSand: new THREE.MeshStandardMaterial({ color: 0xa88b4a, roughness: 0.96 }),
     skirtPink: new THREE.MeshStandardMaterial({ color: 0xa86b62, roughness: 0.96 }),
     skirtWhite: new THREE.MeshStandardMaterial({ color: 0xb3ab9e, roughness: 0.96 }),
     skirtBlue: new THREE.MeshStandardMaterial({ color: 0x6d88a0, roughness: 0.95 }),

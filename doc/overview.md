@@ -17,7 +17,7 @@ npm run dev
 | --- | --- | --- |
 | 豪华别墅 | `/src/scenes/villa/` | 可进屋、上楼、划船 |
 | 鲸尾女仆 | `/src/scenes/maid/` | 角色展示，可旋转查看 |
-| 荒漠迷城 | `/src/scenes/bazaar/` | 绿篷棚子、石板路、周围旧楼，棚下地面有红色 X |
+| 荒漠迷城 | `/src/scenes/bazaar/` | 绿篷棚子、沙黄大地砖、周围旧楼，棚下地面有红色 B |
 
 生产构建：
 
