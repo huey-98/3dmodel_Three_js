@@ -46,7 +46,7 @@ scene.add(person.group);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0.8, 1.6, 7.2);
-camera.position.set(4.6, 12.2, 16.4);
+camera.position.set(6.2, 13.2, 11.15);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minPolarAngle = 0.12;

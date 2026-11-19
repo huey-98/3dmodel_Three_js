@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createBazaarKit } from './materials.js';
 
-// 参考图布局：中央绿篷棚屋（正面红字 B），左粉墙、后白楼、右蓝墙，石板路环绕。
+// 参考图布局：中央绿篷棚屋（正面红字 B），左粉墙、后白楼、右蓝墙、南沙楼（中心凹槽），石板路环绕。
 const BOOTH = { x0: -4.95, x1: 5.25, z0: -4.2, z1: 5.05, h: 5.25 };
 
 export function createBazaar() {
@@ -424,6 +424,62 @@ export function createBazaar() {
   box(0.32, 0.12, 3.9, kit.concrete, blue.x0 - 0.2, 0.46, 8.7);
   placeWindow(blue.x0 - 0.03, 1.2, 0.25, 3.9, 4.2, -Math.PI / 2, false);
 
+  // ---------- 南：沙色楼，中心向南开凹槽 ----------
+  // 凹槽内一堵墙，左右各留三个人物宽（半径 0.32 × 2 × 3）的通道。
+  const south = {
+    x0: pink.x0,
+    x1: blue.x1,
+    z0: SOUTH_WALL_Z,
+    z1: SOUTH_WALL_Z + 8.2,
+    h: 7.05,
+  };
+  const recCx = (pink.x1 + blue.x0) / 2;
+  const recW = 11.4;
+  const recX0 = recCx - recW / 2;
+  const recX1 = recCx + recW / 2;
+  const recDepth = 6.5;
+  const recZ1 = south.z0 + recDepth;
+  const recH = 5.55;
+  const gapW = 0.64 * 3;
+  const wallT = 0.52;
+  const wallX0 = recX0 + gapW;
+  const wallX1 = recX1 - gapW;
+  const wallZ1 = recZ1 - 0.8;
+  const wallZ0 = wallZ1 - wallT;
+
+  block(south.x0, recX0, south.z0, south.z1, south.h, kit.sand);
+  block(recX1, south.x1, south.z0, south.z1, south.h, kit.sand);
+  block(recX0, recX1, recZ1, south.z1, south.h, kit.sand);
+  volume(recX0, recX1, recH, south.h, south.z0, recZ1, kit.sand);
+  block(wallX0, wallX1, wallZ0, wallZ1, recH, kit.sand);
+
+  skirt(south.x0, recX0, south.z0, south.z1, kit.skirtSand);
+  skirt(recX1, south.x1, south.z0, south.z1, kit.skirtSand);
+  skirt(recX0, recX1, recZ1, south.z1, kit.skirtSand);
+  skirt(wallX0, wallX1, wallZ0, wallZ1, kit.skirtSand);
+
+  parapet(south.x0, south.x1, south.z0, south.z1, south.h, kit.sand);
+  volume(
+    south.x0 - 0.06, south.x1 + 0.06,
+    south.h - 0.08, south.h + 0.08,
+    south.z0 - 0.06, south.z1 + 0.06,
+    kit.trim,
+  );
+  volume(recX0, recX1, recH - 0.12, recH + 0.08, south.z0 - 0.08, south.z0 + 0.12, kit.trim);
+  volume(recX0 - 0.1, recX0 + 0.12, 0, recH, south.z0 - 0.08, south.z0 + 0.12, kit.trim);
+  volume(recX1 - 0.12, recX1 + 0.1, 0, recH, south.z0 - 0.08, south.z0 + 0.12, kit.trim);
+  volume(wallX0 - 0.04, wallX1 + 0.04, recH - 0.1, recH + 0.04, wallZ0 - 0.06, wallZ1 + 0.06, kit.trim);
+
+  for (const x of [-13.6, -11.2, -8.5, -6.5]) {
+    placeWindow(x, 1.35, south.z0 - 0.03, 0.82, 1.22, Math.PI, false);
+    placeWindow(x, 3.85, south.z0 - 0.03, 0.78, 1.12, Math.PI, false);
+  }
+  for (const x of [7.3, 9.35]) {
+    placeWindow(x, 1.35, south.z0 - 0.03, 0.82, 1.22, Math.PI, false);
+    placeWindow(x, 3.85, south.z0 - 0.03, 0.78, 1.12, Math.PI, false);
+  }
+  placeWindow((wallX0 + wallX1) / 2, 1.45, wallZ0 - 0.03, 1.15, 1.55, Math.PI, true);
+
   // ---------- 货车 ----------
   // 竖放：中心 X 与红楼对齐，车头紧贴南侧围墙。
   const vanRot = 0;
@@ -508,17 +564,17 @@ export function createBazaar() {
     mesh.userData.noReceive = true;
   });
 
-  // 场地边界：黄色实墙，代替原来的空气墙
+  // 场地边界：北、西、东实墙；南侧由南楼封住，楼后再挡一截防止绕出。
   const yellowWall = new THREE.MeshStandardMaterial({ color: 0xb5a898, roughness: 0.9 });
   const wallH = 3.2;
   function barrier(x0, x1, z0, z1) {
     volume(x0, x1, 0, wallH, z0, z1, yellowWall);
     solid(x0, x1, z0, z1);
   }
-  barrier(-20, blue.x1 + 0.82, 12.4, 13.2);
   barrier(-20, blue.x1 + 0.82, -16.2, -14.7);
-  barrier(-16.4, -15.5, -16, 13);
-  barrier(blue.x1 - 0.08, blue.x1 + 0.82, -16, 13);
+  barrier(-16.4, -15.5, -16, south.z1);
+  barrier(blue.x1 - 0.08, blue.x1 + 0.82, -16, south.z1);
+  barrier(-20, blue.x1 + 0.82, south.z1, south.z1 + 0.8);
 
   const canR = 0.5;
   const canH = 1.18;
