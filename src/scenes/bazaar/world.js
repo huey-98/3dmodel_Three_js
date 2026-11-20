@@ -105,26 +105,28 @@ export function createBazaar() {
     return geo;
   }
 
-  // rotY：窗朝向。局部 +Z 为室外。
-  function placeWindow(x, y, z, w, h, rotY, arch = false) {
+  // rotY：窗朝向。局部 +Z 为室外。open 时不下玻璃，能看见室内。
+  function placeWindow(x, y, z, w, h, rotY, arch = false, open = false) {
     const root = new THREE.Group();
     root.position.set(x, y, z);
     root.rotation.y = rotY;
-    const glass = new THREE.Mesh(arch ? getArch(w, h) : new THREE.PlaneGeometry(w, h), kit.glass);
-    const recess = new THREE.Mesh(
-      arch ? getArch(w * 0.9, h * 0.94) : new THREE.PlaneGeometry(w * 0.9, h * 0.92),
-      kit.recess,
-    );
-    if (!arch) {
-      glass.position.y = h / 2;
-      recess.position.y = h / 2;
+    if (!open) {
+      const glass = new THREE.Mesh(arch ? getArch(w, h) : new THREE.PlaneGeometry(w, h), kit.glass);
+      const recess = new THREE.Mesh(
+        arch ? getArch(w * 0.9, h * 0.94) : new THREE.PlaneGeometry(w * 0.9, h * 0.92),
+        kit.recess,
+      );
+      if (!arch) {
+        glass.position.y = h / 2;
+        recess.position.y = h / 2;
+      }
+      glass.position.z = 0.03;
+      recess.position.z = -0.02;
+      glass.userData.noShadow = true;
+      glass.userData.noReceive = true;
+      recess.userData.noShadow = true;
+      root.add(recess, glass);
     }
-    glass.position.z = 0.03;
-    recess.position.z = -0.02;
-    glass.userData.noShadow = true;
-    glass.userData.noReceive = true;
-    recess.userData.noShadow = true;
-    root.add(recess, glass);
 
     const sill = new THREE.Mesh(makeBox(w + 0.18, 0.08, 0.2), kit.trim);
     sill.position.set(0, 0.02, 0.08);
@@ -155,6 +157,27 @@ export function createBazaar() {
   function shellWall(x0, x1, z0, z1, h, mat) {
     volume(x0, x1, 0, h, z0, z1, mat);
     solid(x0, x1, z0, z1);
+  }
+
+  // 沿 Z 的墙面上按孔挖洞（孔：{ at, w, y, h }）。
+  function pierceZ(x0, x1, y0, y1, z0, z1, holes, mat) {
+    const cuts = holes
+      .map((hole) => ({
+        z0: hole.at - hole.w / 2,
+        z1: hole.at + hole.w / 2,
+        y: hole.y,
+        h: hole.h,
+      }))
+      .sort((a, b) => a.z0 - b.z0);
+    let cursor = z0;
+    for (const hole of cuts) {
+      if (hole.z0 > cursor + 0.001) volume(x0, x1, y0, y1, cursor, hole.z0, mat);
+      if (hole.y > y0 + 0.001) volume(x0, x1, y0, hole.y, hole.z0, hole.z1, mat);
+      const top = hole.y + hole.h;
+      if (y1 > top + 0.001) volume(x0, x1, top, y1, hole.z0, hole.z1, mat);
+      cursor = hole.z1;
+    }
+    if (z1 > cursor + 0.001) volume(x0, x1, y0, y1, cursor, z1, mat);
   }
 
   // 拱门洞上沿的两角墙体，让矩形墙洞看起来仍是拱形。
@@ -357,7 +380,59 @@ export function createBazaar() {
   const storyH = pink.h - balTop;
   pink.h += storyH;
   const pinkCx = (pink.x0 + pink.x1) / 2;
-  block(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.blue);
+  const pinkT = 0.42;
+  const f2 = balTop;
+  const f3 = balTop + storyH;
+  const winW = 3.05;
+  const winH = 2.42;
+  const winY = balTop + 0.22;
+  const eastWins = [-8.85, -1.25];
+  const eastHoles = eastWins.map((at) => ({ at, w: winW, y: winY, h: winH }));
+
+  volume(pink.x0, pink.x1, 0, f2, pink.z0, pink.z1, kit.blue);
+  volume(pink.x0, pink.x1, f3, pink.h, pink.z0, pink.z1, kit.blue);
+  solid(pink.x0, pink.x1, pink.z0, pink.z1);
+  volume(pink.x0, pink.x0 + pinkT, f2, f3, pink.z0, pink.z1, kit.blue);
+  volume(pink.x0, pink.x1, f2, f3, pink.z0, pink.z0 + pinkT, kit.blue);
+  pierceZ(pink.x1 - pinkT, pink.x1, f2, f3, pink.z0, pink.z1, eastHoles, kit.blue);
+
+  const southWinW = (pink.x1 - pink.x0) - 0.2;
+  const southWinX0 = (pink.x0 + pink.x1) / 2 - southWinW / 2;
+  const southWinX1 = southWinX0 + southWinW;
+  const southWinTop = f2 + storyH - 0.14;
+  volume(pink.x0, southWinX0, f2, f3, pink.z1 - pinkT, pink.z1, kit.blue);
+  volume(southWinX1, pink.x1, f2, f3, pink.z1 - pinkT, pink.z1, kit.blue);
+  volume(southWinX0, southWinX1, southWinTop, f3, pink.z1 - pinkT, pink.z1, kit.blue);
+
+  const ix0b = pink.x0 + pinkT;
+  const ix1b = pink.x1 - pinkT;
+  const iz0b = pink.z0 + pinkT;
+  const iz1b = pink.z1 - pinkT;
+  volume(ix0b, ix1b, f2, f2 + 0.05, iz0b, iz1b, kit.creamFloor);
+  volume(ix0b, ix1b, f3 - 0.05, f3, iz0b, iz1b, kit.cream);
+  volume(ix0b, ix0b + 0.04, f2, f3, iz0b, iz1b, kit.cream);
+  volume(ix0b, ix1b, f2, f3, iz0b, iz0b + 0.04, kit.cream);
+  pierceZ(ix1b - 0.04, ix1b, f2, f3, iz0b, iz1b, eastHoles, kit.cream);
+  volume(ix0b, southWinX0, f2, f3, iz1b - 0.04, iz1b, kit.cream);
+  volume(southWinX1, ix1b, f2, f3, iz1b - 0.04, iz1b, kit.cream);
+  volume(southWinX0, southWinX1, southWinTop, f3, iz1b - 0.04, iz1b, kit.cream);
+
+  {
+    const roomCx = (ix0b + ix1b) / 2;
+    const roomCz = (iz0b + iz1b) / 2;
+    box(1.55, 0.08, 0.82, kit.wood, roomCx, f2 + 0.76, roomCz - 1.4);
+    box(0.08, 0.72, 0.08, kit.beam, roomCx - 0.68, f2 + 0.36, roomCz - 1.72);
+    box(0.08, 0.72, 0.08, kit.beam, roomCx + 0.68, f2 + 0.36, roomCz - 1.72);
+    box(0.08, 0.72, 0.08, kit.beam, roomCx - 0.68, f2 + 0.36, roomCz - 1.08);
+    box(0.08, 0.72, 0.08, kit.beam, roomCx + 0.68, f2 + 0.36, roomCz - 1.08);
+    box(1.8, 1.15, 0.42, kit.beam, ix0b + 0.55, f2 + 0.58, roomCz + 2.2);
+    box(0.7, 0.42, 0.55, kit.wood, roomCx + 0.9, f2 + 0.24, iz0b + 1.4);
+    const roomLamp = new THREE.PointLight(0xfff4d2, 4.2, 14, 2);
+    roomLamp.position.set(roomCx, f3 - 0.35, roomCz);
+    add(roomLamp);
+    box(0.55, 0.05, 0.55, kit.cream, roomCx, f3 - 0.12, roomCz);
+  }
+
   skirt(pink.x0, pink.x1, pink.z0, pink.z1, kit.skirtBlue);
   parapet(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.blue);
   volume(pink.x0 - 0.06, pink.x1 + 0.06, pink.h - 0.08, pink.h + 0.08, pink.z0 - 0.06, pink.z1 + 0.06, kit.trim);
@@ -374,18 +449,16 @@ export function createBazaar() {
     (balX0 + balX1) / 2,
     balTop,
     pink.z1 + 0.03,
-    (balX1 - balX0) - 0.2,
+    southWinW,
     storyH - 0.14,
     0,
     false,
+    true,
   );
 
-  // 二楼东立面两扇大窗；三楼实墙无窗。
-  const winW = 3.05;
-  const winH = 2.42;
-  const winY = balTop + 0.22;
-  for (const z of [-8.85, -1.25]) {
-    placeWindow(pink.x1 + 0.03, winY, z, winW, winH, Math.PI / 2, false);
+  // 二楼东立面两扇开口大窗，可看见浅黄室内；三楼实墙无窗。
+  for (const z of eastWins) {
+    placeWindow(pink.x1 + 0.03, winY, z, winW, winH, Math.PI / 2, false, true);
   }
   box(0.34, 0.36, 0.7, kit.ac, pink.x1 + 0.18, 3.55, -0.2);
   const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, pink.h, 6), kit.metalDark);
@@ -440,7 +513,7 @@ export function createBazaar() {
   box(0.95, 0.03, 0.03, kit.metal, 3.7, 10.5, -13.75);
 
   // ---------- 右：沙黄楼（可进入的小卖部） ----------
-  // 东移；北侧留空，宽度与西楼阳台到南墙相当。西立面南端拱门可走入，北侧大窗仍装玻璃。
+  // 东移；北侧留空，宽度与西楼阳台到南墙相当。西立面南端拱门可走入，北侧大窗开口可跳入。
   const blueDx = 2.5;
   const northGap = SOUTH_WALL_Z - (pink.z1 + balD);
   const blue = {
@@ -460,8 +533,8 @@ export function createBazaar() {
   const doorTop = doorY + doorH;
   const shopWinZ = 0.25;
   const shopWinW = 3.9;
-  const shopWinH = 4.2;
-  const shopWinY = 1.2;
+  const shopWinH = 2.48;
+  const shopWinY = 0.78;
   const winZ0 = shopWinZ - shopWinW / 2;
   const winZ1 = shopWinZ + shopWinW / 2;
   const winTop = shopWinY + shopWinH;
@@ -481,8 +554,10 @@ export function createBazaar() {
   volume(wx0, wx1, 0, blue.h, winZ1, doorZ0, kit.sand);
   volume(wx0, wx1, doorTop, blue.h, doorZ0, doorZ1, kit.sand);
   volume(wx0, wx1, 0, blue.h, doorZ1, blue.z1, kit.sand);
-  solid(wx0, wx1, blue.z0, doorZ0);
+  solid(wx0, wx1, blue.z0, winZ0);
+  solid(wx0, wx1, winZ1, doorZ0);
   solid(wx0, wx1, doorZ1, blue.z1);
+  platform(wx0 - 0.16, wx1 + 0.06, winZ0, winZ1, shopWinY);
   volume(blue.x0, blue.x1, blue.h - 0.22, blue.h, blue.z0, blue.z1, kit.sand);
   volume(ix0, ix1, 0.015, 0.04, iz0, iz1, kit.floor);
 
@@ -499,7 +574,7 @@ export function createBazaar() {
   placeArchway(blue.x0 - 0.03, doorY, doorZ, doorW, doorH, -Math.PI / 2);
   placeArchSpandrel(wx0, doorY, doorZ, doorW, doorH, Math.PI / 2, shopT, kit.sand);
   box(0.28, 0.1, doorW + 0.28, kit.concrete, blue.x0 - 0.12, 0.05, doorZ);
-  placeWindow(blue.x0 - 0.03, shopWinY, shopWinZ, shopWinW, shopWinH, -Math.PI / 2, false);
+  placeWindow(blue.x0 - 0.03, shopWinY, shopWinZ, shopWinW, shopWinH, -Math.PI / 2, false, true);
 
   const goodsMat = [0xb33b2b, 0xd6a23a, 0x3f7c58, 0x2f5f9a, 0xc8b8a0, 0x7a3e2e, 0xe8e4dc].map(
     (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.68 }),

@@ -442,6 +442,11 @@ export function createBazaarKit() {
     }),
     arrow: mapped(arrow, { roughness: 0.5 }),
     trim: new THREE.MeshStandardMaterial({ color: 0xefe4d2, roughness: 0.86 }),
+    cream: new THREE.MeshStandardMaterial({ color: 0xffefb0, roughness: 0.86 }),
+    creamFloor: new THREE.MeshStandardMaterial({
+      color: 0xf3d56a, roughness: 0.86,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
     concrete: new THREE.MeshStandardMaterial({ color: 0xc9bfae, roughness: 0.94 }),
     skirtSand: new THREE.MeshStandardMaterial({ color: 0xa88b4a, roughness: 0.96 }),
     skirtPink: new THREE.MeshStandardMaterial({ color: 0xa86b62, roughness: 0.96 }),
