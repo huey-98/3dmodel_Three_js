@@ -53,12 +53,12 @@
 
 ## 第一人称 `firstPerson.js`
 
-`createFirstPersonView({ camera, domElement, controls, subject, getLookScale })` 给别墅和荒漠迷城用。女仆展示页不创建它。`getLookScale` 缺省时按 1。
+`createFirstPersonView({ camera, domElement, controls, subject, getLookScale, getFov })` 给别墅和荒漠迷城用。女仆展示页不创建它。`getLookScale` 缺省时按 1。`getFov` 缺省时不改相机视野；传入后，进入第一人称就改成这个角度，滑杆变化时跟着更新，退出时恢复进入前的视野。
 
-返回 `{ isActive, apply, facingYaw, addYaw, setReturnOffset }`。模块自己监听 `KeyV`（忽略按住连发，以及 Ctrl / Alt / Meta）。
+返回 `{ isActive, apply, facingYaw, addYaw, setReturnOffset, setCrosshairSpread }`。模块自己监听 `KeyV`（忽略按住连发，以及 Ctrl / Alt / Meta）。
 
 - 进入时记下相机相对 `controls.target` 的偏移，供退出时还原；偏移过短时改记成 `(3.5, 2.2, 5)`。水平角对齐 `subject` 局部 +Z 的世界朝向，俯仰为 0，不沿用轨道镜头的俯角。然后 `controls.enabled = false`，`subject.visible = false`，显示 `#crosshair`，并请求指针锁定。
-- `#crosshair` 是加到 `document.body` 的固定定位十字，四条白线带深色描边，不接收指针事件。屏幕中心留空。
+- `#crosshair` 是加到 `document.body` 的固定定位绿色十字，四条线和中心圆点都带深色描边，不接收指针事件。`setCrosshairSpread(px)` 把四条线再向外推，最大 40 像素，中心圆点不动。荒漠迷城用它表现移动、跳跃和开火；别墅不调用，十字保持合拢。
 - 指针锁定时用 `movementX/Y` 转向，基础灵敏度 `0.0026` 弧度/像素，再乘 `getLookScale()`。未锁定时只用落在 `domElement` 上的鼠标位移，单次超过 150 像素的跳变忽略。俯仰限制为 `±(π/2 - 0.02)`。鼠标右移增加朝右的水平角，鼠标下移降低俯仰。
 - `apply(eyeWorld)` 把相机放到该世界坐标，并看向由水平角和俯仰组成的方向。未处于第一人称时直接返回 `false`。
 - `facingYaw()` 是水平视线对应的角色 `rotation.y`（角色局部 +Z 为面朝方向）。
@@ -68,9 +68,10 @@
 
 ## 走动设置 `playSettings.js`
 
-`createPlaySettings()` 在页面右上角放入「设置」按钮，并把它和已有的「返回目录」排在同一行。点开后面板里有两条滑杆：
+`createPlaySettings()` 在页面右上角放入「设置」按钮，并把它和已有的「返回目录」排在同一行。点开后面板里有三条滑杆：
 
 - 移动速度：50%–250%，步进 5%，默认 100%。场景把步行、加速，以及别墅自动走进门的速度乘上这个比例。
 - 鼠标灵敏度：25%–300%，步进 5%，默认 100%。第一人称用它作为 `getLookScale()`。
+- 视野：70°–110°，步进 1°，默认 90°。第一人称用它作为 `getFov()`。第三人称仍用各场景原来的视野。
 
-返回 `{ moveScale, lookScale }`，都是读取当前比例的函数。改滑杆时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale }`）。读不到或数值超出范围时回到默认 1。面板打开时如果鼠标还被锁定，会先释放锁定。
+返回 `{ moveScale, lookScale, fov }`，都是读取当前数值的函数。改滑杆时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov }`）。读不到或数值超出范围时，比例回到 1，视野回到 90。面板打开时如果鼠标还被锁定，会先释放锁定。

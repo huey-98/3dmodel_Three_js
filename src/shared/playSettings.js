@@ -1,9 +1,12 @@
-// 别墅和荒漠迷城共用的移动速度、鼠标灵敏度。数值记在 localStorage。
+// 别墅和荒漠迷城共用的移动速度、鼠标灵敏度和第一人称视野。数值记在 localStorage。
 const STORAGE_KEY = '3dmodel.playSettings';
 const MOVE_MIN = 0.5;
 const MOVE_MAX = 2.5;
 const LOOK_MIN = 0.25;
 const LOOK_MAX = 3;
+const FOV_MIN = 70;
+const FOV_MAX = 110;
+const FOV_DEFAULT = 90;
 
 function clamp(value, min, max, fallback) {
   const n = Number(value);
@@ -17,9 +20,10 @@ function load() {
     return {
       moveScale: clamp(raw.moveScale, MOVE_MIN, MOVE_MAX, 1),
       lookScale: clamp(raw.lookScale, LOOK_MIN, LOOK_MAX, 1),
+      fov: clamp(raw.fov, FOV_MIN, FOV_MAX, FOV_DEFAULT),
     };
   } catch {
-    return { moveScale: 1, lookScale: 1 };
+    return { moveScale: 1, lookScale: 1, fov: FOV_DEFAULT };
   }
 }
 
@@ -73,19 +77,23 @@ export function createPlaySettings() {
     'background:rgba(0,0,0,.72)',
     'padding:12px 14px',
     'border-radius:8px',
-    'width:220px',
+    'width:232px',
     'display:none',
     'flex-direction:column',
     'gap:12px',
     'user-select:none',
   ].join(';');
 
-  addSlider(panel, '移动速度', state.moveScale, MOVE_MIN, MOVE_MAX, (scale) => {
-    state.moveScale = scale;
+  addSlider(panel, '移动速度', state.moveScale * 100, MOVE_MIN * 100, MOVE_MAX * 100, 5, (n) => `${n}%`, (n) => {
+    state.moveScale = n / 100;
     save(state);
   });
-  addSlider(panel, '鼠标灵敏度', state.lookScale, LOOK_MIN, LOOK_MAX, (scale) => {
-    state.lookScale = scale;
+  addSlider(panel, '鼠标灵敏度', state.lookScale * 100, LOOK_MIN * 100, LOOK_MAX * 100, 5, (n) => `${n}%`, (n) => {
+    state.lookScale = n / 100;
+    save(state);
+  });
+  addSlider(panel, '视野', state.fov, FOV_MIN, FOV_MAX, 1, (n) => `${n}°`, (n) => {
+    state.fov = n;
     save(state);
   });
 
@@ -106,10 +114,11 @@ export function createPlaySettings() {
   return {
     moveScale() { return state.moveScale; },
     lookScale() { return state.lookScale; },
+    fov() { return state.fov; },
   };
 }
 
-function addSlider(panel, name, scale, min, max, onChange) {
+function addSlider(panel, name, current, min, max, step, format, onChange) {
   const label = document.createElement('label');
   label.style.cssText = 'display:flex;flex-direction:column;gap:6px;cursor:pointer';
   const title = document.createElement('span');
@@ -120,18 +129,18 @@ function addSlider(panel, name, scale, min, max, onChange) {
   title.append(caption, value);
   const input = document.createElement('input');
   input.type = 'range';
-  input.min = String(Math.round(min * 100));
-  input.max = String(Math.round(max * 100));
-  input.step = '5';
-  input.value = String(Math.round(scale * 100));
+  input.min = String(min);
+  input.max = String(max);
+  input.step = String(step);
+  input.value = String(current);
   input.style.cssText = 'width:100%;accent-color:#9ecbff;margin:0';
   const show = () => {
-    value.textContent = `${input.value}%`;
+    value.textContent = format(Number(input.value));
   };
   show();
   input.addEventListener('input', () => {
     show();
-    onChange(Number(input.value) / 100);
+    onChange(Number(input.value));
   });
   label.append(title, input);
   panel.append(label);

@@ -64,6 +64,7 @@ const view = createFirstPersonView({
   controls,
   subject: person.group,
   getLookScale: () => settings.lookScale(),
+  getFov: () => settings.fov(),
 });
 const gun = createCarbine({
   scene,
@@ -219,7 +220,7 @@ function animate(now) {
   followTarget.set(p.x, p.y + 1.5, p.z);
   if (view.isActive()) {
     controls.target.copy(followTarget);
-    eye.set(0, 1.64, 0);
+    eye.set(0, 1.64, 0); // 护目镜中线，干员的眼睛高度
     person.group.localToWorld(eye);
     view.apply(eye);
     gun.kick();
@@ -248,8 +249,14 @@ function animate(now) {
     }
   }
 
-  gun.update(dt);
+  const running = moving && (keys.has('ShiftLeft') || keys.has('ShiftRight'));
+  gun.update(dt, { moving, running, airborne: !grounded });
+  const moveGap = view.isActive()
+    ? (running ? 16 : moving ? 9 : 0) + (grounded ? 0 : 6) + gun.crosshairGap()
+    : 0;
+  view.setCrosshairSpread(moveGap);
   renderer.render(scene, camera);
+  gun.render(renderer);
 }
 requestAnimationFrame(animate);
 

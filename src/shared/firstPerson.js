@@ -3,7 +3,7 @@ import * as THREE from 'three';
 // 第一人称切换。进入时记下轨道镜头相对目标的偏移，退出时按当前目标还原。
 const PITCH_LIMIT = Math.PI / 2 - 0.02;
 
-export function createFirstPersonView({ camera, domElement, controls, subject, getLookScale }) {
+export function createFirstPersonView({ camera, domElement, controls, subject, getLookScale, getFov }) {
   let active = false;
   let yaw = 0;
   let pitch = 0;
@@ -13,6 +13,8 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
   const look = new THREE.Vector3();
   const facing = new THREE.Vector3();
   const worldQuat = new THREE.Quaternion();
+  let savedFov = camera.fov;
+  let spread = 0;
 
   const crosshair = document.createElement('div');
   crosshair.id = 'crosshair';
@@ -21,33 +23,60 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     'position:fixed',
     'left:50%',
     'top:50%',
-    'width:18px',
-    'height:18px',
     'transform:translate(-50%,-50%)',
     'pointer-events:none',
     'display:none',
     'z-index:5',
   ].join(';');
-  const ticks = [
-    [0, 8, 6, 2],
-    [12, 8, 6, 2],
-    [8, 0, 2, 6],
-    [8, 12, 2, 6],
-  ];
-  for (const [x, y, w, h] of ticks) {
+  const tickNodes = [];
+  for (let i = 0; i < 4; i++) {
     const tick = document.createElement('div');
     tick.style.cssText = [
       'position:absolute',
-      `left:${x}px`,
-      `top:${y}px`,
-      `width:${w}px`,
-      `height:${h}px`,
-      'background:#fff',
-      'box-shadow:0 0 0 1px rgba(0,0,0,.8)',
+      'background:#3ddc6a',
+      'box-shadow:0 0 0 1px rgba(0,0,0,.85)',
     ].join(';');
+    tickNodes.push(tick);
     crosshair.appendChild(tick);
   }
+  const centerDot = document.createElement('div');
+  centerDot.style.cssText = [
+    'position:absolute',
+    'background:#3ddc6a',
+    'box-shadow:0 0 0 1px rgba(0,0,0,.85)',
+    'border-radius:50%',
+  ].join(';');
+  crosshair.appendChild(centerDot);
   document.body.appendChild(crosshair);
+  layoutCrosshair();
+
+  function layoutCrosshair() {
+    const gap = 5 + spread;
+    const arm = 8;
+    const thick = 2;
+    const size = (gap + arm) * 2;
+    crosshair.style.width = `${size}px`;
+    crosshair.style.height = `${size}px`;
+    const mid = size / 2;
+    const specs = [
+      [mid - gap - arm, mid - thick / 2, arm, thick],
+      [mid + gap, mid - thick / 2, arm, thick],
+      [mid - thick / 2, mid - gap - arm, thick, arm],
+      [mid - thick / 2, mid + gap, thick, arm],
+    ];
+    tickNodes.forEach((tick, i) => {
+      const [x, y, w, h] = specs[i];
+      tick.style.left = `${x}px`;
+      tick.style.top = `${y}px`;
+      tick.style.width = `${w}px`;
+      tick.style.height = `${h}px`;
+    });
+    const dot = 3;
+    centerDot.style.left = `${mid - dot / 2}px`;
+    centerDot.style.top = `${mid - dot / 2}px`;
+    centerDot.style.width = `${dot}px`;
+    centerDot.style.height = `${dot}px`;
+  }
 
   function clampPitch() {
     pitch = THREE.MathUtils.clamp(pitch, -PITCH_LIMIT, PITCH_LIMIT);
@@ -141,6 +170,19 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     if (controls._onPointerUp) doc.removeEventListener('pointerup', controls._onPointerUp);
   }
 
+  function fovValue() {
+    const value = getFov ? getFov() : camera.fov;
+    return Number.isFinite(value) ? THREE.MathUtils.clamp(value, 50, 120) : camera.fov;
+  }
+
+  function applyFov() {
+    if (!getFov) return;
+    const next = fovValue();
+    if (Math.abs(camera.fov - next) < 0.01) return;
+    camera.fov = next;
+    camera.updateProjectionMatrix();
+  }
+
   function enter() {
     savedOffset.copy(camera.position).sub(controls.target);
     if (savedOffset.lengthSq() < 0.25) savedOffset.set(3.5, 2.2, 5);
@@ -159,7 +201,9 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     }
     clampPitch();
     releaseOrbitDrag();
+    savedFov = camera.fov;
     active = true;
+    applyFov();
     controls.enabled = false;
     setSubjectVisible(false);
     crosshair.style.display = 'block';
@@ -178,6 +222,10 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     lastX = null;
     lastY = null;
     camera.up.set(0, 1, 0);
+    if (getFov) {
+      camera.fov = savedFov;
+      camera.updateProjectionMatrix();
+    }
     camera.position.copy(controls.target).add(savedOffset);
     controls.update();
     syncCursor();
@@ -186,6 +234,7 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
 
   function apply(eyeWorld) {
     if (!active) return false;
+    applyFov();
     const cp = Math.cos(pitch);
     look.set(-Math.sin(yaw) * cp, Math.sin(pitch), -Math.cos(yaw) * cp);
     camera.position.copy(eyeWorld);
@@ -213,5 +262,11 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     facingYaw,
     addYaw,
     setReturnOffset,
+    setCrosshairSpread(extra) {
+      const next = Math.max(0, Math.min(40, Number(extra) || 0));
+      if (next === spread) return;
+      spread = next;
+      layoutCrosshair();
+    },
   };
 }

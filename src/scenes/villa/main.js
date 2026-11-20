@@ -85,6 +85,7 @@ const view = createFirstPersonView({
   controls,
   subject: person.group,
   getLookScale: () => settings.lookScale(),
+  getFov: () => settings.fov(),
 });
 
 // ---------- 键盘输入 ----------
