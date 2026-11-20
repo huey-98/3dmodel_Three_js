@@ -8,6 +8,7 @@ export function createBazaar() {
   const kit = createBazaarKit();
   const group = new THREE.Group();
   const solids = [];
+  const platforms = [];
   const animated = [];
   const geoCache = new Map();
   const archCache = new Map();
@@ -63,6 +64,16 @@ export function createBazaar() {
       maxX: Math.max(x0, x1),
       minZ: Math.min(z0, z1),
       maxZ: Math.max(z0, z1),
+    });
+  }
+
+  function platform(x0, x1, z0, z1, top) {
+    platforms.push({
+      minX: Math.min(x0, x1),
+      maxX: Math.max(x0, x1),
+      minZ: Math.min(z0, z1),
+      maxZ: Math.max(z0, z1),
+      top,
     });
   }
 
@@ -220,9 +231,14 @@ export function createBazaar() {
     add(mesh);
   }
 
-  function crate(x, z, w, h, d, color, y = 0) {
+  function crate(x, z, w, h, d, color, y = 0, stand = false) {
     box(w, h, d, kit.crate(color), x, y + h / 2, z);
-    solid(x - w / 2, x + w / 2, z - d / 2, z + d / 2);
+    const x0 = x - w / 2;
+    const x1 = x + w / 2;
+    const z0 = z - d / 2;
+    const z1 = z + d / 2;
+    if (stand) platform(x0, x1, z0, z1, y + h);
+    else solid(x0, x1, z0, z1);
   }
 
   // ---------- 地面 ----------
@@ -441,8 +457,11 @@ export function createBazaar() {
   const van = new THREE.Group();
   van.position.set(vanX, 0, vanZ);
   van.rotation.y = vanRot;
-  const body = new THREE.Mesh(makeBox(1.78, 1.62, 4.05), kit.van);
-  body.position.y = 1.28;
+  const bodyH = 1.62;
+  const bodyY = 1.28;
+  const vanTop = bodyY + bodyH / 2;
+  const body = new THREE.Mesh(makeBox(1.78, bodyH, 4.05), kit.van);
+  body.position.y = bodyY;
   van.add(body);
   const trimBand = new THREE.Mesh(makeBox(1.82, 0.28, 4.08), kit.vanTrim);
   trimBand.position.y = 0.62;
@@ -483,7 +502,19 @@ export function createBazaar() {
     const hz = 2.15;
     const vx = vanX;
     const vz = vanZ;
-    solid(vx - (hx * c + hz * s), vx + (hx * c + hz * s), vz - (hx * s + hz * c), vz + (hx * s + hz * c));
+    const x0 = vx - (hx * c + hz * s);
+    const x1 = vx + (hx * c + hz * s);
+    const z0 = vz - (hx * s + hz * c);
+    const z1 = vz + (hx * s + hz * c);
+    platform(x0, x1, z0, z1, vanTop);
+  }
+
+  // 车身东侧一只木箱当跳板，先跳上箱子再跳上货车。
+  {
+    const cw = 0.92;
+    const ch = 0.98;
+    const cd = 0.88;
+    crate(vanX + 0.95 + cw / 2 + 0.06, vanZ - 0.55, cw, ch, cd, 0xc99555, 0, true);
   }
 
   // ---------- 电线、橙布 ----------
@@ -586,5 +617,5 @@ export function createBazaar() {
     }
   }
 
-  return { group, solids, update };
+  return { group, solids, platforms, update };
 }

@@ -61,7 +61,7 @@ src/scenes/<name>/ 单个场景的页面和逻辑
 - WASD 相对相机，方向键是世界方向且优先于 WASD。
 - Shift 加速，空格跳跃。方向键和空格要 `preventDefault`。窗口失焦时清空按键。
 - 水平碰撞是 AABB：`{ minX, maxX, minZ, maxZ }`。先试整步，再试只改 X、只改 Z。
-- 高度单独计算。荒漠迷城地面为 0；别墅的楼层、踏步和桥面见 [doc/villa.md](doc/villa.md)。
+- 高度单独计算。荒漠迷城地面默认 0，白车和车旁跳板箱可站立；别墅的楼层、踏步和桥面见 [doc/villa.md](doc/villa.md)。
 
 ### 角色与船
 

@@ -86,8 +86,8 @@ addEventListener('blur', () => keys.clear());
 const PERSON_R = 0.32;
 const GRAVITY = 24;
 const JUMP_SPEED = 8;
+const STEP_UP = 0.35;
 let jumpVel = 0;
-let jumpOffset = 0;
 let grounded = true;
 
 function overlaps(x, z, r) {
@@ -95,9 +95,22 @@ function overlaps(x, z, r) {
     && z > r.minZ - PERSON_R && z < r.maxZ + PERSON_R;
 }
 
+function resolveGroundY(x, z) {
+  let y = 0;
+  for (const plat of world.platforms) {
+    if (overlaps(x, z, plat) && plat.top > y) y = plat.top;
+  }
+  return y;
+}
+
 function isBlocked(x, z) {
   for (const r of world.solids) {
     if (overlaps(x, z, r)) return true;
+  }
+  const feet = person.group.position.y;
+  for (const plat of world.platforms) {
+    if (feet >= plat.top - STEP_UP) continue;
+    if (overlaps(x, z, plat)) return true;
   }
   return false;
 }
@@ -175,6 +188,7 @@ function animate(now) {
   }
   person.update(dt, moving);
 
+  const floorY = resolveGroundY(p.x, p.z);
   if (jumpRequested) {
     if (grounded) {
       jumpVel = JUMP_SPEED;
@@ -184,14 +198,18 @@ function animate(now) {
   }
   if (!grounded) {
     jumpVel -= GRAVITY * dt;
-    jumpOffset += jumpVel * dt;
-    if (jumpOffset <= 0) {
-      jumpOffset = 0;
+    p.y += jumpVel * dt;
+    if (jumpVel <= 0 && p.y <= floorY) {
+      p.y = floorY;
       jumpVel = 0;
       grounded = true;
     }
+  } else if (p.y - floorY > 0.12) {
+    grounded = false;
+    jumpVel = 0;
+  } else {
+    p.y = floorY;
   }
-  p.y = jumpOffset;
 
   world.update(elapsed);
 
