@@ -9,6 +9,7 @@ export function createBazaar() {
   const group = new THREE.Group();
   const solids = [];
   const platforms = [];
+  const rooms = [];
   const animated = [];
   const geoCache = new Map();
   const archCache = new Map();
@@ -149,6 +150,48 @@ export function createBazaar() {
     volume(x0, x1, y, y + h, z1 - t, z1, mat);
     volume(x0, x0 + t, y, y + h, z0, z1, mat);
     volume(x1 - t, x1, y, y + h, z0, z1, mat);
+  }
+
+  function shellWall(x0, x1, z0, z1, h, mat) {
+    volume(x0, x1, 0, h, z0, z1, mat);
+    solid(x0, x1, z0, z1);
+  }
+
+  // 拱门洞上沿的两角墙体，让矩形墙洞看起来仍是拱形。
+  function placeArchSpandrel(x, y, z, w, h, rotY, depth, mat) {
+    const r = Math.min(w / 2 - 0.001, Math.max(0.2, h - 0.25));
+    const shape = new THREE.Shape();
+    shape.moveTo(-w / 2, h - r);
+    shape.lineTo(-w / 2, h);
+    shape.lineTo(w / 2, h);
+    shape.lineTo(w / 2, h - r);
+    shape.absarc(0, h - r, r, 0, Math.PI, false);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth,
+      bevelEnabled: false,
+      curveSegments: 14,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    mesh.rotation.y = rotY;
+    add(mesh);
+  }
+
+  function placeArchway(x, y, z, w, h, rotY) {
+    const root = new THREE.Group();
+    root.position.set(x, y, z);
+    root.rotation.y = rotY;
+    const jambH = Math.max(0.35, h - w / 2);
+    const sill = new THREE.Mesh(makeBox(w + 0.18, 0.08, 0.2), kit.trim);
+    sill.position.set(0, 0.02, 0.08);
+    root.add(sill);
+    for (const side of [-1, 1]) {
+      const jamb = new THREE.Mesh(makeBox(0.07, jambH, 0.1), kit.trim);
+      jamb.position.set(side * w / 2, jambH / 2, 0.045);
+      root.add(jamb);
+    }
+    group.add(root);
   }
 
   function sagGeo(w, d, sx, sz, sagScale = 1) {
@@ -305,6 +348,7 @@ export function createBazaar() {
   volume(B.x0 - 0.22, B.x0 + 0.06, beamY, beamY + 0.16, B.z0, B.z1, kit.beam);
   volume(B.x1 - 0.06, B.x1 + 0.22, beamY, beamY + 0.16, B.z0, B.z1, kit.beam);
   volume(B.x0, B.x1, beamY, beamY + 0.12, cz - 0.08, cz + 0.08, kit.beam);
+  rooms.push({ minX: -4.55, maxX: 4.85, minZ: -3.8, maxZ: 4.65, minY: 0.4, maxY: 4.9 });
 
   // ---------- 左：蓝楼（原红楼加高一层） ----------
   // 西贴边界墙；整体南移，北侧与北墙留空，南端给阳台和白车通道留空。
@@ -395,8 +439,8 @@ export function createBazaar() {
   add(antenna);
   box(0.95, 0.03, 0.03, kit.metal, 3.7, 10.5, -13.75);
 
-  // ---------- 右：沙黄楼 ----------
-  // 东移；北侧留空，宽度与西楼阳台到南墙相当。
+  // ---------- 右：沙黄楼（可进入的小卖部） ----------
+  // 东移；北侧留空，宽度与西楼阳台到南墙相当。西立面南端拱门可走入，北侧大窗仍装玻璃。
   const blueDx = 2.5;
   const northGap = SOUTH_WALL_Z - (pink.z1 + balD);
   const blue = {
@@ -406,12 +450,139 @@ export function createBazaar() {
     z1: 12.42,
     h: 6.55,
   };
-  block(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.sand);
-  skirt(blue.x0, blue.x1, blue.z0, blue.z1, kit.skirtSand);
+  const shopT = 0.4;
+  const doorZ = 8.7;
+  const doorW = 3.6;
+  const doorH = 5.75;
+  const doorY = 0.42;
+  const doorZ0 = doorZ - doorW / 2;
+  const doorZ1 = doorZ + doorW / 2;
+  const doorTop = doorY + doorH;
+  const shopWinZ = 0.25;
+  const shopWinW = 3.9;
+  const shopWinH = 4.2;
+  const shopWinY = 1.2;
+  const winZ0 = shopWinZ - shopWinW / 2;
+  const winZ1 = shopWinZ + shopWinW / 2;
+  const winTop = shopWinY + shopWinH;
+  const wx0 = blue.x0;
+  const wx1 = blue.x0 + shopT;
+  const ix0 = blue.x0 + shopT;
+  const ix1 = blue.x1 - shopT;
+  const iz0 = blue.z0 + shopT;
+  const iz1 = blue.z1 - shopT;
+
+  shellWall(blue.x1 - shopT, blue.x1, blue.z0, blue.z1, blue.h, kit.sand);
+  shellWall(blue.x0, blue.x1, blue.z0, blue.z0 + shopT, blue.h, kit.sand);
+  shellWall(blue.x0, blue.x1, blue.z1 - shopT, blue.z1, blue.h, kit.sand);
+  volume(wx0, wx1, 0, blue.h, blue.z0, winZ0, kit.sand);
+  volume(wx0, wx1, 0, shopWinY, winZ0, winZ1, kit.sand);
+  volume(wx0, wx1, winTop, blue.h, winZ0, winZ1, kit.sand);
+  volume(wx0, wx1, 0, blue.h, winZ1, doorZ0, kit.sand);
+  volume(wx0, wx1, doorTop, blue.h, doorZ0, doorZ1, kit.sand);
+  volume(wx0, wx1, 0, blue.h, doorZ1, blue.z1, kit.sand);
+  solid(wx0, wx1, blue.z0, doorZ0);
+  solid(wx0, wx1, doorZ1, blue.z1);
+  volume(blue.x0, blue.x1, blue.h - 0.22, blue.h, blue.z0, blue.z1, kit.sand);
+  volume(ix0, ix1, 0.015, 0.04, iz0, iz1, kit.floor);
+
+  const skO = 0.03;
+  const skT = 0.12;
+  const skH = 0.46;
+  volume(blue.x0 - skO, blue.x1 + skO, 0, skH, blue.z0 - skO, blue.z0 + skT, kit.skirtSand);
+  volume(blue.x0 - skO, blue.x1 + skO, 0, skH, blue.z1 - skT, blue.z1 + skO, kit.skirtSand);
+  volume(blue.x1 - skT, blue.x1 + skO, 0, skH, blue.z0, blue.z1, kit.skirtSand);
+  volume(blue.x0 - skO, blue.x0 + skT, 0, skH, blue.z0, doorZ0, kit.skirtSand);
+  volume(blue.x0 - skO, blue.x0 + skT, 0, skH, doorZ1, blue.z1, kit.skirtSand);
+
   parapet(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.sand);
-  placeWindow(blue.x0 - 0.03, 0.42, 8.7, 3.6, 5.75, -Math.PI / 2, true);
-  box(0.32, 0.12, 3.9, kit.concrete, blue.x0 - 0.2, 0.46, 8.7);
-  placeWindow(blue.x0 - 0.03, 1.2, 0.25, 3.9, 4.2, -Math.PI / 2, false);
+  placeArchway(blue.x0 - 0.03, doorY, doorZ, doorW, doorH, -Math.PI / 2);
+  placeArchSpandrel(wx0, doorY, doorZ, doorW, doorH, Math.PI / 2, shopT, kit.sand);
+  box(0.28, 0.1, doorW + 0.28, kit.concrete, blue.x0 - 0.12, 0.05, doorZ);
+  placeWindow(blue.x0 - 0.03, shopWinY, shopWinZ, shopWinW, shopWinH, -Math.PI / 2, false);
+
+  const goodsMat = [0xb33b2b, 0xd6a23a, 0x3f7c58, 0x2f5f9a, 0xc8b8a0, 0x7a3e2e, 0xe8e4dc].map(
+    (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.68 }),
+  );
+
+  // 货架贴东内墙，避开西窗的视线范围。
+  {
+    const shZ0 = 3.35;
+    const shZ1 = 8.05;
+    const shD = 0.46;
+    const shH = 2.18;
+    const shX1 = ix1 - 0.02;
+    const shX0 = shX1 - shD;
+    const shCx = (shX0 + shX1) / 2;
+    const shCz = (shZ0 + shZ1) / 2;
+    const shLen = shZ1 - shZ0;
+    box(0.04, shH, shLen, kit.beam, shX1 - 0.02, shH / 2, shCz);
+    box(shD, shH, 0.05, kit.beam, shCx, shH / 2, shZ0 + 0.025);
+    box(shD, shH, 0.05, kit.beam, shCx, shH / 2, shZ1 - 0.025);
+    for (const y of [0.08, 0.62, 1.16, 1.7, 2.14]) {
+      box(shD - 0.04, 0.04, shLen - 0.1, kit.wood, shCx, y, shCz);
+    }
+    solid(shX0, shX1, shZ0, shZ1);
+    let gi = 0;
+    for (const y of [0.22, 0.76, 1.3, 1.84]) {
+      for (let s = 0; s < 8; s++) {
+        const z = shZ0 + 0.28 + s * ((shLen - 0.56) / 7);
+        if (s % 3 === 1) {
+          const bottle = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.045, 0.05, 0.26, 8),
+            goodsMat[gi % goodsMat.length],
+          );
+          bottle.position.set(shX1 - 0.16, y + 0.13, z);
+          add(bottle);
+        } else {
+          const w = 0.2 + (s % 3) * 0.04;
+          const d = 0.15 + (s % 2) * 0.05;
+          const hh = 0.16 + (s % 4) * 0.04;
+          box(d, hh, w, goodsMat[gi % goodsMat.length], shX1 - 0.1 - d / 2, y + hh / 2, z);
+        }
+        gi += 1;
+      }
+    }
+  }
+
+  // 收银台靠南内墙，门洞南侧，不挡西门。
+  {
+    const cW = 2.15;
+    const cD = 0.7;
+    const cH = 1.02;
+    const cX = ix1 - cW / 2 - 0.4;
+    const cZ = iz1 - cD / 2 - 0.06;
+    box(cW, cH - 0.07, cD, kit.beam, cX, (cH - 0.07) / 2, cZ);
+    box(cW + 0.08, 0.07, cD + 0.08, kit.wood, cX, cH - 0.035, cZ);
+    solid(cX - cW / 2, cX + cW / 2, cZ - cD / 2, cZ + cD / 2);
+    box(0.34, 0.18, 0.26, kit.metalDark, cX + 0.48, cH + 0.09, cZ);
+    box(0.22, 0.15, 0.04, kit.metal, cX + 0.48, cH + 0.25, cZ - 0.12);
+    box(0.28, 0.12, 0.22, goodsMat[0], cX - 0.55, cH + 0.06, cZ + 0.04);
+    box(0.16, 0.2, 0.12, goodsMat[2], cX - 0.78, cH + 0.1, cZ - 0.08);
+  }
+
+  const shopLampMat = new THREE.MeshStandardMaterial({
+    color: 0xf4f0e0,
+    emissive: 0xfff2cc,
+    emissiveIntensity: 1.35,
+    roughness: 0.42,
+  });
+  const shopMidX = (ix0 + ix1) / 2;
+  for (const z of [-3.6, 2.4, 8.15]) {
+    box(1.35, 0.06, 0.26, shopLampMat, shopMidX, blue.h - 0.42, z);
+    const lamp = new THREE.PointLight(0xfff0d0, 3.1, 12, 2);
+    lamp.position.set(shopMidX, blue.h - 0.58, z);
+    add(lamp);
+  }
+
+  rooms.push({
+    minX: blue.x0 + 0.12,
+    maxX: ix1,
+    minZ: iz0,
+    maxZ: iz1,
+    minY: 0.2,
+    maxY: blue.h - 0.2,
+  });
 
   // ---------- 南：沙黄楼，中心向南开露天凹槽 ----------
   // 凹槽口的墙与东楼南沿齐平，略高于人物；左右各留通道。
@@ -617,5 +788,5 @@ export function createBazaar() {
     }
   }
 
-  return { group, solids, platforms, update };
+  return { group, solids, platforms, rooms, update };
 }

@@ -115,10 +115,11 @@ function isBlocked(x, z) {
   return false;
 }
 
-const ROOM = { minX: -4.55, maxX: 4.85, minZ: -3.8, maxZ: 4.65, minY: 0.4, maxY: 4.9 };
-
-function insideBooth(x, z) {
-  return x > ROOM.minX && x < ROOM.maxX && z > ROOM.minZ && z < ROOM.maxZ;
+function roomAt(x, z) {
+  for (const r of world.rooms) {
+    if (x > r.minX && x < r.maxX && z > r.minZ && z < r.maxZ) return r;
+  }
+  return null;
 }
 
 function maxRayInside(origin, dir, box) {
@@ -231,17 +232,17 @@ function animate(now) {
     camera.position.y += dy;
     camera.position.z += dz;
 
-    const inside = insideBooth(p.x, p.z);
-    controls.maxDistance = inside ? 5.2 : 42;
-    controls.minDistance = inside ? 1.6 : 3;
+    const room = roomAt(p.x, p.z);
+    controls.maxDistance = room ? 5.2 : 42;
+    controls.minDistance = room ? 1.6 : 3;
     controls.update();
 
-    if (inside) {
+    if (room) {
       camDir.copy(camera.position).sub(controls.target);
       const dist = camDir.length();
       if (dist > 1e-4) {
         camDir.multiplyScalar(1 / dist);
-        const maxD = maxRayInside(controls.target, camDir, ROOM) - 0.12;
+        const maxD = maxRayInside(controls.target, camDir, room) - 0.12;
         camera.position.copy(controls.target).addScaledVector(camDir, Math.min(dist, Math.max(0.6, maxD)));
       }
     }
