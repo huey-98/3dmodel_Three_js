@@ -1,7 +1,8 @@
 import * as THREE from 'three';
+import { MAP_SCALE } from './world.js';
 
 // 只给荒漠迷城的第一人称用。1 步枪连发，2 手枪单点，3 匕首刺击。
-const RANGE = 48;
+const RANGE = 48 * MAP_SCALE;
 const KNIFE_REACH = 2.1;
 const KNIFE_TIME = 0.48;
 const KNIFE_HIT = 0.2;
@@ -191,6 +192,26 @@ const clothMap = canvasTex(128, (ctx, s) => {
     ctx.beginPath();
     ctx.moveTo(0, i);
     ctx.lineTo(s, i);
+    ctx.stroke();
+  }
+});
+
+const woodMap = canvasTex(128, (ctx, s) => {
+  ctx.fillStyle = '#6e3a1e';
+  ctx.fillRect(0, 0, s, s);
+  for (let y = 0; y < s; y += 1) {
+    const n = (y * 17) ^ (y * 3);
+    const shift = (n % 18) - 6;
+    ctx.fillStyle = `rgba(${148 + shift},${76 + (n % 14)},${34 + (n % 10)},0.32)`;
+    ctx.fillRect(0, y, s, 1);
+  }
+  ctx.strokeStyle = 'rgba(42,18,8,0.4)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 7; i++) {
+    const y = 8 + i * 18 + (i % 3);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.bezierCurveTo(s * 0.35, y - 4, s * 0.7, y + 5, s, y - 1);
     ctx.stroke();
   }
 });
@@ -455,6 +476,9 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
   const slideMetal = new THREE.MeshStandardMaterial({ color: 0xc5ccd4, metalness: 0.72, roughness: 0.26 });
   const gunDark = new THREE.MeshStandardMaterial({ color: 0x171b20, metalness: 0.5, roughness: 0.46 });
   const polymer = new THREE.MeshStandardMaterial({ color: 0x24282e, metalness: 0.08, roughness: 0.62 });
+  const wood = new THREE.MeshStandardMaterial({ map: woodMap, roughness: 0.78, metalness: 0.02 });
+  const blued = new THREE.MeshStandardMaterial({ color: 0x2a3140, metalness: 0.8, roughness: 0.34 });
+  const magSteel = new THREE.MeshStandardMaterial({ color: 0x4a525c, metalness: 0.62, roughness: 0.38 });
   const bladeMetal = new THREE.MeshStandardMaterial({ color: 0xd5dbe3, metalness: 0.84, roughness: 0.18 });
   const leather = new THREE.MeshStandardMaterial({ map: leatherMap, roughness: 0.72, metalness: 0.04 });
   const cloth = new THREE.MeshStandardMaterial({ map: clothMap, roughness: 0.88, metalness: 0 });
@@ -475,28 +499,78 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     parent.add(mesh);
     return mesh;
   };
+  const axle = (parent, radius, length, mat, x, y, z) => {
+    const mesh = viewMesh(new THREE.CylinderGeometry(radius, radius, length, 8), mat);
+    mesh.rotation.z = Math.PI / 2;
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+    return mesh;
+  };
 
-  part(rifleView, new THREE.BoxGeometry(0.05, 0.11, 0.03), polymer, 0, 0.01, -0.36);
-  part(rifleView, new THREE.BoxGeometry(0.042, 0.086, 0.2), polymer, 0, 0.02, -0.24);
-  part(rifleView, new THREE.BoxGeometry(0.03, 0.028, 0.12), polymer, 0, 0.072, -0.18);
-  part(rifleView, new THREE.BoxGeometry(0.05, 0.072, 0.24), gunMetal, 0, 0.036, 0.02);
-  part(rifleView, new THREE.BoxGeometry(0.034, 0.018, 0.16), gunDark, 0, 0.078, 0.03);
-  part(rifleView, new THREE.BoxGeometry(0.012, 0.032, 0.07), gunDark, -0.028, 0.04, 0.02);
-  part(rifleView, new THREE.BoxGeometry(0.032, 0.11, 0.042), polymer, 0, -0.055, -0.03, 0.22);
-  part(rifleView, new THREE.BoxGeometry(0.03, 0.012, 0.055), gunDark, 0, -0.028, 0.04);
-  part(rifleView, new THREE.BoxGeometry(0.03, 0.04, 0.012), gunDark, 0, -0.01, 0.062);
+  // 经典 AK-47。+Z 朝枪口，拉机柄和保险在右侧（局部 -X）。枪口保持在步枪轴上。
+  part(rifleView, new THREE.BoxGeometry(0.048, 0.108, 0.016), gunDark, 0, 0.002, -0.378);
+  part(rifleView, new THREE.BoxGeometry(0.04, 0.074, 0.16), wood, 0, 0.008, -0.288);
+  part(rifleView, new THREE.BoxGeometry(0.032, 0.046, 0.09), wood, 0, 0.022, -0.162);
+  part(rifleView, new THREE.BoxGeometry(0.048, 0.064, 0.22), blued, 0, 0.03, 0);
+  part(rifleView, new THREE.BoxGeometry(0.044, 0.014, 0.18), gunMetal, 0, 0.066, -0.01);
+  part(rifleView, new THREE.BoxGeometry(0.008, 0.006, 0.15), gunDark, 0, 0.076, -0.01);
+  part(rifleView, new THREE.BoxGeometry(0.04, 0.028, 0.032), blued, 0, 0.086, 0.112);
+  part(rifleView, new THREE.BoxGeometry(0.008, 0.036, 0.02), gunDark, 0, 0.11, 0.11);
+  part(rifleView, new THREE.BoxGeometry(0.008, 0.014, 0.12), gunDark, -0.028, 0.012, -0.02);
+  part(rifleView, new THREE.BoxGeometry(0.01, 0.016, 0.016), gunMetal, -0.03, 0.006, 0.038);
+  axle(rifleView, 0.008, 0.01, gunMetal, -0.028, 0.042, -0.068);
+  part(rifleView, new THREE.BoxGeometry(0.006, 0.012, 0.13), gunDark, -0.024, 0.048, -0.01);
+  const rifleBolt = new THREE.Group();
+  rifleBolt.position.set(-0.03, 0.048, 0.02);
+  rifleView.add(rifleBolt);
+  remember(rifleBolt);
+  part(rifleBolt, new THREE.BoxGeometry(0.014, 0.012, 0.016), blued, -0.004, 0, 0);
+  axle(rifleBolt, 0.009, 0.016, gunMetal, -0.014, 0, 0);
+  for (const [y, z] of [[0.042, -0.06], [0.016, -0.06], [0.042, 0.04], [0.016, 0.04]]) {
+    axle(rifleView, 0.0035, 0.008, gunMetal, -0.026, y, z);
+  }
+  part(rifleView, new THREE.BoxGeometry(0.05, 0.018, 0.062), blued, 0, -0.004, 0.09);
+  part(rifleView, new THREE.BoxGeometry(0.034, 0.1, 0.04), wood, 0, -0.056, -0.036, 0.3);
+  part(rifleView, new THREE.BoxGeometry(0.028, 0.008, 0.052), blued, 0, -0.03, 0.018);
+  part(rifleView, new THREE.BoxGeometry(0.028, 0.024, 0.008), blued, 0, -0.016, -0.008);
+  part(rifleView, new THREE.BoxGeometry(0.028, 0.02, 0.008), blued, 0, -0.016, 0.044);
+  part(rifleView, new THREE.BoxGeometry(0.018, 0.018, 0.01), gunDark, 0, -0.02, 0.06);
   const rifleTrigger = new THREE.Group();
-  rifleTrigger.position.set(0, -0.01, 0.02);
+  rifleTrigger.position.set(0, -0.012, 0.016);
   rifleView.add(rifleTrigger);
-  part(rifleTrigger, new THREE.BoxGeometry(0.008, 0.03, 0.01), gunDark, 0, -0.012, 0);
-  part(rifleView, new THREE.BoxGeometry(0.034, 0.03, 0.05), polymer, 0, -0.012, 0.125);
-  const rifleMag = remember(part(rifleView, new THREE.BoxGeometry(0.03, 0.15, 0.046), polymer, 0, -0.07, 0.128, 0.04));
-  part(rifleView, new THREE.BoxGeometry(0.048, 0.052, 0.28), polymer, 0, 0.03, 0.32);
-  part(rifleView, new THREE.BoxGeometry(0.02, 0.012, 0.22), gunDark, 0, 0.062, 0.3);
-  tube(rifleView, 0.011, 0.34, gunDark, 0, 0.034, 0.58);
-  part(rifleView, new THREE.BoxGeometry(0.014, 0.04, 0.016), gunDark, 0, 0.07, 0.48);
-  tube(rifleView, 0.016, 0.05, gunMetal, 0, 0.034, 0.76);
-  const rifleBolt = remember(part(rifleView, new THREE.BoxGeometry(0.012, 0.02, 0.05), gunMetal, -0.032, 0.055, 0.04));
+  part(rifleTrigger, new THREE.BoxGeometry(0.008, 0.028, 0.01), gunDark, 0, -0.01, 0);
+  const rifleMag = new THREE.Group();
+  rifleMag.position.set(0, -0.006, 0.09);
+  rifleView.add(rifleMag);
+  remember(rifleMag);
+  let magY = -0.008;
+  let magZ = 0.008;
+  let magAng = -0.18;
+  for (let i = 0; i < 6; i++) {
+    const last = i === 5;
+    part(
+      rifleMag,
+      new THREE.BoxGeometry(last ? 0.032 : 0.03, last ? 0.018 : 0.048, last ? 0.034 : 0.034),
+      last ? gunMetal : magSteel,
+      0,
+      magY,
+      magZ,
+      magAng,
+    );
+    const step = 0.022;
+    magY -= Math.cos(magAng) * step;
+    magZ -= Math.sin(magAng) * step;
+    magAng -= 0.16;
+  }
+  part(rifleView, new THREE.BoxGeometry(0.048, 0.062, 0.22), wood, 0, 0.03, 0.27);
+  part(rifleView, new THREE.BoxGeometry(0.044, 0.016, 0.12), wood, 0, 0.002, 0.3);
+  tube(rifleView, 0.008, 0.16, gunMetal, 0, 0.066, 0.24);
+  part(rifleView, new THREE.BoxGeometry(0.052, 0.05, 0.02), blued, 0, 0.036, 0.39);
+  tube(rifleView, 0.011, 0.62, gunDark, 0, 0.034, 0.43);
+  part(rifleView, new THREE.BoxGeometry(0.032, 0.048, 0.036), blued, 0, 0.066, 0.64);
+  tube(rifleView, 0.0026, 0.2, gunMetal, 0, 0.02, 0.52);
+  tube(rifleView, 0.015, 0.04, blued, 0, 0.034, 0.73);
+  tube(rifleView, 0.017, 0.012, gunMetal, 0, 0.034, 0.754);
   const rifleMuzzle = new THREE.Object3D();
   rifleMuzzle.position.set(0, 0.034, RIFLE_MUZZLE_Z);
   rifleView.add(rifleMuzzle);
@@ -662,17 +736,36 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     ctx.fillStyle = '#fff';
     ctx.lineWidth = 3;
     if (kind === 'rifle') {
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(8, 30);
-      ctx.lineTo(28, 22);
-      ctx.lineTo(78, 20);
-      ctx.lineTo(104, 18);
-      ctx.moveTo(28, 22);
-      ctx.lineTo(34, 38);
-      ctx.lineTo(42, 38);
-      ctx.lineTo(40, 24);
+      ctx.moveTo(6, 32);
+      ctx.lineTo(8, 16);
+      ctx.lineTo(26, 15);
+      ctx.lineTo(32, 20);
+      ctx.lineTo(50, 18);
+      ctx.lineTo(52, 11);
+      ctx.lineTo(56, 18);
+      ctx.lineTo(84, 16);
+      ctx.lineTo(86, 9);
+      ctx.lineTo(92, 9);
+      ctx.lineTo(92, 17);
+      ctx.lineTo(106, 16);
       ctx.stroke();
-      ctx.fillRect(46, 22, 8, 16);
+      ctx.beginPath();
+      ctx.moveTo(34, 24);
+      ctx.lineTo(106, 22);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(42, 23);
+      ctx.quadraticCurveTo(50, 34, 60, 42);
+      ctx.quadraticCurveTo(54, 34, 48, 23);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(30, 22);
+      ctx.lineTo(24, 36);
+      ctx.lineTo(31, 38);
+      ctx.lineTo(36, 24);
+      ctx.stroke();
     } else if (kind === 'pistol') {
       ctx.beginPath();
       ctx.moveTo(28, 20);
@@ -1019,7 +1112,7 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
       _dir.set(0, 0, -1);
       _aim.copy(_origin).addScaledVector(_dir, PISTOL_MUZZLE_Z);
     } else {
-      _origin.set(0.5, -0.42, -0.38);
+      _origin.set(0.48, -0.36, -0.36);
       _dir.set(-0.1, -0.04, -0.99);
       _aim.copy(_origin).addScaledVector(_dir, RIFLE_MUZZLE_Z);
     }

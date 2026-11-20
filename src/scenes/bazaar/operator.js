@@ -246,32 +246,25 @@ function buildRifle(chest, materials) {
   rifle.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(barrel, y, z));
   rifle.position.set(0.0, 1.2, 0.2);
 
-  put(rifle, new THREE.BoxGeometry(0.2, 0.05, 0.042), materials.rifleDark, -0.2, 0.035, 0);
-  put(rifle, new THREE.BoxGeometry(0.07, 0.13, 0.04), materials.rifleDark, -0.28, 0.03, 0);
-  put(rifle, new THREE.BoxGeometry(0.22, 0.075, 0.05), materials.rifle, 0.02, 0.048, 0);
-  put(rifle, new THREE.BoxGeometry(0.12, 0.032, 0.022), materials.rifleDark, -0.01, 0.1, 0);
-  put(rifle, new THREE.BoxGeometry(0.02, 0.04, 0.016), materials.metal, -0.05, 0.125, 0);
-  put(rifle, new THREE.BoxGeometry(0.045, 0.09, 0.04), materials.rifleDark, -0.04, -0.02, 0, 0, 0, -0.4);
-  put(rifle, new THREE.BoxGeometry(0.055, 0.16, 0.06), materials.rifle, 0.06, -0.065, 0, 0, 0, 0.25);
-  put(rifle, new THREE.BoxGeometry(0.2, 0.055, 0.05), materials.rifleDark, 0.22, 0.042, 0);
-  const tube = put(
-    rifle,
-    new THREE.CylinderGeometry(0.013, 0.012, 0.28, 8),
-    materials.metal,
-    0.42,
-    0.05,
-    0,
-  );
-  tube.rotation.z = Math.PI / 2;
-  put(rifle, new THREE.BoxGeometry(0.025, 0.05, 0.02), materials.rifleDark, 0.5, 0.09, 0);
-  const muzzle = put(
-    rifle,
-    new THREE.CylinderGeometry(0.018, 0.015, 0.05, 8),
-    materials.metal,
-    0.58,
-    0.05,
-    0,
-  );
+  put(rifle, new THREE.BoxGeometry(0.018, 0.11, 0.044), materials.metal, -0.3, 0.02, 0);
+  put(rifle, new THREE.BoxGeometry(0.15, 0.058, 0.04), materials.wood, -0.21, 0.028, 0);
+  put(rifle, new THREE.BoxGeometry(0.07, 0.04, 0.032), materials.wood, -0.1, 0.036, 0);
+  put(rifle, new THREE.BoxGeometry(0.2, 0.068, 0.048), materials.rifle, 0.02, 0.046, 0);
+  put(rifle, new THREE.BoxGeometry(0.13, 0.016, 0.04), materials.rifleDark, -0.005, 0.086, 0);
+  put(rifle, new THREE.BoxGeometry(0.022, 0.032, 0.02), materials.metal, 0.09, 0.108, 0);
+  put(rifle, new THREE.BoxGeometry(0.02, 0.016, 0.018), materials.metal, 0.02, 0.05, -0.032);
+  put(rifle, new THREE.BoxGeometry(0.038, 0.09, 0.034), materials.wood, -0.035, -0.015, 0, 0, 0, -0.42);
+  put(rifle, new THREE.BoxGeometry(0.045, 0.012, 0.03), materials.metal, 0.01, -0.002, 0);
+  put(rifle, new THREE.BoxGeometry(0.055, 0.09, 0.048), materials.rifleDark, 0.04, -0.02, 0, 0, 0, 0.12);
+  put(rifle, new THREE.BoxGeometry(0.048, 0.08, 0.044), materials.rifleDark, 0.07, -0.075, 0, 0, 0, 0.42);
+  put(rifle, new THREE.BoxGeometry(0.18, 0.058, 0.048), materials.wood, 0.2, 0.04, 0);
+  const gas = put(rifle, new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8), materials.metal, 0.18, 0.074, 0);
+  gas.rotation.z = Math.PI / 2;
+  put(rifle, new THREE.BoxGeometry(0.024, 0.032, 0.032), materials.rifleDark, 0.3, 0.055, 0);
+  const bore = put(rifle, new THREE.CylinderGeometry(0.012, 0.011, 0.38, 8), materials.metal, 0.36, 0.048, 0);
+  bore.rotation.z = Math.PI / 2;
+  put(rifle, new THREE.BoxGeometry(0.032, 0.032, 0.03), materials.rifleDark, 0.5, 0.068, 0);
+  const muzzle = put(rifle, new THREE.CylinderGeometry(0.015, 0.013, 0.04, 8), materials.metal, 0.56, 0.048, 0);
   muzzle.rotation.z = Math.PI / 2;
 
   const grip = new THREE.Object3D();
@@ -329,8 +322,11 @@ function buildArms(chest, materials, grip, support) {
   return { right, left };
 }
 
+export const CHAR_SCALE = 0.9;
+
 export function createCtOperator() {
   const group = new THREE.Group();
+  group.scale.setScalar(CHAR_SCALE);
   const rig = new THREE.Group();
   const chest = new THREE.Group();
   group.add(rig);
@@ -349,6 +345,7 @@ export function createCtOperator() {
     pad: mat(PAD, { roughness: 0.64, metalness: 0.08 }),
     rifle: mat(RIFLE, { roughness: 0.4, metalness: 0.62 }),
     rifleDark: mat(RIFLE_DARK, { roughness: 0.46, metalness: 0.5 }),
+    wood: mat(0x7a4326, { roughness: 0.82, metalness: 0.02 }),
     metal: mat(METAL, { roughness: 0.28, metalness: 0.78 }),
     glove: mat(0x1a1d21, { roughness: 0.7 }),
     buckle: mat(0x8a9098, { roughness: 0.32, metalness: 0.7 }),

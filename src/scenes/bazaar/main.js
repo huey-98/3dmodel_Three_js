@@ -1,16 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createCtOperator } from './operator.js';
+import { createCtOperator, CHAR_SCALE } from './operator.js';
 import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createPlaySettings } from '@shared/playSettings.js';
-import { createBazaar } from './world.js';
+import { createBazaar, MAP_SCALE } from './world.js';
 import { createCarbine } from './gun.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xd2d8d4);
-scene.fog = new THREE.Fog(0xd5d6cc, 28, 82);
+scene.fog = new THREE.Fog(0xd5d6cc, 28 * MAP_SCALE, 82 * MAP_SCALE);
 
-const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 220);
+const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 220 * MAP_SCALE);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -22,40 +22,40 @@ document.body.appendChild(renderer.domElement);
 
 scene.add(new THREE.HemisphereLight(0xfff6ea, 0xc6aa84, 0.78));
 const sun = new THREE.DirectionalLight(0xfff1d2, 2.05);
-sun.position.set(-20, 32, 18);
+sun.position.set(-20 * MAP_SCALE, 32, 18 * MAP_SCALE);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -28;
-sun.shadow.camera.right = 28;
-sun.shadow.camera.top = 28;
-sun.shadow.camera.bottom = -28;
+sun.shadow.camera.left = -28 * MAP_SCALE;
+sun.shadow.camera.right = 28 * MAP_SCALE;
+sun.shadow.camera.top = 28 * MAP_SCALE;
+sun.shadow.camera.bottom = -28 * MAP_SCALE;
 sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 90;
+sun.shadow.camera.far = 90 * MAP_SCALE;
 sun.shadow.bias = -0.00025;
 sun.shadow.normalBias = 0.035;
 sun.shadow.camera.updateProjectionMatrix();
 scene.add(sun);
 const fill = new THREE.DirectionalLight(0xffe6cc, 0.28);
-fill.position.set(16, 10, 6);
+fill.position.set(16 * MAP_SCALE, 10, 6 * MAP_SCALE);
 scene.add(fill);
 
 const world = createBazaar();
 scene.add(world.group);
 
 const person = createCtOperator();
-person.group.position.set(0.8, 0, 7.2);
+person.group.position.set(0.8 * MAP_SCALE, 0, 7.2 * MAP_SCALE);
 person.group.rotation.y = Math.PI;
 scene.add(person.group);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0.8, 1.6, 7.2);
-camera.position.set(6.2, 13.2, 11.15);
+controls.target.set(0.8 * MAP_SCALE, 1.6, 7.2 * MAP_SCALE);
+camera.position.set(6.2 * MAP_SCALE, 13.2, 11.15 * MAP_SCALE);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minPolarAngle = 0.12;
 controls.maxPolarAngle = Math.PI / 2 - 0.04;
 controls.minDistance = 3;
-controls.maxDistance = 42;
+controls.maxDistance = 42 * MAP_SCALE;
 controls.enablePan = false;
 const settings = createPlaySettings();
 const view = createFirstPersonView({
@@ -84,9 +84,9 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
 
-const PERSON_R = 0.32;
+const PERSON_R = 0.32 * CHAR_SCALE;
 const GRAVITY = 24;
-const JUMP_SPEED = 8;
+const JUMP_SPEED = 8.6;
 const STEP_UP = 0.35;
 let jumpVel = 0;
 let grounded = true;
@@ -217,7 +217,7 @@ function animate(now) {
 
   if (view.isActive()) person.group.rotation.y = view.facingYaw();
 
-  followTarget.set(p.x, p.y + 1.5, p.z);
+  followTarget.set(p.x, p.y + 1.5 * CHAR_SCALE, p.z);
   if (view.isActive()) {
     controls.target.copy(followTarget);
     eye.set(0, 1.64, 0); // 护目镜中线，干员的眼睛高度
@@ -234,8 +234,8 @@ function animate(now) {
     camera.position.z += dz;
 
     const room = roomAt(p.x, p.z);
-    controls.maxDistance = room ? 5.2 : 42;
-    controls.minDistance = room ? 1.6 : 3;
+    controls.maxDistance = room ? 5.2 * MAP_SCALE : 42 * MAP_SCALE;
+    controls.minDistance = room ? 1.6 * MAP_SCALE : 3;
     controls.update();
 
     if (room) {

@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { createBazaarKit } from './materials.js';
 
 // 参考图布局：中央绿篷棚屋（正面红字 B），左蓝楼、后白楼、右沙黄楼、南沙黄楼（露天凹槽），沙黄大地砖环绕。
+// 只放大水平尺度，层高、窗台和跳板高度不变，人物仍能跳窗、上车。
+export const MAP_SCALE = 1.5;
 const BOOTH = { x0: -4.95, x1: 5.25, z0: -4.2, z1: 5.05, h: 5.25 };
 
 export function createBazaar() {
@@ -27,8 +29,8 @@ export function createBazaar() {
       const uv = geo.attributes.uv;
       const faces = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
       for (let f = 0; f < 6; f++) {
-        const su = faces[f][0] * 0.48;
-        const sv = faces[f][1] * 0.48;
+        const su = faces[f][0] * 0.48 * MAP_SCALE;
+        const sv = faces[f][1] * 0.48 * (f === 2 || f === 3 ? MAP_SCALE : 1);
         for (let i = 0; i < 4; i++) {
           const idx = f * 4 + i;
           uv.setXY(idx, uv.getX(idx) * su, uv.getY(idx) * sv);
@@ -157,6 +159,18 @@ export function createBazaar() {
   function shellWall(x0, x1, z0, z1, h, mat) {
     volume(x0, x1, 0, h, z0, z1, mat);
     solid(x0, x1, z0, z1);
+  }
+
+  function solidAlongZ(x0, x1, z0, z1, holes = []) {
+    const cuts = holes
+      .map((hole) => ({ z0: hole.at - hole.w / 2, z1: hole.at + hole.w / 2 }))
+      .sort((a, b) => a.z0 - b.z0);
+    let cursor = z0;
+    for (const hole of cuts) {
+      if (hole.z0 > cursor + 0.001) solid(x0, x1, cursor, hole.z0);
+      cursor = Math.max(cursor, hole.z1);
+    }
+    if (z1 > cursor + 0.001) solid(x0, x1, cursor, z1);
   }
 
   // 沿 Z 的墙面上按孔挖洞（孔：{ at, w, y, h }）。
@@ -308,6 +322,7 @@ export function createBazaar() {
   }
 
   // ---------- 地面 ----------
+  kit.cobble.map.repeat.set(22 * MAP_SCALE, 22 * MAP_SCALE);
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), kit.cobble);
   ground.rotation.x = -Math.PI / 2;
   ground.userData.noShadow = true;
@@ -362,7 +377,9 @@ export function createBazaar() {
   slats.rotation.x = -Math.PI / 2;
   slats.position.set(cx + 1.4, tarpY - 0.28, cz + 0.7);
   const slatUv = slats.geometry.attributes.uv;
-  for (let i = 0; i < slatUv.count; i++) slatUv.setXY(i, slatUv.getX(i) * 3, slatUv.getY(i) * 2);
+  for (let i = 0; i < slatUv.count; i++) {
+    slatUv.setXY(i, slatUv.getX(i) * 3 * MAP_SCALE, slatUv.getY(i) * 2 * MAP_SCALE);
+  }
   add(slats);
 
   const beamY = B.h - 0.08;
@@ -376,9 +393,9 @@ export function createBazaar() {
   // ---------- 左：蓝楼（原红楼加高一层） ----------
   // 西贴边界墙；整体南移，北侧与北墙留空，南端给阳台和白车通道留空。
   const pink = { x0: -15.5, x1: -9.625, z0: -12.6, z1: 2.3, h: 7.35 };
-  const balTop = 3.92;
-  const storyH = pink.h - balTop;
-  pink.h += storyH;
+  const balTop = 3.7;
+  const storyH = 3.43;
+  pink.h = balTop + storyH * 2;
   const pinkCx = (pink.x0 + pink.x1) / 2;
   const pinkT = 0.42;
   const f2 = balTop;
@@ -391,7 +408,6 @@ export function createBazaar() {
 
   volume(pink.x0, pink.x1, 0, f2, pink.z0, pink.z1, kit.blue);
   volume(pink.x0, pink.x1, f3, pink.h, pink.z0, pink.z1, kit.blue);
-  solid(pink.x0, pink.x1, pink.z0, pink.z1);
   volume(pink.x0, pink.x0 + pinkT, f2, f3, pink.z0, pink.z1, kit.blue);
   volume(pink.x0, pink.x1, f2, f3, pink.z0, pink.z0 + pinkT, kit.blue);
   pierceZ(pink.x1 - pinkT, pink.x1, f2, f3, pink.z0, pink.z1, eastHoles, kit.blue);
@@ -417,6 +433,21 @@ export function createBazaar() {
   volume(southWinX1, ix1b, f2, f3, iz1b - 0.04, iz1b, kit.cream);
   volume(southWinX0, southWinX1, southWinTop, f3, iz1b - 0.04, iz1b, kit.cream);
 
+  solid(pink.x0, pink.x0 + pinkT, pink.z0, pink.z1);
+  solid(pink.x0, pink.x1, pink.z0, pink.z0 + pinkT);
+  solidAlongZ(pink.x1 - pinkT, pink.x1, pink.z0, pink.z1, eastHoles);
+  solid(pink.x0, southWinX0, pink.z1 - pinkT, pink.z1);
+  solid(southWinX1, pink.x1, pink.z1 - pinkT, pink.z1);
+  platform(ix0b, ix1b, iz0b, pink.z1, f2);
+  rooms.push({
+    minX: ix0b,
+    maxX: ix1b,
+    minZ: iz0b,
+    maxZ: iz1b,
+    minY: f2 - 0.15,
+    maxY: f3 - 0.15,
+  });
+
   {
     const roomCx = (ix0b + ix1b) / 2;
     const roomCz = (iz0b + iz1b) / 2;
@@ -427,6 +458,8 @@ export function createBazaar() {
     box(0.08, 0.72, 0.08, kit.beam, roomCx + 0.68, f2 + 0.36, roomCz - 1.08);
     box(1.8, 1.15, 0.42, kit.beam, ix0b + 0.55, f2 + 0.58, roomCz + 2.2);
     box(0.7, 0.42, 0.55, kit.wood, roomCx + 0.9, f2 + 0.24, iz0b + 1.4);
+    solid(roomCx - 0.78, roomCx + 0.78, roomCz - 1.4 - 0.41, roomCz - 1.4 + 0.41);
+    solid(ix0b + 0.55 - 0.9, ix0b + 0.55 + 0.9, roomCz + 2.2 - 0.21, roomCz + 2.2 + 0.21);
     const roomLamp = new THREE.PointLight(0xfff4d2, 4.2, 14, 2);
     roomLamp.position.set(roomCx, f3 - 0.35, roomCz);
     add(roomLamp);
@@ -441,10 +474,11 @@ export function createBazaar() {
   const balX1 = pink.x1;
   const SOUTH_WALL_Z = 12.4;
   const vanHalf = 2.06;
-  const vanZ = SOUTH_WALL_Z - vanHalf;
   const balD = 3.5;
+  const vanGap = 1.15;
+  const vanZ = pink.z1 + balD + vanHalf + vanGap;
   volume(balX0, balX1, 0, balTop, pink.z1 - 0.05, pink.z1 + balD, kit.blue);
-  solid(balX0, balX1, pink.z1 - 0.05, pink.z1 + balD);
+  platform(balX0, balX1, pink.z1 - 0.05, pink.z1 + balD, balTop);
   placeWindow(
     (balX0 + balX1) / 2,
     balTop,
@@ -697,15 +731,15 @@ export function createBazaar() {
   parapet(recX0, recX1, recZ1, south.z1, south.h, kit.sand);
 
   // ---------- 货车 ----------
-  // 竖放：中心 X 与西楼对齐，车头紧贴南侧围墙。
+  // 竖放：中心 X 与西楼对齐，停在阳台南侧通道并留空，车顶可助跑跳上二楼阳台。
   const vanRot = 0;
   const vanX = pinkCx;
   const van = new THREE.Group();
   van.position.set(vanX, 0, vanZ);
   van.rotation.y = vanRot;
-  const bodyH = 1.62;
-  const bodyY = 1.28;
-  const vanTop = bodyY + bodyH / 2;
+  const vanTop = 2.35;
+  const bodyH = 1.88;
+  const bodyY = vanTop - bodyH / 2;
   const body = new THREE.Mesh(makeBox(1.78, bodyH, 4.05), kit.van);
   body.position.y = bodyY;
   van.add(body);
@@ -713,12 +747,12 @@ export function createBazaar() {
   trimBand.position.y = 0.62;
   van.add(trimBand);
   const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(1.35, 0.62), kit.glass);
-  glassPane.position.set(0, 1.55, 2.03);
+  glassPane.position.set(0, 1.72, 2.03);
   glassPane.userData.noShadow = true;
   van.add(glassPane);
   for (const sx of [-1, 1]) {
     const sideGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.48), kit.glass);
-    sideGlass.position.set(sx * 0.9, 1.52, 0.85);
+    sideGlass.position.set(sx * 0.9, 1.68, 0.85);
     sideGlass.rotation.y = sx * Math.PI / 2;
     sideGlass.userData.noShadow = true;
     van.add(sideGlass);
@@ -728,6 +762,7 @@ export function createBazaar() {
     for (const sz of [-1.25, 1.25]) {
       const wheel = new THREE.Mesh(wheelGeo, kit.rubber);
       wheel.rotation.z = Math.PI / 2;
+      wheel.scale.z = 1 / MAP_SCALE;
       wheel.position.set(sx * 0.82, 0.34, sz);
       van.add(wheel);
     }
@@ -758,9 +793,9 @@ export function createBazaar() {
   // 车身东侧一只木箱当跳板，先跳上箱子再跳上货车。
   {
     const cw = 0.92;
-    const ch = 0.98;
+    const ch = 1.05;
     const cd = 0.88;
-    crate(vanX + 0.95 + cw / 2 + 0.06, vanZ - 0.55, cw, ch, cd, 0xc99555, 0, true);
+    crate(vanX + 0.95 + cw / 2 + 0.06, vanZ - 0.85, cw, ch, cd, 0xc99555, 0, true);
   }
 
   // ---------- 电线、橙布 ----------
@@ -838,7 +873,21 @@ export function createBazaar() {
   group.add(bin);
   solid(canX - canR, canX + canR, canZ - canR, canZ + canR);
 
+  group.scale.set(MAP_SCALE, 1, MAP_SCALE);
+  for (const list of [solids, platforms, rooms]) {
+    for (const b of list) {
+      b.minX *= MAP_SCALE;
+      b.maxX *= MAP_SCALE;
+      b.minZ *= MAP_SCALE;
+      b.maxZ *= MAP_SCALE;
+    }
+  }
+
   group.traverse((obj) => {
+    if (obj.isPointLight) {
+      obj.distance *= MAP_SCALE;
+      obj.intensity *= MAP_SCALE;
+    }
     if (!obj.isMesh) return;
     obj.castShadow = !obj.userData.noShadow;
     obj.receiveShadow = !obj.userData.noReceive;
