@@ -149,19 +149,53 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
   let swing = 0;
   const effects = [];
 
-  const blade = new THREE.Group();
-  const bladeMetal = new THREE.Mesh(
-    new THREE.BoxGeometry(0.028, 0.008, 0.34),
-    new THREE.MeshStandardMaterial({ color: 0xd7dbe2, metalness: 0.82, roughness: 0.28 }),
-  );
-  const bladeGrip = new THREE.Mesh(
-    new THREE.BoxGeometry(0.034, 0.016, 0.09),
-    new THREE.MeshStandardMaterial({ color: 0x2c261f, roughness: 0.72 }),
-  );
-  bladeGrip.position.z = 0.2;
-  blade.add(bladeMetal, bladeGrip);
-  blade.visible = false;
-  scene.add(blade);
+  const viewmodel = new THREE.Group();
+  const rifleView = new THREE.Group();
+  const pistolView = new THREE.Group();
+  const knifeView = new THREE.Group();
+  viewmodel.add(rifleView, pistolView, knifeView);
+  scene.add(viewmodel);
+  const gunMetal = new THREE.MeshStandardMaterial({ color: 0x2a2e33, metalness: 0.72, roughness: 0.38 });
+  const slideMetal = new THREE.MeshStandardMaterial({ color: 0xc5c9d0, metalness: 0.65, roughness: 0.32 });
+  const gunDark = new THREE.MeshStandardMaterial({ color: 0x1a1d21, metalness: 0.45, roughness: 0.55 });
+  const gloveMat = new THREE.MeshStandardMaterial({ color: 0x1c1f24, roughness: 0.8 });
+  const hand = (parent, x, y, z, sx = 0.09, sy = 0.07, sz = 0.1) => {
+    const mesh = noRaycast(new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), gloveMat));
+    mesh.position.set(x, y, z);
+    parent.add(mesh);
+  };
+  const part = (parent, geo, mat, x, y, z, rx = 0) => {
+    const mesh = noRaycast(new THREE.Mesh(geo, mat));
+    mesh.position.set(x, y, z);
+    mesh.rotation.x = rx;
+    parent.add(mesh);
+    return mesh;
+  };
+  const tip = (parent, x, y, z) => {
+    const mark = new THREE.Object3D();
+    mark.position.set(x, y, z);
+    parent.add(mark);
+    return mark;
+  };
+  part(rifleView, new THREE.BoxGeometry(0.05, 0.08, 0.18), gunDark, 0, 0.02, -0.2);
+  part(rifleView, new THREE.BoxGeometry(0.055, 0.08, 0.26), gunMetal, 0, 0.03, 0.02);
+  part(rifleView, new THREE.BoxGeometry(0.02, 0.025, 0.08), gunDark, 0, 0.075, 0.04);
+  part(rifleView, new THREE.CylinderGeometry(0.012, 0.012, 0.42, 8), gunDark, 0, 0.04, 0.34, Math.PI / 2);
+  part(rifleView, new THREE.BoxGeometry(0.034, 0.12, 0.045), gunDark, 0, -0.07, 0.02);
+  hand(rifleView, 0.02, -0.04, 0.02, 0.07, 0.05, 0.09);
+  const rifleMuzzleMark = tip(rifleView, 0, 0.04, 0.56);
+  part(pistolView, new THREE.BoxGeometry(0.05, 0.055, 0.2), slideMetal, 0, 0.045, 0.05);
+  part(pistolView, new THREE.BoxGeometry(0.012, 0.02, 0.04), gunDark, 0, 0.08, -0.02);
+  part(pistolView, new THREE.CylinderGeometry(0.011, 0.011, 0.1, 8), gunDark, 0, 0.04, 0.17, Math.PI / 2);
+  part(pistolView, new THREE.BoxGeometry(0.04, 0.12, 0.05), gunDark, 0, -0.04, -0.03);
+  hand(pistolView, 0.015, -0.045, -0.02, 0.07, 0.055, 0.08);
+  const pistolMuzzleMark = tip(pistolView, 0, 0.04, 0.23);
+  pistolView.scale.setScalar(1.15);
+  rifleView.scale.setScalar(1.05);
+  part(knifeView, new THREE.BoxGeometry(0.02, 0.006, 0.28), gunMetal, 0, 0, 0.08);
+  part(knifeView, new THREE.BoxGeometry(0.028, 0.016, 0.09), gunDark, 0, -0.004, -0.1);
+  hand(knifeView, 0.01, -0.01, -0.08, 0.08, 0.06, 0.1);
+  let viewKick = 0;
 
   const flashLight = new THREE.PointLight(0xffa040, 0, 8, 2);
   scene.add(flashLight);
@@ -422,6 +456,7 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     spawnTracer(start, dir, end);
     if (impacted) spawnHole(end, normal);
     recoil = item.recoil;
+    viewKick = weapon === 'pistol' ? 0.035 : 0.05;
     tone(weapon === 'pistol' ? 210 : 140, 0.09, weapon === 'pistol' ? 0.14 : 0.22, 'square');
   }
 
@@ -429,7 +464,8 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     camera.updateMatrixWorld();
     camera.getWorldDirection(aim);
     muzzle.copy(camera.position).addScaledVector(aim, 0.35);
-    gunMuzzle.set(0.16, -0.14, -0.42).applyMatrix4(camera.matrixWorld);
+    placeViewmodel();
+    (weapon === 'pistol' ? pistolMuzzleMark : rifleMuzzleMark).getWorldPosition(gunMuzzle);
     raycaster.set(weapon === 'knife' ? camera.position : muzzle, aim);
     raycaster.far = reach;
     const hits = raycaster.intersectObject(target, true);
@@ -444,15 +480,54 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     return hit;
   }
 
-  function placeBlade() {
-    const t = 1 - swing / SWING_TIME;
+  const viewPos = new THREE.Vector3();
+  const viewQuat = new THREE.Quaternion();
+  const viewScale = new THREE.Vector3();
+
+  function placeViewmodel() {
+    const fp = isFirstPerson();
+    viewmodel.visible = fp;
+    if (!fp) return;
+    rifleView.visible = weapon === 'rifle';
+    pistolView.visible = weapon === 'pistol';
+    knifeView.visible = weapon === 'knife';
     camera.updateMatrixWorld();
-    gunMuzzle.set(0.46 - t * 0.92, -0.16 + Math.sin(t * Math.PI) * 0.12, -0.5);
-    gunMuzzle.applyMatrix4(camera.matrixWorld);
-    blade.position.copy(gunMuzzle);
-    blade.quaternion.copy(camera.quaternion);
-    blade.rotateZ(-1.2 + t * 2.4);
-    blade.rotateX(0.45);
+    let x = 0.22;
+    let y = -0.28;
+    let z = -0.68;
+    let pitch = -0.12;
+    let yaw = Math.PI + 0.5;
+    let roll = 0.1;
+    if (weapon === 'pistol') {
+      x = 0.08;
+      y = -0.18;
+      z = -0.52;
+      pitch = -0.18;
+      yaw = Math.PI + 0.5;
+      roll = 0.2;
+    } else if (weapon === 'knife') {
+      x = 0.3;
+      y = -0.22;
+      z = -0.46;
+      pitch = 0.55;
+      yaw = Math.PI - 0.15;
+      roll = -0.7;
+      if (swing > 0) {
+        const t = 1 - swing / SWING_TIME;
+        x = 0.46 - t * 0.78;
+        y = -0.18 + Math.sin(t * Math.PI) * 0.1;
+        roll = -1.15 + t * 2.3;
+      }
+    }
+    if (reloading && weapon !== 'knife') y -= 0.08;
+    if (viewKick > 0) z += viewKick;
+    viewPos.set(x, y, z);
+    viewQuat.setFromEuler(new THREE.Euler(pitch, yaw, roll, 'YXZ'));
+    const local = new THREE.Matrix4().compose(viewPos, viewQuat, viewScale.set(1, 1, 1));
+    viewmodel.matrix.copy(camera.matrixWorld).multiply(local);
+    viewmodel.matrix.decompose(viewmodel.position, viewmodel.quaternion, viewScale);
+    viewmodel.scale.set(1, 1, 1);
+    viewmodel.updateMatrixWorld(true);
   }
 
   function tryFire() {
@@ -460,7 +535,6 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     if (weapon === 'knife') {
       gap = spec().gap;
       swing = SWING_TIME;
-      blade.visible = true;
       tone(460, 0.08, 0.07, 'sawtooth');
       const hit = aimShot(KNIFE_REACH);
       if (hit) spawnSlash(hitPoint, hitNormal);
@@ -531,15 +605,11 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     if (!isFirstPerson()) {
       holding = false;
       swing = 0;
-      blade.visible = false;
     } else if (holding && spec().auto) {
       tryFire();
     }
-    if (swing > 0) {
-      swing = Math.max(0, swing - dt);
-      placeBlade();
-      blade.visible = swing > 0;
-    }
+    if (swing > 0) swing = Math.max(0, swing - dt);
+    if (viewKick > 0) viewKick = Math.max(0, viewKick - dt * 0.45);
     if (reloading) {
       reloadLeft -= dt;
       if (reloadLeft <= 0) {
@@ -574,6 +644,7 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
       }
     }
     if (recoil > 0) recoil = Math.max(0, recoil - dt * 0.55);
+    placeViewmodel();
     paint();
   }
 
