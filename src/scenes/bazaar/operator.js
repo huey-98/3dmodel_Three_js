@@ -246,32 +246,55 @@ function buildRifle(chest, materials) {
   rifle.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(barrel, y, z));
   rifle.position.set(0.0, 1.2, 0.2);
 
-  put(rifle, new THREE.BoxGeometry(0.018, 0.11, 0.044), materials.metal, -0.3, 0.02, 0);
-  put(rifle, new THREE.BoxGeometry(0.15, 0.058, 0.04), materials.wood, -0.21, 0.028, 0);
-  put(rifle, new THREE.BoxGeometry(0.07, 0.04, 0.032), materials.wood, -0.1, 0.036, 0);
-  put(rifle, new THREE.BoxGeometry(0.2, 0.068, 0.048), materials.rifle, 0.02, 0.046, 0);
-  put(rifle, new THREE.BoxGeometry(0.13, 0.016, 0.04), materials.rifleDark, -0.005, 0.086, 0);
-  put(rifle, new THREE.BoxGeometry(0.022, 0.032, 0.02), materials.metal, 0.09, 0.108, 0);
-  put(rifle, new THREE.BoxGeometry(0.02, 0.016, 0.018), materials.metal, 0.02, 0.05, -0.032);
-  put(rifle, new THREE.BoxGeometry(0.038, 0.09, 0.034), materials.wood, -0.035, -0.015, 0, 0, 0, -0.42);
-  put(rifle, new THREE.BoxGeometry(0.045, 0.012, 0.03), materials.metal, 0.01, -0.002, 0);
-  put(rifle, new THREE.BoxGeometry(0.055, 0.09, 0.048), materials.rifleDark, 0.04, -0.02, 0, 0, 0, 0.12);
-  put(rifle, new THREE.BoxGeometry(0.048, 0.08, 0.044), materials.rifleDark, 0.07, -0.075, 0, 0, 0, 0.42);
-  put(rifle, new THREE.BoxGeometry(0.18, 0.058, 0.048), materials.wood, 0.2, 0.04, 0);
-  const gas = put(rifle, new THREE.CylinderGeometry(0.01, 0.01, 0.1, 8), materials.metal, 0.18, 0.074, 0);
-  gas.rotation.z = Math.PI / 2;
-  put(rifle, new THREE.BoxGeometry(0.024, 0.032, 0.032), materials.rifleDark, 0.3, 0.055, 0);
-  const bore = put(rifle, new THREE.CylinderGeometry(0.012, 0.011, 0.38, 8), materials.metal, 0.36, 0.048, 0);
-  bore.rotation.z = Math.PI / 2;
-  put(rifle, new THREE.BoxGeometry(0.032, 0.032, 0.03), materials.rifleDark, 0.5, 0.068, 0);
-  const muzzle = put(rifle, new THREE.CylinderGeometry(0.015, 0.013, 0.04, 8), materials.metal, 0.56, 0.048, 0);
+  const buffer = put(rifle, new THREE.CylinderGeometry(0.01, 0.01, 0.12, 8), materials.rifleOrange, -0.24, 0.02, 0);
+  buffer.rotation.z = Math.PI / 2;
+  put(rifle, new THREE.BoxGeometry(0.05, 0.09, 0.1), materials.rifleDark, -0.32, 0.018, 0);
+  put(rifle, new THREE.BoxGeometry(0.012, 0.05, 0.1), materials.rifleDark, 0.016, 0.034, -0.28);
+  put(rifle, new THREE.BoxGeometry(0.012, 0.05, 0.1), materials.rifleDark, -0.016, 0.034, -0.28);
+  put(rifle, new THREE.BoxGeometry(0.18, 0.058, 0.048), materials.rifle, -0.02, 0.042, 0);
+  put(rifle, new THREE.BoxGeometry(0.16, 0.032, 0.044), materials.rifle, -0.02, 0.082, 0);
+  put(rifle, new THREE.BoxGeometry(0.008, 0.012, 0.028), materials.metal, -0.02, 0.054, 0.02);
+  put(rifle, new THREE.BoxGeometry(0.012, 0.048, 0.012), materials.metal, 0.05, 0.038, 0);
+  put(rifle, new THREE.BoxGeometry(0.14, 0.04, 0.04), materials.rifleDark, -0.02, 0.108, 0);
+  put(rifle, new THREE.BoxGeometry(0.022, 0.012, 0.012), materials.metal, 0.0, 0.116, 0);
+  put(rifle, new THREE.BoxGeometry(0.01, 0.016, 0.016), materials.emblem, -0.02, 0.098, 0.022);
+  put(rifle, new THREE.BoxGeometry(0.036, 0.088, 0.036), materials.rifleDark, -0.05, -0.02, 0, 0, 0, -0.38);
+  put(rifle, new THREE.BoxGeometry(0.04, 0.008, 0.028), materials.metal, 0.01, -0.004, 0);
+  put(rifle, new THREE.BoxGeometry(0.046, 0.078, 0.044), materials.rifleDark, 0.04, -0.038, 0, 0, 0, -0.08);
+  put(rifle, new THREE.BoxGeometry(0.016, 0.018, 0.032), materials.rifleOrange, 0.02, 0.104, 0);
+  put(rifle, new THREE.BoxGeometry(0.19, 0.044, 0.048), materials.rifleDark, 0.2, 0.036, 0);
+  for (let i = 0; i < 6; i++) {
+    put(rifle, new THREE.BoxGeometry(0.052, 0.005, 0.048), materials.black, 0.2, 0.036, 0.02 + i * 0.028);
+  }
+  put(rifle, new THREE.BoxGeometry(0.06, 0.016, 0.024), materials.metal, 0.04, 0.052, 0);
+  put(rifle, new THREE.BoxGeometry(0.28, 0.03, 0.026), materials.metal, 0.2, 0.064, 0);
+  put(rifle, new THREE.BoxGeometry(0.26, 0.018, 0.026), materials.metal, 0.2, 0.076, 0);
+  put(rifle, new THREE.BoxGeometry(0.04, 0.03, 0.026), materials.metal, 0.34, 0.064, 0);
+  for (let i = 0; i < 8; i++) {
+    put(rifle, new THREE.BoxGeometry(0.032, 0.003, 0.022), materials.black, 0.1 + i * 0.028, 0.062, 0);
+  }
+  const gasTube = put(rifle, new THREE.CylinderGeometry(0.003, 0.003, 0.28, 6), materials.black, 0.2, 0.058, 0);
+  gasTube.rotation.z = Math.PI / 2;
+  const boreA = put(rifle, new THREE.CylinderGeometry(0.009, 0.009, 0.12, 8), materials.rifleOrange, 0.32, 0.042, 0);
+  boreA.rotation.z = Math.PI / 2;
+  put(rifle, new THREE.BoxGeometry(0.024, 0.026, 0.018), materials.rifleDark, 0.3, 0.042, 0);
+  put(rifle, new THREE.BoxGeometry(0.006, 0.02, 0.012), materials.rifleDark, 0.3, 0.04, 0.024);
+  put(rifle, new THREE.BoxGeometry(0.006, 0.02, 0.012), materials.rifleDark, 0.3, 0.04, -0.024);
+  put(rifle, new THREE.BoxGeometry(0.004, 0.02, 0.008), materials.metal, 0.3, 0.056, 0);
+  const boreB = put(rifle, new THREE.CylinderGeometry(0.009, 0.009, 0.14, 8), materials.rifleOrange, 0.44, 0.042, 0);
+  boreB.rotation.z = Math.PI / 2;
+  put(rifle, new THREE.BoxGeometry(0.042, 0.008, 0.028), materials.metal, 0.52, 0.042, 0);
+  const muzzle = put(rifle, new THREE.CylinderGeometry(0.016, 0.016, 0.22, 10), materials.rifleDark, 0.58, 0.042, 0);
   muzzle.rotation.z = Math.PI / 2;
+  for (let i = 0; i < 4; i++) {
+    put(rifle, new THREE.BoxGeometry(0.036, 0.003, 0.016), materials.black, 0.54 + i * 0.03, 0.042, 0);
+  }
 
   const grip = new THREE.Object3D();
-  grip.position.set(-0.02, -0.04, 0);
+  grip.position.set(-0.05, -0.04, 0);
   rifle.add(grip);
   const support = new THREE.Object3D();
-  support.position.set(0.24, 0.01, 0);
+  support.position.set(0.2, 0.01, 0);
   rifle.add(support);
 
   const gloveGeo = new THREE.BoxGeometry(0.09, 0.08, 0.08);
@@ -345,7 +368,8 @@ export function createCtOperator() {
     pad: mat(PAD, { roughness: 0.64, metalness: 0.08 }),
     rifle: mat(RIFLE, { roughness: 0.4, metalness: 0.62 }),
     rifleDark: mat(RIFLE_DARK, { roughness: 0.46, metalness: 0.5 }),
-    wood: mat(0x7a4326, { roughness: 0.82, metalness: 0.02 }),
+    rifleOrange: mat(0xff6600, { roughness: 0.4, metalness: 0.4 }),
+    emblem: mat(0xc41e24, { roughness: 0.5, emissive: 0x8a1018, emissiveIntensity: 0.3 }),
     metal: mat(METAL, { roughness: 0.28, metalness: 0.78 }),
     glove: mat(0x1a1d21, { roughness: 0.7 }),
     buckle: mat(0x8a9098, { roughness: 0.32, metalness: 0.7 }),
