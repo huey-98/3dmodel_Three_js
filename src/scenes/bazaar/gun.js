@@ -6,14 +6,71 @@ const FIRE_GAP = 0.09;
 const RELOAD_TIME = 1.65;
 const RANGE = 48;
 
-const tracerGeo = new THREE.BoxGeometry(0.02, 0.02, 1);
-const flashGeo = new THREE.SphereGeometry(0.08, 8, 6);
-const sparkGeo = new THREE.SphereGeometry(0.06, 8, 6);
+const tracerGeo = new THREE.BoxGeometry(0.045, 0.045, 1);
+const chipGeo = new THREE.BoxGeometry(0.035, 0.02, 0.05);
+const holeGeo = new THREE.PlaneGeometry(0.36, 0.36);
 const zAxis = new THREE.Vector3(0, 0, 1);
 const aim = new THREE.Vector3();
 const muzzle = new THREE.Vector3();
 const hitPoint = new THREE.Vector3();
+const hitNormal = new THREE.Vector3();
+const flashAnchor = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();
+const FLASH_LIFE = 0.2;
+const HOLE_LIFE = 3;
+
+function canvasTex(size, draw) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  draw(canvas.getContext('2d'), size);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const flameMap = canvasTex(128, (ctx, s) => {
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,245,1)');
+  g.addColorStop(0.18, 'rgba(255,214,90,0.95)');
+  g.addColorStop(0.42, 'rgba(255,110,24,0.62)');
+  g.addColorStop(1, 'rgba(255,40,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+});
+
+const holeMap = canvasTex(160, (ctx, s) => {
+  const c = s / 2;
+  ctx.clearRect(0, 0, s, s);
+  ctx.fillStyle = 'rgba(92,74,54,0.55)';
+  ctx.beginPath();
+  ctx.arc(c, c, 58, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(48,36,28,0.78)';
+  ctx.beginPath();
+  ctx.arc(c, c, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#1a1410';
+  ctx.beginPath();
+  ctx.arc(c, c, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(28,20,14,0.9)';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + 0.2;
+    const len = 46 + (i % 3) * 12;
+    ctx.beginPath();
+    ctx.moveTo(c + Math.cos(a) * 12, c + Math.sin(a) * 12);
+    ctx.lineTo(c + Math.cos(a) * len, c + Math.sin(a) * len);
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(168,150,128,0.8)';
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    ctx.fillRect(c + Math.cos(a) * 24 - 3, c + Math.sin(a) * 24 - 2, 7, 4);
+  }
+});
 
 function additive(color) {
   return new THREE.MeshBasicMaterial({
@@ -37,9 +94,26 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
   let reloading = false;
   let reloadLeft = 0;
   let recoil = 0;
+  let flashLife = 0;
   const effects = [];
 
-  const flashLight = new THREE.PointLight(0xffe2b0, 0, 7, 2);
+  const flashMat = new THREE.SpriteMaterial({
+    map: flameMap,
+    color: 0xfff4d2,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    depthTest: false,
+  });
+  const coreMat = flashMat.clone();
+  coreMat.color.setHex(0xffffff);
+  const flash = new THREE.Sprite(flashMat);
+  const core = new THREE.Sprite(coreMat);
+  flash.visible = false;
+  core.visible = false;
+  scene.add(flash, core);
+
+  const flashLight = new THREE.PointLight(0xffb45a, 0, 10, 2);
   scene.add(flashLight);
 
   const hud = document.createElement('div');
@@ -88,31 +162,88 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     hud.style.color = ammo === 0 && !reloading ? '#ffb4a8' : '#fff';
   }
 
-  function addEffect(mesh, life) {
+  function addEffect(mesh, life, extra = {}) {
     scene.add(mesh);
-    effects.push({ mesh, life, max: life });
+    effects.push({ mesh, life, max: life, ...extra });
   }
 
-  function spawnShot(start, dir, end, impacted) {
-    const flash = noRaycast(new THREE.Mesh(flashGeo, additive(0xfff0c8)));
-    flash.position.copy(start);
-    addEffect(flash, 0.045);
+  function placeFlash() {
+    camera.updateMatrixWorld();
+    flashAnchor.set(0.1, -0.16, -0.62);
+    camera.localToWorld(flashAnchor);
+    flash.position.copy(flashAnchor);
+    core.position.copy(flashAnchor);
+    flashLight.position.copy(flashAnchor);
+  }
 
-    const tracer = noRaycast(new THREE.Mesh(tracerGeo, additive(0xffc56a)));
+  function spawnMuzzle() {
+    flashLife = FLASH_LIFE;
+    flash.visible = true;
+    core.visible = true;
+    const spread = 0.85 + Math.random() * 0.35;
+    flash.scale.set(0.52 * spread, 0.52 * spread, 1);
+    core.scale.set(0.18 * spread, 0.18 * spread, 1);
+    flashMat.rotation = Math.random() * Math.PI;
+    flashMat.opacity = 1;
+    coreMat.opacity = 1;
+    placeFlash();
+    flashLight.intensity = 28;
+  }
+
+  function spawnHole(point, normal) {
+    const mat = new THREE.MeshBasicMaterial({
+      map: holeMap,
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
+      side: THREE.DoubleSide,
+    });
+    const hole = noRaycast(new THREE.Mesh(holeGeo, mat));
+    const align = new THREE.Quaternion().setFromUnitVectors(zAxis, normal);
+    const spin = new THREE.Quaternion().setFromAxisAngle(normal, Math.random() * Math.PI * 2);
+    hole.quaternion.copy(align).premultiply(spin);
+    hole.position.copy(point).addScaledVector(normal, 0.025);
+    hole.scale.setScalar(0.85 + Math.random() * 0.35);
+    addEffect(hole, HOLE_LIFE, { hold: true });
+
+    for (let i = 0; i < 5; i++) {
+      const chip = noRaycast(new THREE.Mesh(
+        chipGeo,
+        new THREE.MeshStandardMaterial({
+          color: i % 2 ? 0x6a5344 : 0x2a211c,
+          roughness: 0.9,
+          transparent: true,
+        }),
+      ));
+      chip.position.copy(point).addScaledVector(normal, 0.04);
+      chip.rotation.set(Math.random(), Math.random(), Math.random());
+      const velocity = normal.clone().multiplyScalar(1.4 + Math.random() * 1.6);
+      velocity.x += (Math.random() - 0.5) * 1.8;
+      velocity.z += (Math.random() - 0.5) * 1.8;
+      addEffect(chip, 0.55, {
+        tick(item, dt) {
+          velocity.y -= 9 * dt;
+          item.mesh.position.addScaledVector(velocity, dt);
+          item.mesh.rotation.x += dt * 8;
+        },
+      });
+    }
+  }
+
+  function spawnShot(start, dir, end, impacted, normal) {
+    spawnMuzzle();
+
+    const tracer = noRaycast(new THREE.Mesh(tracerGeo, additive(0xfff0c2)));
     const length = Math.max(0.2, start.distanceTo(end));
     tracer.position.copy(start).lerp(end, 0.5);
     tracer.scale.z = length;
     tracer.quaternion.setFromUnitVectors(zAxis, dir);
-    addEffect(tracer, 0.07);
+    addEffect(tracer, 0.12);
 
-    if (impacted) {
-      const spark = noRaycast(new THREE.Mesh(sparkGeo, additive(0xffb15a)));
-      spark.position.copy(end);
-      addEffect(spark, 0.12);
-    }
+    if (impacted) spawnHole(end, normal);
 
-    flashLight.position.copy(start);
-    flashLight.intensity = 6;
     recoil = 0.028;
     tone(140, 0.09, 0.22, 'square');
   }
@@ -132,10 +263,15 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     raycaster.set(muzzle, aim);
     raycaster.far = RANGE;
     const hits = raycaster.intersectObject(target, true);
-    const hit = hits.find((item) => item.object.visible && item.distance > 0.2);
-    if (hit) hitPoint.copy(hit.point);
-    else hitPoint.copy(muzzle).addScaledVector(aim, RANGE);
-    spawnShot(muzzle, aim, hitPoint, Boolean(hit));
+    const hit = hits.find((item) => item.object.visible && item.face && item.distance > 0.2);
+    if (hit) {
+      hitPoint.copy(hit.point);
+      hitNormal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).normalize();
+      if (hitNormal.dot(aim) > 0) hitNormal.negate();
+    } else {
+      hitPoint.copy(muzzle).addScaledVector(aim, RANGE);
+    }
+    spawnShot(muzzle, aim, hitPoint, Boolean(hit), hitNormal);
     paint();
   }
 
@@ -167,11 +303,27 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
         tone(320, 0.05, 0.08, 'triangle');
       }
     }
-    flashLight.intensity = Math.max(0, flashLight.intensity - dt * 90);
+    if (flashLife > 0) {
+      flashLife = Math.max(0, flashLife - dt);
+      const k = flashLife / FLASH_LIFE;
+      flashMat.opacity = k;
+      coreMat.opacity = k;
+      flash.scale.multiplyScalar(1 + dt * 2.2);
+      placeFlash();
+      flashLight.intensity = 28 * k;
+      if (flashLife === 0) {
+        flash.visible = false;
+        core.visible = false;
+        flashLight.intensity = 0;
+      }
+    }
     for (let i = effects.length - 1; i >= 0; i--) {
       const effect = effects[i];
       effect.life -= dt;
-      effect.mesh.material.opacity = Math.max(0, effect.life / effect.max);
+      if (effect.tick) effect.tick(effect, dt);
+      const fade = effect.hold ? 0.35 : effect.max;
+      const left = effect.hold ? Math.min(effect.life, fade) : effect.life;
+      effect.mesh.material.opacity = Math.max(0, left / fade);
       if (effect.life <= 0) {
         scene.remove(effect.mesh);
         effect.mesh.material.dispose();
