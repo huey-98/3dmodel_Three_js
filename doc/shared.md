@@ -53,15 +53,24 @@
 
 ## 第一人称 `firstPerson.js`
 
-`createFirstPersonView({ camera, domElement, controls, subject })` 给别墅和荒漠迷城用。女仆展示页不创建它。
+`createFirstPersonView({ camera, domElement, controls, subject, getLookScale })` 给别墅和荒漠迷城用。女仆展示页不创建它。`getLookScale` 缺省时按 1。
 
 返回 `{ isActive, apply, facingYaw, addYaw, setReturnOffset }`。模块自己监听 `KeyV`（忽略按住连发，以及 Ctrl / Alt / Meta）。
 
 - 进入时记下相机相对 `controls.target` 的偏移，供退出时还原；偏移过短时改记成 `(3.5, 2.2, 5)`。水平角对齐 `subject` 局部 +Z 的世界朝向，俯仰为 0，不沿用轨道镜头的俯角。然后 `controls.enabled = false`，`subject.visible = false`，显示 `#crosshair`，并请求指针锁定。
 - `#crosshair` 是加到 `document.body` 的固定定位十字，四条白线带深色描边，不接收指针事件。屏幕中心留空。
-- 指针锁定时用 `movementX/Y` 转向，灵敏度 `0.0026` 弧度/像素。未锁定时只用落在 `domElement` 上的鼠标位移，单次超过 150 像素的跳变忽略。俯仰限制为 `±(π/2 - 0.02)`。鼠标右移增加朝右的水平角，鼠标下移降低俯仰。
+- 指针锁定时用 `movementX/Y` 转向，基础灵敏度 `0.0026` 弧度/像素，再乘 `getLookScale()`。未锁定时只用落在 `domElement` 上的鼠标位移，单次超过 150 像素的跳变忽略。俯仰限制为 `±(π/2 - 0.02)`。鼠标右移增加朝右的水平角，鼠标下移降低俯仰。
 - `apply(eyeWorld)` 把相机放到该世界坐标，并看向由水平角和俯仰组成的方向。未处于第一人称时直接返回 `false`。
 - `facingYaw()` 是水平视线对应的角色 `rotation.y`（角色局部 +Z 为面朝方向）。
 - `addYaw(delta)` 在此基础上再转一个水平角。别墅用它把船头的航向增量加进视线。
 - `setReturnOffset(px, py, pz, tx, ty, tz)` 改写退出时要恢复的相机偏移，不移动当前相机。
 - 退出时先清掉轨道控制上未完成的拖拽和残余旋转，把相机放到当前 `target` 加上记下的偏移，调用一次 `controls.update()`，再解开指针锁定、隐藏准星、显示角色。Esc 只释放鼠标，不退出第一人称；光标在未锁定时为 `crosshair`，锁定后由浏览器隐藏。
+
+## 走动设置 `playSettings.js`
+
+`createPlaySettings()` 在页面右上角放入「设置」按钮，并把它和已有的「返回目录」排在同一行。点开后面板里有两条滑杆：
+
+- 移动速度：50%–250%，步进 5%，默认 100%。场景把步行、加速，以及别墅自动走进门的速度乘上这个比例。
+- 鼠标灵敏度：25%–300%，步进 5%，默认 100%。第一人称用它作为 `getLookScale()`。
+
+返回 `{ moveScale, lookScale }`，都是读取当前比例的函数。改滑杆时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale }`）。读不到或数值超出范围时回到默认 1。面板打开时如果鼠标还被锁定，会先释放锁定。

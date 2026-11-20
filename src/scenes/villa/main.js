@@ -10,6 +10,7 @@ import {
 } from './environment.js';
 import { createBoat } from '@shared/boat.js';
 import { createFirstPersonView } from '@shared/firstPerson.js';
+import { createPlaySettings } from '@shared/playSettings.js';
 import { createInterior, FURNITURE_RECTS } from './interior.js';
 import { createWhaleMaid } from '@shared/whaleMaid.js';
 
@@ -77,11 +78,13 @@ controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI / 2 - 0.03;
 controls.minDistance = 3;
 controls.maxDistance = 70;
+const settings = createPlaySettings();
 const view = createFirstPersonView({
   camera,
   domElement: renderer.domElement,
   controls,
   subject: person.group,
+  getLookScale: () => settings.lookScale(),
 });
 
 // ---------- 键盘输入 ----------
@@ -431,6 +434,7 @@ function animate() {
       moving = true;
       if (keys.has('ShiftLeft') || keys.has('ShiftRight')) speed = 7;
     }
+    speed *= settings.moveScale();
 
     if (moving) {
       const nx2 = p.x + move.x * speed * dt;

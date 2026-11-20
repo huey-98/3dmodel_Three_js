@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { createBazaarKit } from './materials.js';
 
-// 参考图布局：中央绿篷棚屋（正面红字 B），左粉墙、后白楼、右蓝墙、南沙黄楼（露天凹槽），沙黄大地砖环绕。
+// 参考图布局：中央绿篷棚屋（正面红字 B），左蓝楼、后白楼、右沙黄楼、南沙黄楼（露天凹槽），沙黄大地砖环绕。
 const BOOTH = { x0: -4.95, x1: 5.25, z0: -4.2, z1: 5.05, h: 5.25 };
 
 export function createBazaar() {
@@ -290,13 +290,16 @@ export function createBazaar() {
   volume(B.x1 - 0.06, B.x1 + 0.22, beamY, beamY + 0.16, B.z0, B.z1, kit.beam);
   volume(B.x0, B.x1, beamY, beamY + 0.12, cz - 0.08, cz + 0.08, kit.beam);
 
-  // ---------- 左：粉墙 ----------
+  // ---------- 左：蓝楼（原红楼加高一层） ----------
   // 西贴边界墙；整体南移，北侧与北墙留空，南端给阳台和白车通道留空。
   const pink = { x0: -15.5, x1: -9.625, z0: -12.6, z1: 2.3, h: 7.35 };
+  const balTop = 3.92;
+  const storyH = pink.h - balTop;
+  pink.h += storyH;
   const pinkCx = (pink.x0 + pink.x1) / 2;
-  block(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.pink);
-  skirt(pink.x0, pink.x1, pink.z0, pink.z1, kit.skirtPink);
-  parapet(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.pink);
+  block(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.blue);
+  skirt(pink.x0, pink.x1, pink.z0, pink.z1, kit.skirtBlue);
+  parapet(pink.x0, pink.x1, pink.z0, pink.z1, pink.h, kit.blue);
   volume(pink.x0 - 0.06, pink.x1 + 0.06, pink.h - 0.08, pink.h + 0.08, pink.z0 - 0.06, pink.z1 + 0.06, kit.trim);
 
   const balX0 = pink.x0;
@@ -305,9 +308,7 @@ export function createBazaar() {
   const vanHalf = 2.06;
   const vanZ = SOUTH_WALL_Z - vanHalf;
   const balD = 3.5;
-  const balTop = 3.92;
-  const storyH = pink.h - balTop;
-  volume(balX0, balX1, 0, balTop, pink.z1 - 0.05, pink.z1 + balD, kit.pink);
+  volume(balX0, balX1, 0, balTop, pink.z1 - 0.05, pink.z1 + balD, kit.blue);
   solid(balX0, balX1, pink.z1 - 0.05, pink.z1 + balD);
   placeWindow(
     (balX0 + balX1) / 2,
@@ -319,8 +320,12 @@ export function createBazaar() {
     false,
   );
 
-  for (const z of [-11.1, -8.8, -6.5, -4.2, -1.9, 0.4, 2.05]) {
-    placeWindow(pink.x1 + 0.03, 4.4, z, 0.78, 1.05, Math.PI / 2, false);
+  // 二楼东立面两扇大窗；三楼实墙无窗。
+  const winW = 3.05;
+  const winH = 2.42;
+  const winY = balTop + 0.22;
+  for (const z of [-8.85, -1.25]) {
+    placeWindow(pink.x1 + 0.03, winY, z, winW, winH, Math.PI / 2, false);
   }
   box(0.34, 0.36, 0.7, kit.ac, pink.x1 + 0.18, 3.55, -0.2);
   const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, pink.h, 6), kit.metalDark);
@@ -374,8 +379,8 @@ export function createBazaar() {
   add(antenna);
   box(0.95, 0.03, 0.03, kit.metal, 3.7, 10.5, -13.75);
 
-  // ---------- 右：蓝墙 ----------
-  // 东移；北侧留空，宽度与红楼阳台到南墙相当。
+  // ---------- 右：沙黄楼 ----------
+  // 东移；北侧留空，宽度与西楼阳台到南墙相当。
   const blueDx = 2.5;
   const northGap = SOUTH_WALL_Z - (pink.z1 + balD);
   const blue = {
@@ -385,15 +390,15 @@ export function createBazaar() {
     z1: 12.42,
     h: 6.55,
   };
-  block(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
-  skirt(blue.x0, blue.x1, blue.z0, blue.z1, kit.skirtBlue);
-  parapet(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.blue);
+  block(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.sand);
+  skirt(blue.x0, blue.x1, blue.z0, blue.z1, kit.skirtSand);
+  parapet(blue.x0, blue.x1, blue.z0, blue.z1, blue.h, kit.sand);
   placeWindow(blue.x0 - 0.03, 0.42, 8.7, 3.6, 5.75, -Math.PI / 2, true);
   box(0.32, 0.12, 3.9, kit.concrete, blue.x0 - 0.2, 0.46, 8.7);
   placeWindow(blue.x0 - 0.03, 1.2, 0.25, 3.9, 4.2, -Math.PI / 2, false);
 
   // ---------- 南：沙黄楼，中心向南开露天凹槽 ----------
-  // 凹槽口的墙与蓝楼南沿齐平，略高于人物；左右各留通道。
+  // 凹槽口的墙与东楼南沿齐平，略高于人物；左右各留通道。
   const south = {
     x0: pink.x0,
     x1: blue.x1,
@@ -430,7 +435,7 @@ export function createBazaar() {
   parapet(recX0, recX1, recZ1, south.z1, south.h, kit.sand);
 
   // ---------- 货车 ----------
-  // 竖放：中心 X 与红楼对齐，车头紧贴南侧围墙。
+  // 竖放：中心 X 与西楼对齐，车头紧贴南侧围墙。
   const vanRot = 0;
   const vanX = pinkCx;
   const van = new THREE.Group();

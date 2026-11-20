@@ -2,9 +2,8 @@ import * as THREE from 'three';
 
 // 第一人称切换。进入时记下轨道镜头相对目标的偏移，退出时按当前目标还原。
 const PITCH_LIMIT = Math.PI / 2 - 0.02;
-const SENSITIVITY = 0.0026;
 
-export function createFirstPersonView({ camera, domElement, controls, subject }) {
+export function createFirstPersonView({ camera, domElement, controls, subject, getLookScale }) {
   let active = false;
   let yaw = 0;
   let pitch = 0;
@@ -55,9 +54,15 @@ export function createFirstPersonView({ camera, domElement, controls, subject })
   }
 
   function applyLookDelta(dx, dy) {
-    yaw -= dx * SENSITIVITY;
-    pitch -= dy * SENSITIVITY;
+    const sens = 0.0026 * lookScale();
+    yaw -= dx * sens;
+    pitch -= dy * sens;
     clampPitch();
+  }
+
+  function lookScale() {
+    const value = getLookScale ? getLookScale() : 1;
+    return Number.isFinite(value) && value > 0 ? value : 1;
   }
 
   function syncCursor() {

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createCtOperator } from './operator.js';
 import { createFirstPersonView } from '@shared/firstPerson.js';
+import { createPlaySettings } from '@shared/playSettings.js';
 import { createBazaar } from './world.js';
 import { createCarbine } from './gun.js';
 
@@ -56,11 +57,13 @@ controls.maxPolarAngle = Math.PI / 2 - 0.04;
 controls.minDistance = 3;
 controls.maxDistance = 42;
 controls.enablePan = false;
+const settings = createPlaySettings();
 const view = createFirstPersonView({
   camera,
   domElement: renderer.domElement,
   controls,
   subject: person.group,
+  getLookScale: () => settings.lookScale(),
 });
 const gun = createCarbine({
   scene,
@@ -157,7 +160,7 @@ function animate(now) {
       move.copy(forward).multiplyScalar(-iz).addScaledVector(right, ix).normalize();
     }
     moving = true;
-    const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7 : 3.6;
+    const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7 : 3.6) * settings.moveScale();
     const nx = p.x + move.x * speed * dt;
     const nz = p.z + move.z * speed * dt;
     if (!isBlocked(nx, nz)) {
