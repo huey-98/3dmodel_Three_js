@@ -13,7 +13,7 @@
 | 改简易小人、鲸尾女仆或小木船 | [doc/shared.md](doc/shared.md) |
 | 改别墅的建筑、室内、河桥、行走、上楼、开门或划船 | [doc/villa.md](doc/villa.md) |
 | 改女仆展示页的灯光、镜头或站立动画 | [doc/maid.md](doc/maid.md) |
-| 改荒漠迷城的街区、贴图、碰撞、棚内镜头或 CT 干员 | [doc/bazaar.md](doc/bazaar.md) |
+| 改荒漠迷城的街区、贴图、碰撞、棚内镜头、CT 干员或武器 | [doc/bazaar.md](doc/bazaar.md) |
 | 看文档目录 | [doc/README.md](doc/README.md) |
 
 场景之间不互相引用。改某个场景时只读该场景文档和它用到的共享模块；共享模块的签名被两个场景使用时，同时看 [doc/shared.md](doc/shared.md) 和调用方。

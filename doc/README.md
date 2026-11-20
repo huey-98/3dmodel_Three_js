@@ -11,4 +11,4 @@
 | [shared.md](./shared.md) | `src/shared` 的小人、鲸尾女仆、小木船：结构和返回值 |
 | [villa.md](./villa.md) | 别墅场景：建筑尺寸、楼梯、室内、河桥、开门、划船和镜头 |
 | [maid.md](./maid.md) | 女仆展示页：灯光、地面阴影和轨道相机 |
-| [bazaar.md](./bazaar.md) | 荒漠迷城：场地布局、材质、碰撞和棚内镜头 |
+| [bazaar.md](./bazaar.md) | 荒漠迷城：场地布局、材质、碰撞、棚内镜头、CT 干员和武器 |
