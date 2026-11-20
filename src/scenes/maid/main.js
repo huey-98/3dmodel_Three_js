@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { createWhaleMaid } from '@shared/whaleMaid.js';
+import { createPerfStats } from '@shared/perfStats.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf4f7fb);
@@ -16,6 +17,7 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
 document.body.appendChild(renderer.domElement);
+const perf = createPerfStats({ renderer, name: 'maid' });
 
 scene.add(new THREE.HemisphereLight(0xfff6ee, 0xc5d0dc, 0.85));
 
@@ -61,12 +63,14 @@ controls.update();
 
 const clock = new THREE.Clock();
 
-function animate() {
+function animate(now) {
   requestAnimationFrame(animate);
+  perf.beginFrame();
   const dt = Math.min(clock.getDelta(), 0.05);
   maid.update(dt);
   controls.update();
   renderer.render(scene, camera);
+  perf.endFrame(now);
 }
 animate();
 

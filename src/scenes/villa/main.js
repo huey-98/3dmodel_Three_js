@@ -13,6 +13,7 @@ import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createPlaySettings } from '@shared/playSettings.js';
 import { createInterior, FURNITURE_RECTS } from './interior.js';
 import { createWhaleMaid } from '@shared/whaleMaid.js';
+import { createPerfStats } from '@shared/perfStats.js';
 
 // ---------- 场景 / 相机 / 渲染器 ----------
 const scene = new THREE.Scene();
@@ -30,6 +31,7 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 document.body.appendChild(renderer.domElement);
+const perf = createPerfStats({ renderer, name: 'villa' });
 
 // ---------- 光照 ----------
 scene.add(new THREE.HemisphereLight(0xfff8ef, 0xe7d5bc, 0.74));
@@ -335,8 +337,9 @@ function rayHitT(origin, dir, box) {
   return tmin;
 }
 
-function animate() {
+function animate(now) {
   requestAnimationFrame(animate);
+  perf.beginFrame();
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
 
@@ -622,6 +625,7 @@ function animate() {
   }
 
   renderer.render(scene, camera);
+  perf.endFrame(now);
 }
 animate();
 

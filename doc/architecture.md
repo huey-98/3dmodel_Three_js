@@ -46,6 +46,10 @@ src/scenes/bazaar/         荒漠街区
 
 帧循环里 `dt` 都夹到最多 `0.05` 秒，避免切回标签页后物理一步过大。窗口 `resize` 时更新相机宽高比和渲染尺寸。
 
+## 性能面板
+
+三个场景的地址后加 `?stats`（例如 `/src/scenes/villa/?stats`）时，左上角显示性能面板：最近 120 帧的帧率、平均 / P95 / 最大帧时间、本帧 JS 耗时，以及 `renderer.info` 的绘制调用、三角面、几何体、贴图数量和像素比。开启时 `renderer.info.autoReset` 置为 `false`，由面板每帧 `reset` 一次，所以一帧里的多次 `render`（荒漠迷城的武器近景、别墅的透射 pass）都累加进同一帧。面板还会把最后一次渲染的 `scene`、`camera` 和 `renderer` 挂到 `window.__perfScene`、`window.__perfCamera`、`window.__perfRenderer`，方便在控制台做 A/B 测量。没有这个参数时不创建任何 DOM。
+
 ## 输入约定
 
 别墅和荒漠迷城共用同一套移动键：

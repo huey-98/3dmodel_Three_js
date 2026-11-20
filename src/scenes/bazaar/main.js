@@ -5,6 +5,7 @@ import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createPlaySettings } from '@shared/playSettings.js';
 import { createBazaar, MAP_SCALE } from './world.js';
 import { createCarbine } from './gun.js';
+import { createPerfStats } from '@shared/perfStats.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xd2d8d4);
@@ -19,6 +20,7 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
 document.body.appendChild(renderer.domElement);
+const perf = createPerfStats({ renderer, name: 'bazaar' });
 
 scene.add(new THREE.HemisphereLight(0xfff6ea, 0xc6aa84, 0.78));
 const sun = new THREE.DirectionalLight(0xfff1d2, 2.05);
@@ -149,6 +151,7 @@ let elapsed = 0;
 
 function animate(now) {
   requestAnimationFrame(animate);
+  perf.beginFrame();
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   elapsed += dt;
@@ -257,6 +260,7 @@ function animate(now) {
   view.setCrosshairSpread(moveGap);
   renderer.render(scene, camera);
   gun.render(renderer);
+  perf.endFrame(now);
 }
 requestAnimationFrame(animate);
 
