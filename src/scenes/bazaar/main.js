@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createPerson } from '@shared/person.js';
+import { createCtOperator } from './operator.js';
 import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createBazaar } from './world.js';
+import { createCarbine } from './gun.js';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xd2d8d4);
@@ -40,7 +41,7 @@ scene.add(fill);
 const world = createBazaar();
 scene.add(world.group);
 
-const person = createPerson();
+const person = createCtOperator();
 person.group.position.set(0.8, 0, 7.2);
 person.group.rotation.y = Math.PI;
 scene.add(person.group);
@@ -60,6 +61,13 @@ const view = createFirstPersonView({
   domElement: renderer.domElement,
   controls,
   subject: person.group,
+});
+const gun = createCarbine({
+  scene,
+  camera,
+  domElement: renderer.domElement,
+  isFirstPerson: () => view.isActive(),
+  target: world.group,
 });
 
 const keys = new Set();
@@ -186,12 +194,13 @@ function animate(now) {
 
   if (view.isActive()) person.group.rotation.y = view.facingYaw();
 
-  followTarget.set(p.x, p.y + 1.35, p.z);
+  followTarget.set(p.x, p.y + 1.5, p.z);
   if (view.isActive()) {
     controls.target.copy(followTarget);
-    eye.set(0, 1.55, 0);
+    eye.set(0, 1.64, 0);
     person.group.localToWorld(eye);
     view.apply(eye);
+    gun.kick();
   } else {
     const dx = followTarget.x - controls.target.x;
     const dy = followTarget.y - controls.target.y;
@@ -217,6 +226,7 @@ function animate(now) {
     }
   }
 
+  gun.update(dt);
   renderer.render(scene, camera);
 }
 requestAnimationFrame(animate);
