@@ -388,7 +388,8 @@ export function createBazaar() {
   volume(B.x0 - 0.22, B.x0 + 0.06, beamY, beamY + 0.16, B.z0, B.z1, kit.beam);
   volume(B.x1 - 0.06, B.x1 + 0.22, beamY, beamY + 0.16, B.z0, B.z1, kit.beam);
   volume(B.x0, B.x1, beamY, beamY + 0.12, cz - 0.08, cz + 0.08, kit.beam);
-  rooms.push({ minX: -4.55, maxX: 4.85, minZ: -3.8, maxZ: 4.65, minY: 0.4, maxY: 4.9 });
+  // open: true 表示只有顶篷、没有墙，敌人可以走进去。
+  rooms.push({ minX: -4.55, maxX: 4.85, minZ: -3.8, maxZ: 4.65, minY: 0.4, maxY: 4.9, open: true });
 
   // ---------- 左：蓝楼（原红楼加高一层） ----------
   // 西贴边界墙；整体南移，北侧与北墙留空，南端给阳台和白车通道留空。

@@ -296,12 +296,16 @@ function buildRifle(chest, materials) {
   const support = new THREE.Object3D();
   support.position.set(0.2, 0.01, 0);
   rifle.add(support);
+  // 枪口锚点：敌人的射击起点和枪焰都挂在这里。局部 +X 是枪口方向。
+  const muzzlePoint = new THREE.Object3D();
+  muzzlePoint.position.set(0.7, 0.042, 0);
+  rifle.add(muzzlePoint);
 
   const gloveGeo = new THREE.BoxGeometry(0.09, 0.08, 0.08);
   put(rifle, gloveGeo, materials.glove, -0.02, -0.055, 0.01);
   put(rifle, gloveGeo, materials.glove, 0.24, -0.01, 0.015);
 
-  return { weapon, grip, support };
+  return { weapon, grip, support, muzzle: muzzlePoint };
 }
 
 function buildArms(chest, materials, grip, support) {
@@ -347,42 +351,68 @@ function buildArms(chest, materials, grip, support) {
 
 export const CHAR_SCALE = 0.9;
 
-export function createCtOperator() {
-  const group = new THREE.Group();
-  group.scale.setScalar(CHAR_SCALE);
-  const rig = new THREE.Group();
-  const chest = new THREE.Group();
-  group.add(rig);
-  rig.add(chest);
+// 材质在模块里建一次，同配色的干员共用。敌人只换配色，几何完全一样。
+const PALETTES = {
+  ct: {
+    navy: NAVY,
+    navyDeep: NAVY_DEEP,
+    pants: 0x2a4368,
+    visor: 0x2f6d8c,
+    visorEmissive: 0x1a5678,
+    shine: 0xb7d4e4,
+  },
+  enemy: {
+    navy: 0x6b5637,
+    navyDeep: 0x564529,
+    pants: 0x443728,
+    vest: 0x3a2c1c,
+    vestDark: 0x241a10,
+    helmet: 0x2c2318,
+    skin: 0x9a6640,
+    visor: 0x120e0a,
+    visorEmissive: 0x000000,
+    shine: 0x3a2a1c,
+    emblem: 0xe0703a,
+  },
+};
+const materialSets = new Map();
 
+function operatorMaterials(paletteName) {
+  const cached = materialSets.get(paletteName);
+  if (cached) return cached;
+  const palette = PALETTES[paletteName] || PALETTES.ct;
   const materials = {
-    navy: mat(NAVY, { roughness: 0.84 }),
-    navyDeep: mat(NAVY_DEEP, { roughness: 0.86 }),
-    pants: mat(0x2a4368, { roughness: 0.88 }),
-    vest: mat(VEST, { roughness: 0.78 }),
-    vestDark: mat(VEST_DARK, { roughness: 0.8 }),
+    navy: mat(palette.navy, { roughness: 0.84 }),
+    navyDeep: mat(palette.navyDeep, { roughness: 0.86 }),
+    pants: mat(palette.pants, { roughness: 0.88 }),
+    vest: mat(palette.vest ?? VEST, { roughness: 0.78 }),
+    vestDark: mat(palette.vestDark ?? VEST_DARK, { roughness: 0.8 }),
     black: mat(BLACK, { roughness: 0.62, metalness: 0.08 }),
     boot: mat(BOOT, { roughness: 0.55, metalness: 0.12 }),
-    helmet: mat(0x23272d, { roughness: 0.38, metalness: 0.42 }),
-    skin: mat(SKIN, { roughness: 0.72 }),
+    helmet: mat(palette.helmet ?? 0x23272d, { roughness: 0.38, metalness: 0.42 }),
+    skin: mat(palette.skin ?? SKIN, { roughness: 0.72 }),
     pad: mat(PAD, { roughness: 0.64, metalness: 0.08 }),
     rifle: mat(RIFLE, { roughness: 0.4, metalness: 0.62 }),
     rifleDark: mat(RIFLE_DARK, { roughness: 0.46, metalness: 0.5 }),
     rifleOrange: mat(0xff6600, { roughness: 0.4, metalness: 0.4 }),
-    emblem: mat(0xc41e24, { roughness: 0.5, emissive: 0x8a1018, emissiveIntensity: 0.3 }),
+    emblem: mat(palette.emblem ?? 0xc41e24, {
+      roughness: 0.5,
+      emissive: 0x8a1018,
+      emissiveIntensity: 0.3,
+    }),
     metal: mat(METAL, { roughness: 0.28, metalness: 0.78 }),
     glove: mat(0x1a1d21, { roughness: 0.7 }),
     buckle: mat(0x8a9098, { roughness: 0.32, metalness: 0.7 }),
-    visor: mat(0x2f6d8c, {
+    visor: mat(palette.visor, {
       roughness: 0.14,
       metalness: 0.72,
-      emissive: 0x1a5678,
+      emissive: palette.visorEmissive,
       emissiveIntensity: 0.4,
     }),
-    shine: mat(0xb7d4e4, {
+    shine: mat(palette.shine, {
       roughness: 0.1,
       metalness: 0.4,
-      emissive: 0x9ec6dc,
+      emissive: palette.shine,
       emissiveIntensity: 0.7,
     }),
     plate: new THREE.MeshStandardMaterial({
@@ -397,6 +427,19 @@ export function createCtOperator() {
       roughness: 0.6,
     }),
   };
+  materialSets.set(paletteName, materials);
+  return materials;
+}
+
+export function createCtOperator({ palette = 'ct' } = {}) {
+  const group = new THREE.Group();
+  group.scale.setScalar(CHAR_SCALE);
+  const rig = new THREE.Group();
+  const chest = new THREE.Group();
+  group.add(rig);
+  rig.add(chest);
+
+  const materials = operatorMaterials(palette);
 
   const legL = buildLeg(rig, materials, -1);
   const legR = buildLeg(rig, materials, 1);
@@ -430,7 +473,27 @@ export function createCtOperator() {
     chest.position.y = bob;
     chest.rotation.y = s * 0.12;
     rifle.weapon.rotation.x = Math.sin(time * (moving ? 9 : 1.7)) * (moving ? 0.02 * swing : 0.008);
+    rifle.weapon.rotation.x -= aimPitch;
+    rifle.weapon.position.x = -kick * 0.035;
+    kick = Math.max(0, kick - dt * 6);
   }
 
-  return { group, update };
+  // 敌人用：把胸前的枪抬到俯仰角，朝上方阳台或下方的玩家瞄准。
+  let aimPitch = 0;
+  function setAimPitch(rad) {
+    aimPitch = THREE.MathUtils.clamp(rad, -0.45, 0.5);
+  }
+
+  // 敌人用：开火时枪身向后一顿。
+  let kick = 0;
+  function recoil() {
+    kick = 1;
+  }
+
+  function muzzleWorld(out) {
+    rifle.muzzle.getWorldPosition(out);
+    return out;
+  }
+
+  return { group, update, setAimPitch, recoil, muzzleWorld };
 }

@@ -412,7 +412,15 @@ function noRaycast(mesh) {
   return mesh;
 }
 
-export function createCarbine({ scene, camera, domElement, isFirstPerson, target, getSound = () => true }) {
+export function createCarbine({
+  scene,
+  camera,
+  domElement,
+  isFirstPerson,
+  target,
+  getSound = () => true,
+  onShot = null,
+}) {
   const ammo = { rifle: WEAPONS.rifle.mag, pistol: WEAPONS.pistol.mag };
   const reserve = { rifle: WEAPONS.rifle.reserve, pistol: WEAPONS.pistol.reserve };
   let weapon = 'rifle';
@@ -433,6 +441,9 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
   let equip = 1;
   let bob = 0;
   let motion = { moving: false, running: false, airborne: false };
+  let lastImpact = null;
+  let vitals = { hp: 100, armor: 100, kills: 0 };
+  let tankFlash = 0;
   const effects = [];
 
   const viewScene = new THREE.Scene();
@@ -721,12 +732,14 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
   const reserveEl = document.createElement('div');
   reserveEl.style.cssText = 'font-size:16px;line-height:1';
   readout.append(magEl, sepEl, reserveEl);
-  hud.append(icon, bar, readout);
+  const killLine = document.createElement('div');
+  killLine.style.cssText = 'font-size:13px;opacity:.9;letter-spacing:.5px;min-height:18px';
+  hud.append(killLine, icon, bar, readout);
   document.body.appendChild(hud);
 
-  const vitals = document.createElement('div');
-  vitals.id = 'vitals';
-  vitals.style.cssText = [
+  const vitalsEl = document.createElement('div');
+  vitalsEl.id = 'vitals';
+  vitalsEl.style.cssText = [
     'position:fixed',
     'left:28px',
     'bottom:28px',
@@ -740,8 +753,10 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     'color:#fff',
     'text-shadow:0 1px 2px rgba(0,0,0,.85)',
   ].join(';');
-  vitals.append(vitalRow('血量', '#7CFF6B'), vitalRow('护甲', '#8EB6FF'));
-  document.body.appendChild(vitals);
+  const hpRow = vitalRow('血量', '#7CFF6B');
+  const armorRow = vitalRow('护甲', '#8EB6FF');
+  vitalsEl.append(hpRow.row, armorRow.row);
+  document.body.appendChild(vitalsEl);
 
   let drawn = '';
 
@@ -754,13 +769,48 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     const track = document.createElement('div');
     track.style.cssText = 'width:120px;height:8px;border-radius:2px;background:rgba(255,255,255,.22);overflow:hidden';
     const meter = document.createElement('div');
-    meter.style.cssText = `width:100%;height:100%;background:${color}`;
+    meter.style.cssText = `width:100%;height:100%;background:${color};transition:width .12s linear`;
     track.appendChild(meter);
     const num = document.createElement('div');
     num.textContent = '100';
     num.style.cssText = 'font-size:18px;font-weight:700;min-width:32px';
     row.append(label, track, num);
-    return row;
+    return { row, meter, num };
+  }
+
+  function paintVitals() {
+    hpRow.num.textContent = String(Math.round(vitals.hp));
+    hpRow.meter.style.width = `${Math.max(0, Math.min(100, vitals.hp))}%`;
+    hpRow.meter.style.background = vitals.hp <= 30 ? '#ff6b5a' : '#7CFF6B';
+    armorRow.num.textContent = String(Math.round(vitals.armor));
+    armorRow.meter.style.width = `${Math.max(0, Math.min(100, vitals.armor))}%`;
+    armorRow.meter.style.opacity = vitals.armor > 0 ? '1' : '0.35';
+    if (killLine) killLine.textContent = vitals.kills > 0 ? `击杀 ${vitals.kills}` : '';
+  }
+
+  function setVitals(next) {
+    if (!next) return;
+    const hp = Number(next.hp);
+    const armor = Number(next.armor);
+    const kills = Number(next.kills);
+    if (Number.isFinite(hp)) {
+      if (hp < vitals.hp) tankFlash = 1;
+      vitals.hp = hp;
+    }
+    if (Number.isFinite(armor)) vitals.armor = armor;
+    if (Number.isFinite(kills)) vitals.kills = kills;
+    paintVitals();
+  }
+
+  function refillAmmo() {
+    for (const key of Object.keys(WEAPONS)) {
+      if (key === 'knife') continue;
+      ammo[key] = WEAPONS[key].mag;
+      reserve[key] = WEAPONS[key].reserve;
+    }
+    reloading = false;
+    gap = 0;
+    paint();
   }
 
   function drawWeapon(kind) {
@@ -867,7 +917,7 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
   function paint() {
     const active = isFirstPerson();
     hud.style.display = active ? 'flex' : 'none';
-    vitals.style.display = active ? 'flex' : 'none';
+    vitalsEl.style.display = active ? 'flex' : 'none';
     if (!active) return;
     if (drawn !== weapon) {
       drawWeapon(weapon);
@@ -1028,6 +1078,25 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     const mark = weapon === 'pistol' ? pistolMuzzle : rifleMuzzle;
     mark.getWorldPosition(_muzzleLocal);
     gunMuzzle.copy(_muzzleLocal).applyMatrix4(camera.matrixWorld);
+
+    // 战斗模块接管命中判定：先打敌人命中盒，再比墙面谁更近。自由跑图没有战斗模块，退回只打场景。
+    if (onShot) {
+      const result = onShot({
+        weapon,
+        origin: muzzle.clone(),
+        direction: aim.clone(),
+        reach,
+        mark,
+        gunMuzzle: gunMuzzle.clone(),
+      });
+      if (result) {
+        hitPoint.copy(result.point);
+        hitNormal.copy(result.normal);
+        lastImpact = result;
+        return result;
+      }
+    }
+
     raycaster.set(weapon === 'knife' ? camera.position : muzzle, aim);
     raycaster.far = reach;
     const hits = raycaster.intersectObject(target, true);
@@ -1036,10 +1105,29 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
       hitPoint.copy(hit.point);
       hitNormal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).normalize();
       if (hitNormal.dot(aim) > 0) hitNormal.negate();
+      lastImpact = { point: hitPoint, normal: hitNormal, enemy: false, killed: false };
     } else {
       hitPoint.copy(muzzle).addScaledVector(aim, reach);
+      lastImpact = null;
     }
     return hit;
+  }
+
+  // 刀砍到敌人的火花。墙面用划痕，敌人身上只闪一下。
+  function spawnHitSpark(point) {
+    const spark = noRaycast(new THREE.Mesh(
+      new THREE.PlaneGeometry(0.34, 0.34),
+      new THREE.MeshBasicMaterial({
+        map: holeMap,
+        color: 0xffd27a,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    ));
+    spark.position.copy(point);
+    spark.lookAt(camera.position);
+    addEffect(spark, 0.26);
   }
 
   function aimQuat(origin, targetPoint, roll, out) {
@@ -1207,12 +1295,23 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     }
     ammo[weapon] -= 1;
     gap = item.gap;
+    lastImpact = null;
     const hit = aimShot(RANGE);
-    flightDir.copy(hitPoint).sub(gunMuzzle);
-    if (flightDir.lengthSq() < 1e-6) flightDir.copy(aim);
-    flightDir.normalize();
-    const mark = weapon === 'pistol' ? pistolMuzzle : rifleMuzzle;
-    spawnShot(mark, item.flame, hitPoint, Boolean(hit), hitNormal);
+    const impact = lastImpact;
+    // 命中敌人时不画墙上的弹孔，敌人的受击反馈由战斗模块负责。
+    if (impact?.enemy) {
+      flightDir.copy(impact.point).sub(gunMuzzle);
+      if (flightDir.lengthSq() < 1e-6) flightDir.copy(aim);
+      flightDir.normalize();
+      const mark = weapon === 'pistol' ? pistolMuzzle : rifleMuzzle;
+      spawnShot(mark, item.flame, impact.point, false, impact.normal);
+    } else {
+      flightDir.copy(hitPoint).sub(gunMuzzle);
+      if (flightDir.lengthSq() < 1e-6) flightDir.copy(aim);
+      flightDir.normalize();
+      const mark = weapon === 'pistol' ? pistolMuzzle : rifleMuzzle;
+      spawnShot(mark, item.flame, hitPoint, Boolean(hit), hitNormal);
+    }
     if (ammo[weapon] === 0) tryReload();
     paint();
   }
@@ -1289,8 +1388,14 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
         const prevElapsed = KNIFE_TIME - prevSwing;
         if (prevElapsed < KNIFE_HIT && elapsed >= KNIFE_HIT) {
           knifeStruck = true;
+          lastImpact = null;
           const hit = aimShot(KNIFE_REACH);
-          if (hit) spawnSlash(hitPoint, hitNormal);
+          const impact = lastImpact;
+          if (impact?.enemy) {
+            if (hit) spawnHitSpark(impact.point);
+          } else if (hit) {
+            spawnSlash(hitPoint, hitNormal);
+          }
         }
       }
     }
@@ -1358,6 +1463,8 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
     update,
     kick,
     render,
+    setVitals,
+    refillAmmo,
     crosshairGap() { return shotSpread; },
   };
 }

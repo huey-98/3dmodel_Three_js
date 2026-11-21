@@ -66,6 +66,81 @@
       font-size: 13px;
       line-height: 1.5;
     }
+    #mode-mask {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6, 9, 14, 0.72);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+      padding: 24px;
+    }
+    #mode-mask.open { display: flex; }
+    .mode-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px 22px 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+    .mode-box h2 {
+      margin: 0 0 4px;
+      font-size: 19px;
+    }
+    .mode-box p {
+      margin: 0 0 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .mode-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    button.mode {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: inherit;
+      font-family: inherit;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    button.mode:hover {
+      border-color: var(--accent);
+      background: rgba(126, 182, 255, 0.08);
+    }
+    button.mode strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    button.mode span {
+      display: block;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    .mode-cancel {
+      margin-top: 14px;
+      width: 100%;
+      padding: 9px;
+      background: none;
+      border: 0;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .mode-cancel:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -81,11 +156,61 @@
         <h2>鲸尾女仆</h2>
         <span>根据设定图还原的角色模型，可旋转查看。</span>
       </a>
-      <a class="card" href="/src/scenes/bazaar/">
+      <a class="card" href="/src/scenes/bazaar/" data-modes="bazaar">
         <h2>荒漠迷城</h2>
         <span>敞开的绿篷棚子、沙黄大地砖和周围旧楼，棚下地面有红色 B。</span>
       </a>
     </div>
   </main>
+  <div id="mode-mask" role="dialog" aria-modal="true" aria-labelledby="mode-title">
+    <div class="mode-box">
+      <h2 id="mode-title">进入荒漠迷城</h2>
+      <p>选择这次进入的方式，想换一种回到这里重选即可。</p>
+      <div class="mode-options">
+        <button class="mode" type="button" data-href="/src/scenes/bazaar/?mode=free">
+          <strong>自由跑图</strong>
+          <span>没有敌人，可以四处走动、试枪，熟悉街区和棚子。</span>
+        </button>
+        <button class="mode" type="button" data-href="/src/scenes/bazaar/?mode=game">
+          <strong>游戏模式</strong>
+          <span>波次防守：敌人从南北两侧进场，清光一波再来下一波。</span>
+        </button>
+      </div>
+      <button class="mode-cancel" type="button" id="mode-cancel">取消</button>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const mask = document.getElementById('mode-mask');
+      const cancel = document.getElementById('mode-cancel');
+      let pendingHref = '';
+      function close() {
+        mask.classList.remove('open');
+        pendingHref = '';
+        cancel.focus();
+      }
+      for (const card of document.querySelectorAll('a.card[data-modes]')) {
+        card.addEventListener('click', (event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          pendingHref = card.getAttribute('href');
+          mask.classList.add('open');
+          mask.querySelector('button.mode').focus();
+        });
+      }
+      for (const button of mask.querySelectorAll('button.mode')) {
+        button.addEventListener('click', () => {
+          window.location.href = button.dataset.href;
+        });
+      }
+      cancel.addEventListener('click', close);
+      mask.addEventListener('click', (event) => {
+        if (event.target === mask) close();
+      });
+      addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && mask.classList.contains('open')) close();
+      });
+    })();
+  </script>
 </body>
 </html>

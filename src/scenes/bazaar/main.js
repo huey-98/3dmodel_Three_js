@@ -6,6 +6,18 @@ import { createPlaySettings } from '@shared/playSettings.js';
 import { createBazaar, MAP_SCALE } from './world.js';
 import { createCarbine } from './gun.js';
 import { createPerfStats } from '@shared/perfStats.js';
+import { createCombat } from './combat.js';
+import {
+  GRAVITY,
+  JUMP_SPEED,
+  groundAt,
+  blockedAt,
+  roomAt,
+  maxRayInside,
+} from './physics.js';
+
+// 大厅弹窗会带上 ?mode=free / ?mode=game，没有参数时按自由跑图。
+const mode = new URLSearchParams(location.search).get('mode') === 'game' ? 'game' : 'free';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xd2d8d4);
@@ -20,7 +32,7 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.12;
 document.body.appendChild(renderer.domElement);
-const perf = createPerfStats({ renderer, name: 'bazaar' });
+const perf = createPerfStats({ renderer, name: `bazaar-${mode}` });
 
 scene.add(new THREE.HemisphereLight(0xfff6ea, 0xc6aa84, 0.78));
 const sun = new THREE.DirectionalLight(0xfff1d2, 2.05);
@@ -44,13 +56,14 @@ scene.add(fill);
 const world = createBazaar();
 scene.add(world.group);
 
+// 游戏模式的出生点在棚子南缘，面朝 +Z，正对南凹槽这两个主攻口；自由跑图保持原来的位置。
+const SPAWN_FREE = { x: 0.8 * MAP_SCALE, z: 7.2 * MAP_SCALE, yaw: Math.PI };
+const SPAWN_GAME = { x: 0, z: 5.5 * MAP_SCALE, yaw: 0 };
+
 const person = createCtOperator();
-person.group.position.set(0.8 * MAP_SCALE, 0, 7.2 * MAP_SCALE);
-person.group.rotation.y = Math.PI;
 scene.add(person.group);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0.8 * MAP_SCALE, 1.6, 7.2 * MAP_SCALE);
 camera.position.set(6.2 * MAP_SCALE, 13.2, 11.15 * MAP_SCALE);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
@@ -68,6 +81,7 @@ const view = createFirstPersonView({
   getLookScale: () => settings.lookScale(),
   getFov: () => settings.fov(),
 });
+
 const gun = createCarbine({
   scene,
   camera,
@@ -75,7 +89,92 @@ const gun = createCarbine({
   isFirstPerson: () => view.isActive(),
   target: world.group,
   getSound: () => settings.sound(),
+  onShot: (shot) => (combat ? combat.resolveShot(shot) : null),
 });
+
+const PERSON_R = 0.32 * CHAR_SCALE;
+let jumpVel = 0;
+let grounded = true;
+
+// 战斗模块只需要这几个跟玩家有关的方法，弹药和血量都还留在 gun.js 里。
+const player = {
+  group: person.group,
+  setVitals(state) {
+    gun.setVitals(state);
+  },
+  refillAmmo() {
+    gun.refillAmmo();
+  },
+  respawn() {
+    placePlayer(SPAWN_GAME);
+    jumpVel = 0;
+    grounded = true;
+  },
+};
+
+let dismissHint = () => {};
+
+const combat = mode === 'game'
+  ? createCombat({
+    scene, camera, domElement: renderer.domElement, world, player, settings,
+    onState: (state) => {
+      if (state !== 'idle') dismissHint();
+    },
+  })
+  : null;
+
+if (combat) dismissHint = showModeHint('游戏模式：按 G 开始第 1 波');
+
+function placePlayer(spawn) {
+  person.group.position.set(spawn.x, groundAt(world, spawn.x, spawn.z, 0.29), spawn.z);
+  person.group.rotation.y = spawn.yaw;
+  controls.target.set(spawn.x, 1.6, spawn.z);
+}
+
+// 初始机位沿用原版从东南俯视的角度，两种出生点共用同一组偏移。
+const CAMERA_OFFSET = { x: 8.1, y: 13.2, z: 5.9 };
+
+function placeCamera() {
+  const p = person.group.position;
+  camera.position.set(p.x + CAMERA_OFFSET.x, CAMERA_OFFSET.y, p.z + CAMERA_OFFSET.z);
+  controls.target.set(p.x, 1.6, p.z);
+  controls.update();
+}
+
+placePlayer(mode === 'game' ? SPAWN_GAME : SPAWN_FREE);
+placeCamera();
+
+function showModeHint(text) {
+  const hint = document.createElement('div');
+  hint.textContent = text;
+  hint.style.cssText = [
+    'position:fixed',
+    'left:50%',
+    'bottom:14%',
+    'transform:translateX(-50%)',
+    'z-index:6',
+    'pointer-events:none',
+    'user-select:none',
+    'color:#fff',
+    'font:15px "Microsoft YaHei", sans-serif',
+    'background:rgba(0,0,0,.55)',
+    'padding:9px 16px',
+    'border-radius:8px',
+    'transition:opacity .4s ease',
+  ].join(';');
+  document.body.appendChild(hint);
+  let done = false;
+  function dismiss() {
+    if (done) return;
+    done = true;
+    hint.style.opacity = '0';
+    setTimeout(() => hint.remove(), 500);
+  }
+  addEventListener('keydown', (event) => {
+    if (event.code === 'KeyG') dismiss();
+  });
+  return dismiss;
+}
 
 const keys = new Set();
 let jumpRequested = false;
@@ -86,60 +185,6 @@ addEventListener('keydown', (e) => {
 });
 addEventListener('keyup', (e) => keys.delete(e.code));
 addEventListener('blur', () => keys.clear());
-
-const PERSON_R = 0.32 * CHAR_SCALE;
-const GRAVITY = 24;
-const JUMP_SPEED = 8.6;
-const STEP_UP = 0.35;
-let jumpVel = 0;
-let grounded = true;
-
-function overlaps(x, z, r) {
-  return x > r.minX - PERSON_R && x < r.maxX + PERSON_R
-    && z > r.minZ - PERSON_R && z < r.maxZ + PERSON_R;
-}
-
-function resolveGroundY(x, z) {
-  let y = 0;
-  for (const plat of world.platforms) {
-    if (overlaps(x, z, plat) && plat.top > y) y = plat.top;
-  }
-  return y;
-}
-
-function isBlocked(x, z) {
-  for (const r of world.solids) {
-    if (overlaps(x, z, r)) return true;
-  }
-  const feet = person.group.position.y;
-  for (const plat of world.platforms) {
-    if (feet >= plat.top - STEP_UP) continue;
-    if (overlaps(x, z, plat)) return true;
-  }
-  return false;
-}
-
-function roomAt(x, z) {
-  for (const r of world.rooms) {
-    if (x > r.minX && x < r.maxX && z > r.minZ && z < r.maxZ) return r;
-  }
-  return null;
-}
-
-function maxRayInside(origin, dir, box) {
-  let tExit = Infinity;
-  const axes = [['x', box.minX, box.maxX], ['y', box.minY, box.maxY], ['z', box.minZ, box.maxZ]];
-  for (const [axis, min, max] of axes) {
-    const o = origin[axis];
-    const d = dir[axis];
-    if (Math.abs(d) < 1e-8) {
-      if (o < min || o > max) return 0;
-      continue;
-    }
-    tExit = Math.min(tExit, Math.max((min - o) / d, (max - o) / d));
-  }
-  return Number.isFinite(tExit) ? Math.max(0, tExit) : 0;
-}
 
 const forward = new THREE.Vector3();
 const right = new THREE.Vector3();
@@ -158,6 +203,7 @@ function animate(now) {
   elapsed += dt;
 
   const p = person.group.position;
+  const groundedNow = grounded;
   const arrowX = (keys.has('ArrowRight') ? 1 : 0) - (keys.has('ArrowLeft') ? 1 : 0);
   const arrowZ = (keys.has('ArrowDown') ? 1 : 0) - (keys.has('ArrowUp') ? 1 : 0);
   const wasdX = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0);
@@ -182,19 +228,19 @@ function animate(now) {
     const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7 : 3.6) * settings.moveScale();
     const nx = p.x + move.x * speed * dt;
     const nz = p.z + move.z * speed * dt;
-    if (!isBlocked(nx, nz)) {
+    if (!blockedAt(world, nx, nz, PERSON_R, p.y)) {
       p.x = nx;
       p.z = nz;
-    } else if (!isBlocked(nx, p.z)) {
+    } else if (!blockedAt(world, nx, p.z, PERSON_R, p.y)) {
       p.x = nx;
-    } else if (!isBlocked(p.x, nz)) {
+    } else if (!blockedAt(world, p.x, nz, PERSON_R, p.y)) {
       p.z = nz;
     }
     person.group.rotation.y = Math.atan2(move.x, move.z);
   }
   person.update(dt, moving);
 
-  const floorY = resolveGroundY(p.x, p.z);
+  const floorY = groundAt(world, p.x, p.z, PERSON_R);
   if (jumpRequested) {
     if (grounded) {
       jumpVel = JUMP_SPEED;
@@ -218,6 +264,7 @@ function animate(now) {
   }
 
   world.update(elapsed);
+  if (combat) combat.update(dt);
 
   if (view.isActive()) person.group.rotation.y = view.facingYaw();
 
@@ -237,7 +284,7 @@ function animate(now) {
     camera.position.y += dy;
     camera.position.z += dz;
 
-    const room = roomAt(p.x, p.z);
+    const room = roomAt(world, p.x, p.z);
     controls.maxDistance = room ? 5.2 * MAP_SCALE : 42 * MAP_SCALE;
     controls.minDistance = room ? 1.6 * MAP_SCALE : 3;
     controls.update();
@@ -256,7 +303,7 @@ function animate(now) {
   const running = moving && (keys.has('ShiftLeft') || keys.has('ShiftRight'));
   gun.update(dt, { moving, running, airborne: !grounded });
   const moveGap = view.isActive()
-    ? (running ? 16 : moving ? 9 : 0) + (grounded ? 0 : 6) + gun.crosshairGap()
+    ? (running ? 16 : moving ? 9 : 0) + (groundedNow ? 0 : 6) + gun.crosshairGap()
     : 0;
   view.setCrosshairSpread(moveGap);
   renderer.render(scene, camera);
