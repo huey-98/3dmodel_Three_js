@@ -74,6 +74,7 @@ const gun = createCarbine({
   domElement: renderer.domElement,
   isFirstPerson: () => view.isActive(),
   target: world.group,
+  getSound: () => settings.sound(),
 });
 
 const keys = new Set();

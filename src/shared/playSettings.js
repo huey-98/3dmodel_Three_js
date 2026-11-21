@@ -21,9 +21,10 @@ function load() {
       moveScale: clamp(raw.moveScale, MOVE_MIN, MOVE_MAX, 1),
       lookScale: clamp(raw.lookScale, LOOK_MIN, LOOK_MAX, 1),
       fov: clamp(raw.fov, FOV_MIN, FOV_MAX, FOV_DEFAULT),
+      sound: raw.sound !== false,
     };
   } catch {
-    return { moveScale: 1, lookScale: 1, fov: FOV_DEFAULT };
+    return { moveScale: 1, lookScale: 1, fov: FOV_DEFAULT, sound: true };
   }
 }
 
@@ -35,7 +36,7 @@ function save(state) {
   }
 }
 
-export function createPlaySettings() {
+export function createPlaySettings({ withSound = true } = {}) {
   const state = load();
   const font = '"Microsoft YaHei", sans-serif';
 
@@ -96,6 +97,12 @@ export function createPlaySettings() {
     state.fov = n;
     save(state);
   });
+  if (withSound) {
+    addToggle(panel, '音效', state.sound, (on) => {
+      state.sound = on;
+      save(state);
+    });
+  }
 
   button.addEventListener('click', () => {
     const open = panel.style.display === 'none';
@@ -115,7 +122,24 @@ export function createPlaySettings() {
     moveScale() { return state.moveScale; },
     lookScale() { return state.lookScale; },
     fov() { return state.fov; },
+    sound() { return state.sound; },
   };
+}
+
+function addToggle(panel, name, current, onChange) {
+  const label = document.createElement('label');
+  label.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer';
+  const caption = document.createElement('span');
+  caption.textContent = name;
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = current;
+  input.style.cssText = 'width:16px;height:16px;accent-color:#9ecbff;margin:0;cursor:pointer';
+  input.addEventListener('change', () => {
+    onChange(input.checked);
+  });
+  label.append(caption, input);
+  panel.append(label);
 }
 
 function addSlider(panel, name, current, min, max, step, format, onChange) {

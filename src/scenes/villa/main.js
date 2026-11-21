@@ -80,7 +80,7 @@ controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI / 2 - 0.03;
 controls.minDistance = 3;
 controls.maxDistance = 70;
-const settings = createPlaySettings();
+const settings = createPlaySettings({ withSound: false });
 const view = createFirstPersonView({
   camera,
   domElement: renderer.domElement,

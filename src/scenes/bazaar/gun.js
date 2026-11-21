@@ -412,7 +412,7 @@ function noRaycast(mesh) {
   return mesh;
 }
 
-export function createCarbine({ scene, camera, domElement, isFirstPerson, target }) {
+export function createCarbine({ scene, camera, domElement, isFirstPerson, target, getSound = () => true }) {
   const ammo = { rifle: WEAPONS.rifle.mag, pistol: WEAPONS.pistol.mag };
   const reserve = { rifle: WEAPONS.rifle.reserve, pistol: WEAPONS.pistol.reserve };
   let weapon = 'rifle';
@@ -840,6 +840,7 @@ export function createCarbine({ scene, camera, domElement, isFirstPerson, target
 
   let audio;
   function tone(freq, dur, gainValue, type) {
+    if (!getSound()) return;
     try {
       if (!audio) audio = new AudioContext();
       if (audio.state === 'suspended') audio.resume();

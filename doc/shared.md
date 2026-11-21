@@ -68,10 +68,12 @@
 
 ## 走动设置 `playSettings.js`
 
-`createPlaySettings()` 在页面右上角放入「设置」按钮，并把它和已有的「返回目录」排在同一行。点开后面板里有三条滑杆：
+`createPlaySettings({ withSound })` 在页面右上角放入「设置」按钮，并把它和已有的「返回目录」排在同一行。点开后面板里有三条滑杆：
 
 - 移动速度：50%–250%，步进 5%，默认 100%。场景把步行、加速，以及别墅自动走进门的速度乘上这个比例。
 - 鼠标灵敏度：25%–300%，步进 5%，默认 100%。第一人称用它作为 `getLookScale()`。
 - 视野：70°–110°，步进 1°，默认 90°。第一人称用它作为 `getFov()`。第三人称仍用各场景原来的视野。
 
-返回 `{ moveScale, lookScale, fov }`，都是读取当前数值的函数。改滑杆时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov }`）。读不到或数值超出范围时，比例回到 1，视野回到 90。面板打开时如果鼠标还被锁定，会先释放锁定。
+`withSound` 默认为真，此时面板里还有一个「音效」开关，用于荒漠迷城的开火、换弹和切枪提示音。别墅没有音效，传 `false` 不显示这个开关。
+
+返回 `{ moveScale, lookScale, fov, sound }`，都是读取当前数值的函数。改滑杆或开关时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov, sound }`）。读不到或数值超出范围时，比例回到 1，视野回到 90；`sound` 只有显式为 `false` 时才算关闭。面板打开时如果鼠标还被锁定，会先释放锁定。
