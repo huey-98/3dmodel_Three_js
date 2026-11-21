@@ -21,10 +21,11 @@ function load() {
       moveScale: clamp(raw.moveScale, MOVE_MIN, MOVE_MAX, 1),
       lookScale: clamp(raw.lookScale, LOOK_MIN, LOOK_MAX, 1),
       fov: clamp(raw.fov, FOV_MIN, FOV_MAX, FOV_DEFAULT),
-      sound: raw.sound !== false,
+      // 音效默认关闭，只有明确存过 true 才打开
+      sound: raw.sound === true,
     };
   } catch {
-    return { moveScale: 1, lookScale: 1, fov: FOV_DEFAULT, sound: true };
+    return { moveScale: 1, lookScale: 1, fov: FOV_DEFAULT, sound: false };
   }
 }
 

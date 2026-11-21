@@ -76,4 +76,4 @@
 
 `withSound` 默认为真，此时面板里还有一个「音效」开关，用于荒漠迷城的开火、换弹和切枪提示音。别墅没有音效，传 `false` 不显示这个开关。
 
-返回 `{ moveScale, lookScale, fov, sound }`，都是读取当前数值的函数。改滑杆或开关时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov, sound }`）。读不到或数值超出范围时，比例回到 1，视野回到 90；`sound` 只有显式为 `false` 时才算关闭。面板打开时如果鼠标还被锁定，会先释放锁定。
+返回 `{ moveScale, lookScale, fov, sound }`，都是读取当前数值的函数。改滑杆或开关时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov, sound }`）。读不到或数值超出范围时，比例回到 1，视野回到 90；`sound` 默认关闭，只有存过 `true` 才打开。面板打开时如果鼠标还被锁定，会先释放锁定。
