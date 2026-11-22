@@ -58,8 +58,18 @@ const world = createBazaar();
 scene.add(world.group);
 
 // 游戏模式的出生点在棚子南缘，面朝 +Z，正对南凹槽这两个主攻口；自由跑图保持原来的位置。
+// ?spawn=ct 调试出生点：直接落在凹槽（CT 出生点）里面朝北，便于查看警家街景。
+// 可再带 &sx=&sz=（局部坐标，乘 MAP_SCALE 前的值）覆盖落点，如高台 sx=50&sz=-9。
+const SPAWN_CT = { x: 46 * MAP_SCALE, z: 1.2 * MAP_SCALE, yaw: Math.PI };
 const SPAWN_FREE = { x: 0.8 * MAP_SCALE, z: 7.2 * MAP_SCALE, yaw: Math.PI };
 const SPAWN_GAME = { x: 0, z: 5.5 * MAP_SCALE, yaw: 0 };
+const params = new URLSearchParams(location.search);
+if (params.get('spawn') === 'ct') {
+  const sx = Number(params.get('sx'));
+  const sz = Number(params.get('sz'));
+  if (Number.isFinite(sx)) SPAWN_CT.x = sx * MAP_SCALE;
+  if (Number.isFinite(sz)) SPAWN_CT.z = sz * MAP_SCALE;
+}
 
 const person = createCtOperator();
 scene.add(person.group);
@@ -142,7 +152,12 @@ function placeCamera() {
   controls.update();
 }
 
-placePlayer(mode === 'game' ? SPAWN_GAME : SPAWN_FREE);
+placePlayer(params.get('spawn') === 'ct' ? SPAWN_CT : (mode === 'game' ? SPAWN_GAME : SPAWN_FREE));
+// 调试机位偏移 &cam=x,y,z（米）：默认东南俯视；看朝北立面用 cam=0,3,10（正南低机位）。
+const camOverride = (params.get('cam') || '').split(',').map(Number);
+if (camOverride.length === 3 && camOverride.every(Number.isFinite)) {
+  [CAMERA_OFFSET.x, CAMERA_OFFSET.y, CAMERA_OFFSET.z] = camOverride;
+}
 placeCamera();
 
 function showModeHint(text) {

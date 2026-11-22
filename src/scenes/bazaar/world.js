@@ -986,8 +986,9 @@ export function createBazaar() {
   barrier(-20, blue.x1 + 0.82, south.z1, south.z1 + 0.8);
   barrier(lotX1 - 0.8, lotX1, lotZ0 - 0.8, lotZ1 + 0.8);
   // 南墙在 X≈69（世界坐标）处向南开一个宽约 10、深约 8 米的凹槽，
-  // 朝东北看是参考图的 CT 出生点街景：西侧剥落蓝楼大木门红 A，
-  // 东侧矮石墙铁栏后棕榈远楼，东北角台阶石灯柱，地面细石铺装。
+  // 凹槽是 CT 出生点，朝北看是参考图的警家街景：左手北墙西段剥落蓝楼
+  // 大木门红 A 朝北（警家凹槽），正中白楼木门立面，右手警家宽缓台阶
+  // 带铁栏向北延伸上墙外高台，地面细石铺装。
   const alcX0 = 42.8;
   const alcX1 = 49.5;
   const alcZ1 = lotZ1 + 0.8 + 5.3;
@@ -1027,35 +1028,47 @@ export function createBazaar() {
   lotFloor.userData.noShadow = true;
   add(lotFloor);
 
-  // 北墙一段换成剥落蓝楼，立面朝南（面朝东时的左手边）：
-  // 大木门、红 A 箭头、蓝牌、高窗和带托木的出檐。
-  const blueB = { x0: 38, x1: 48, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.4 };
+  // 空地北墙西段（通道口以北）换成剥落蓝楼（警家凹槽），立面朝北：
+  // 大木门、门楣横窗、红 A 箭头、蓝牌、高窗、空调外机和带托木的出檐。
+  // 从凹槽朝北看它在左手边，不挡通道和空地。
+  const blueB = { x0: 38, x1: alcX0, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.4 };
+  const bbFace = lotZ0 - 0.83;
   block(blueB.x0, blueB.x1, blueB.z0, blueB.z1, blueB.h, kit.blue);
   skirt(blueB.x0, blueB.x1, blueB.z0, blueB.z1, kit.skirtBlue);
-  const alcDoorX = 43;
+  const alcDoorX = 40;
   const alcDoorMat = kit.wood.clone();
   alcDoorMat.color.set(0x9a6b42);
-  box(2.6, 2.9, 0.08, alcDoorMat, alcDoorX, 1.45, lotZ0 + 0.04);
-  box(2.84, 0.12, 0.1, kit.trim, alcDoorX, 2.96, lotZ0 + 0.05);
+  box(2.6, 2.9, 0.08, alcDoorMat, alcDoorX, 1.45, bbFace - 0.01);
+  box(2.84, 0.12, 0.1, kit.trim, alcDoorX, 2.96, bbFace - 0.02);
   for (const s of [-1, 1]) {
-    box(0.12, 2.9, 0.1, kit.trim, alcDoorX + s * 1.36, 1.45, lotZ0 + 0.05);
+    box(0.12, 2.9, 0.1, kit.trim, alcDoorX + s * 1.36, 1.45, bbFace - 0.02);
   }
-  box(0.05, 2.9, 0.09, kit.trim, alcDoorX, 1.45, lotZ0 + 0.045);
+  box(0.05, 2.9, 0.09, kit.trim, alcDoorX, 1.45, bbFace - 0.015);
+  // 门楣上的横窗（暗玻璃带框）。
+  box(1.7, 0.62, 0.05, kit.glass, alcDoorX, 3.55, bbFace);
+  box(1.86, 0.08, 0.07, kit.trim, alcDoorX, 3.9, bbFace - 0.01);
+  box(1.86, 0.08, 0.07, kit.trim, alcDoorX, 3.2, bbFace - 0.01);
   const aMark = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), kit.aMark);
-  aMark.position.set(45.8, 2.7, lotZ0 + 0.03);
+  aMark.rotation.y = Math.PI;
+  aMark.position.set(41.9, 3.3, bbFace);
   aMark.userData.noShadow = true;
   add(aMark);
   const alcSign = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.1), kit.sign);
-  alcSign.position.set(40.2, 1.7, lotZ0 + 0.03);
+  alcSign.rotation.y = Math.PI;
+  alcSign.position.set(38.7, 1.7, bbFace);
   alcSign.userData.noShadow = true;
   add(alcSign);
-  placeWindow(46.8, 4.5, lotZ0 + 0.03, 0.9, 1.1, 0);
-  box(blueB.x1 - blueB.x0 + 0.3, 0.14, 0.5, kit.trim, (blueB.x0 + blueB.x1) / 2, blueB.h - 0.05, lotZ0 + 0.15);
+  placeWindow(41.9, 4.6, bbFace, 1.0, 1.2, Math.PI);
+  box(0.7, 0.36, 0.34, kit.ac, 38.9, 5.1, bbFace - 0.16);
+  box(blueB.x1 - blueB.x0 + 0.3, 0.14, 0.5, kit.trim, (blueB.x0 + blueB.x1) / 2, blueB.h - 0.05, blueB.z0 - 0.15);
   for (let x = blueB.x0 + 0.4; x < blueB.x1; x += 0.85) {
-    box(0.12, 0.18, 0.34, kit.beam, x, blueB.h - 0.28, lotZ0 + 0.1);
+    box(0.12, 0.18, 0.34, kit.beam, x, blueB.h - 0.28, blueB.z0 - 0.1);
   }
+  // 蓝楼取代该段北墙屏障（避免共面闪烁），凹槽西墙仍是普通围墙。
+  barrier(blue.x1 - 0.08, blueB.x0, lotZ0 - 0.8, lotZ0);
+  solid(blueB.x0, blueB.x1, blueB.z0, blueB.z1);
 
-  // 东侧：矮石墙压顶加黑铁栏杆，栏后棕榈和远处白楼（界外布景，不可达）。
+  // 东侧：矮石墙压顶加黑铁栏杆，栏后只留远处白楼（界外布景，不可达）。
   const stoneH = 1.15;
   const fenceTop = 2.35;
   volume(alcX1, alcX1 + 0.8, 0, stoneH, lotZ1, alcZ1 + 0.8, kit.stone);
@@ -1072,28 +1085,6 @@ export function createBazaar() {
   for (let z = fz0; z <= fz1 + 0.001; z += 1.7) {
     box(0.07, fenceTop - stoneH + 0.08, 0.07, kit.metalDark, alcX1 + 0.4, (stoneH + fenceTop) / 2, z);
   }
-
-  const frondGeo = new THREE.PlaneGeometry(0.75, 2.3);
-  frondGeo.translate(0, 1.15, 0);
-  function palm(x, z, h) {
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.19, h, 7), kit.bark);
-    trunk.position.set(x, h / 2, z);
-    add(trunk);
-    const crown = new THREE.Group();
-    crown.position.set(x, h, z);
-    add(crown);
-    for (let i = 0; i < 7; i++) {
-      const arm = new THREE.Group();
-      arm.rotation.y = (i / 7) * Math.PI * 2;
-      const frond = new THREE.Mesh(frondGeo, kit.leaf);
-      frond.rotation.x = 1.05 + (i % 3) * 0.12;
-      arm.add(frond);
-      crown.add(arm);
-    }
-  }
-  palm(alcX1 + 2.2, lotZ1 + 3.6, 5.2);
-  palm(alcX1 + 5.5, lotZ1 + 4.4, 6.0);
-  palm(alcX1 + 9, lotZ1 + 3.8, 4.8);
 
   const eastFar = [
     [alcX1 + 4, lotZ1 + 8, 7.5, 6, 5],
@@ -1116,24 +1107,11 @@ export function createBazaar() {
     }
   }
 
-  // 南墙东段（面朝东时的右手边）：矮石墙向东延伸；栏杆和树木在墙外。
+  // 南墙东段（面朝东时的右手边）：矮石墙向东延伸，墙外只留远处白楼布景。
   const rwX1 = alcX1 + 12;
   volume(alcX1, rwX1, 0, stoneH, lotZ1, lotZ1 + 0.8, kit.stone);
   solid(alcX1, rwX1, lotZ1, lotZ1 + 0.8);
   box(rwX1 - alcX1, 0.08, 0.95, kit.concrete, (alcX1 + rwX1) / 2, stoneH + 0.04, lotZ1 + 0.4);
-  // 墙外一道矮石基加铁栏，树木在栏后更远处（界外布景）。
-  const ofZ = lotZ1 + 2.0;
-  volume(alcX1, rwX1, 0, 0.4, ofZ, ofZ + 0.4, kit.stone);
-  solid(alcX1, rwX1, ofZ, ofZ + 0.4);
-  for (const y of [0.55, 1.5]) {
-    box(rwX1 - alcX1 - 0.2, 0.05, 0.04, kit.metalDark, (alcX1 + rwX1) / 2, y, ofZ + 0.2);
-  }
-  for (let x = alcX1 + 0.2; x <= rwX1 - 0.1; x += 0.34) {
-    box(0.03, 1.0, 0.03, kit.metalDark, x, 1.0, ofZ + 0.2);
-  }
-  for (let x = alcX1 + 0.2; x <= rwX1 - 0.1; x += 1.7) {
-    box(0.07, 1.2, 0.07, kit.metalDark, x, 1.0, ofZ + 0.2);
-  }
 
   // 斜角：凹槽东北角切一段 45° 石墙（带铁栏），位于南墙线以南作导向，不挡台阶。
   const chamLen = 1.6 * Math.SQRT2;
@@ -1148,29 +1126,98 @@ export function createBazaar() {
   }
   solid(alcX1 - 0.35, alcX1 + 1.95, lotZ1, lotZ1 + 1.95);
 
-  // 台阶在蓝楼东端（蓝箭头处），朝北向上接北墙东段石台，台阶口两根石灯柱。
-  const platX0 = 48.4;
-  const platX1 = 52;
-  const platZ1 = lotZ0 + 1.0;
-  volume(platX0, platX1, 0, 0.9, lotZ0, platZ1, kit.stone);
-  platform(platX0, platX1, lotZ0, platZ1, 0.9);
-  for (let i = 0; i < 3; i++) {
-    const sz0 = platZ1 + (2 - i) * 0.4;
-    const top = 0.3 * (i + 1);
-    volume(platX0, platX1, 0, top, sz0, sz0 + 0.4, kit.stone);
-    platform(platX0, platX1, sz0, sz0 + 0.4, top);
+  // 凹槽正北：剥落白楼立面（朝南），大木门、门旁小窗、上层双窗、
+  // 空调外机、出檐和屋顶水箱，对应参考图正中的白楼。
+  const wf = { x0: 43.8, x1: 48.6, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.8 };
+  block(wf.x0, wf.x1, wf.z0, wf.z1, wf.h, kit.white);
+  skirt(wf.x0, wf.x1, wf.z0, wf.z1, kit.skirtWhite);
+  const wfFace = wf.z1 + 0.03;
+  const wfDoorX = 46.6;
+  box(2.2, 2.7, 0.08, kit.door, wfDoorX, 1.35, wfFace + 0.01);
+  box(2.44, 0.12, 0.1, kit.trim, wfDoorX, 2.76, wfFace + 0.02);
+  for (const s of [-1, 1]) {
+    box(0.12, 2.7, 0.1, kit.trim, wfDoorX + s * 1.16, 1.35, wfFace + 0.02);
   }
-  const alcLampMat = new THREE.MeshStandardMaterial({
-    color: 0xf0e6c8, emissive: 0xffdf9a, emissiveIntensity: 0.9, roughness: 0.5,
-  });
-  for (const px of [platX0 - 0.3, platX1 + 0.3]) {
-    box(0.42, 1.6, 0.42, kit.stone, px, 0.8, platZ1 + 1.5);
-    box(0.5, 0.08, 0.5, kit.concrete, px, 1.64, platZ1 + 1.5);
-    box(0.2, 0.24, 0.2, alcLampMat, px, 1.8, platZ1 + 1.5);
-    solid(px - 0.21, px + 0.21, platZ1 + 1.29, platZ1 + 1.71);
+  box(0.05, 2.7, 0.09, kit.trim, wfDoorX, 1.35, wfFace + 0.015);
+  placeWindow(44.7, 1.15, wfFace, 0.7, 0.95, 0);
+  placeWindow(44.9, 4.1, wfFace, 0.95, 1.25, 0);
+  placeWindow(47.3, 4.1, wfFace, 0.95, 1.25, 0);
+  box(0.7, 0.36, 0.34, kit.ac, 47.9, 3.1, wfFace + 0.15);
+  box(wf.x1 - wf.x0 + 0.3, 0.14, 0.5, kit.trim, (wf.x0 + wf.x1) / 2, wf.h - 0.05, wf.z1 + 0.15);
+  for (let x = wf.x0 + 0.4; x < wf.x1; x += 0.85) {
+    box(0.12, 0.18, 0.34, kit.beam, x, wf.h - 0.28, wf.z1 + 0.1);
   }
-  barrier(blue.x1 - 0.08, 38, lotZ0 - 0.8, lotZ0);
-  barrier(48, lotX1, lotZ0 - 0.8, lotZ0);
+  const wfTank = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.9, 12), kit.tank);
+  wfTank.position.set(44.8, wf.h + 0.45, wf.z0 + 0.4);
+  add(wfTank);
+  // 白楼西侧接回北墙屏障；东侧留给警家台阶。
+  barrier(alcX0, wf.x0, lotZ0 - 0.8, lotZ0);
+
+  // 警家台阶：第一级在北墙外皮一线，整条宽缓实心台阶向北延伸到界外，
+  // 16 级、每级升 0.2 米、踏面约 0.83 米（约 20° 坡），上到墙外高台
+  // （台面与边界墙齐高）；西侧矮石墙压顶加黑铁栏杆逐级抬升，东侧贴东边界墙。
+  const stairX0 = wf.x1 + 0.1;
+  const stairX1 = lotX1 - 0.8;
+  const terrX1 = lotX1;
+  const stairStartZ = lotZ0 - 0.8;
+  const stairTop = wallH;
+  const stairN = 16;
+  const stairTread = 0.55;
+  const terrZ1 = stairStartZ - stairN * stairTread;
+  const terrZ0 = terrZ1 - 2.2;
+  const parH = 0.65;
+  const railH = 1.05;
+  for (let i = 0; i < stairN; i++) {
+    const top = (stairTop * (i + 1)) / stairN;
+    const sz1 = stairStartZ - i * stairTread;
+    const sz0 = sz1 - stairTread;
+    volume(stairX0, stairX1, 0, top, sz0, sz1, kit.stone);
+    platform(stairX0, stairX1, sz0, sz1, top);
+    // 西侧逐级抬升的矮石墙 + 黑铁栏杆；footprint 一并挡住。
+    volume(stairX0, stairX0 + 0.3, top, top + parH, sz0, sz1, kit.stone);
+    solid(stairX0, stairX0 + 0.3, sz0, sz1);
+    const px = stairX0 + 0.15;
+    for (const off of [0.22, railH - 0.05]) {
+      box(0.04, 0.05, stairTread, kit.metalDark, px, top + parH + off, (sz0 + sz1) / 2);
+    }
+    for (const pz of [sz0 + 0.08, sz1 - 0.08]) {
+      box(0.03, railH - 0.1, 0.03, kit.metalDark, px, top + parH + railH / 2 - 0.05, pz);
+    }
+    if (i % 3 === 0) {
+      box(0.07, railH + 0.08, 0.07, kit.metalDark, px, top + parH + railH / 2 - 0.01, (sz0 + sz1) / 2);
+    }
+  }
+  // 高台：台阶北端再向外 2.2 米，东到东墙外皮，台面与边界墙齐高，
+  // 南沿与最高一级台阶齐平相接。
+  volume(stairX0, terrX1, 0, stairTop, terrZ0, terrZ1, kit.stone);
+  platform(stairX0, terrX1, terrZ0, terrZ1, stairTop);
+  // 北墙在台阶通道处断开豁口；东边界墙沿台阶东侧一直延到高台南沿，
+  // 角部由高台补满到东墙外皮，避免共面闪烁。
+  barrier(terrX1 - 0.8, terrX1, terrZ1, lotZ1 + 0.8);
+  // 高台临空四边中除南沿接台阶外都设矮石墙加同式栏杆。
+  function terraceEdge(x0, x1, z0, z1) {
+    volume(x0, x1, stairTop, stairTop + parH, z0, z1, kit.stone);
+    solid(x0, x1, z0, z1);
+    const alongX = x1 - x0 > z1 - z0;
+    const cx = (x0 + x1) / 2;
+    const cz = (z0 + z1) / 2;
+    for (const off of [0.22, railH - 0.05]) {
+      box(alongX ? x1 - x0 : 0.04, 0.05, alongX ? 0.04 : z1 - z0, kit.metalDark, cx, stairTop + parH + off, cz);
+    }
+    if (alongX) {
+      for (let x = x0 + 0.2; x <= x1 - 0.1; x += 0.34) {
+        box(0.03, railH - 0.1, 0.03, kit.metalDark, x, stairTop + parH + railH / 2 - 0.05, cz);
+      }
+    } else {
+      for (let z = z0 + 0.2; z <= z1 - 0.1; z += 0.34) {
+        box(0.03, railH - 0.1, 0.03, kit.metalDark, cx, stairTop + parH + railH / 2 - 0.05, z);
+      }
+    }
+  }
+  terraceEdge(stairX0, terrX1, terrZ0, terrZ0 + 0.3);
+  terraceEdge(terrX1 - 0.3, terrX1, terrZ0, terrZ1);
+  terraceEdge(stairX0, stairX0 + 0.3, terrZ0, terrZ1);
+  terraceEdge(stairX1, terrX1, terrZ1 - 0.3, terrZ1);
 
   // 通道外空地上的一堆积沙。
   const lotPile = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), kit.sandPile);
