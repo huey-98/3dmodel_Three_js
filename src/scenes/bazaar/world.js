@@ -965,31 +965,33 @@ export function createBazaar() {
     mesh.userData.noReceive = true;
   });
 
-  // 场地边界：北、西实墙；东侧边界墙在东门外通道处断开，通道外再圈出一小块空地，
-  // 空地南端用横墙截断；南侧由南楼封住，楼后再挡一截防止绕出。
+  // 场地边界：北、西实墙；东侧边界墙在东门外通道处断开，通道外圈出一块矩形空地：
+  // 北墙贴通道北墙外皮，南墙取后门中心与旧墙位的中点，东墙再向东扩一截；
+  // 南侧由南楼封住，楼后再挡一截防止绕出。
   const yellowWall = new THREE.MeshStandardMaterial({ color: 0xb5a898, roughness: 0.9 });
   const wallH = 3.2;
   function barrier(x0, x1, z0, z1) {
     volume(x0, x1, 0, wallH, z0, z1, yellowWall);
     solid(x0, x1, z0, z1);
   }
-  const lotX1 = 24;
-  // 南墙取后门中心与原先墙位的中点，空地只留门口一小段。
+  const lotX1 = 53.4;
   const lotZ1 = (eastDoorZ + 1.5) / 2;
-  barrier(-20, lotX1, -16.2, -14.7);
+  const lotZ0 = passage.z0 - passage.t;
+  barrier(-20, blue.x1 + 0.82, -16.2, -14.7);
   barrier(-16.4, -15.5, -16, south.z1);
   barrier(blue.x1 - 0.08, blue.x1 + 0.82, -16, passage.z0 - passage.t);
   barrier(blue.x1 - 0.08, blue.x1 + 0.82, passage.z1 + passage.t, lotZ1 + 0.8);
   // 通道上方补到边界墙同高（门洞加高后这段可能为零），不设碰撞。
   volume(blue.x1 - 0.08, blue.x1 + 0.82, passage.h + 0.2, wallH, passage.z0 - passage.t, passage.z1 + passage.t, yellowWall);
   barrier(-20, blue.x1 + 0.82, south.z1, south.z1 + 0.8);
-  barrier(lotX1 - 0.8, lotX1, -16, lotZ1 + 0.8);
+  barrier(lotX1 - 0.8, lotX1, lotZ0 - 0.8, lotZ1 + 0.8);
   barrier(blue.x1 - 0.08, lotX1, lotZ1, lotZ1 + 0.8);
+  barrier(blue.x1 - 0.08, lotX1, lotZ0 - 0.8, lotZ0);
 
   // 通道外空地上的一堆积沙。
   const lotPile = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), kit.sandPile);
   lotPile.scale.set(1.15, 0.08, 0.85);
-  lotPile.position.set(21.3, 0.04, -8.2);
+  lotPile.position.set(23, 0.04, -4.4);
   lotPile.userData.noShadow = true;
   add(lotPile);
 
