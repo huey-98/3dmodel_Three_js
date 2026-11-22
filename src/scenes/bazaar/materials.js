@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-function mulberry32(seed) {
+export function mulberry32(seed) {
   let a = seed >>> 0;
   return function rand() {
     a |= 0;
@@ -129,6 +129,52 @@ function drawCobble(ctx, s) {
       ctx.fill();
     }
   }
+}
+
+function drawTile(ctx, s) {
+  const rnd = mulberry32(77);
+  ctx.fillStyle = '#6f7370';
+  ctx.fillRect(0, 0, s, s);
+  const n = 4;
+  const gap = Math.max(2, s * 0.012);
+  const cell = s / n;
+  for (let j = 0; j < n; j++) {
+    for (let i = 0; i < n; i++) {
+      const tone = 196 + Math.floor(rnd() * 22);
+      ctx.fillStyle = `rgb(${tone}, ${tone + 2}, ${tone - 2})`;
+      ctx.fillRect(i * cell + gap / 2, j * cell + gap / 2, cell - gap, cell - gap);
+      for (let k = 0; k < 5; k++) {
+        ctx.globalAlpha = 0.05 + rnd() * 0.06;
+        ctx.fillStyle = rnd() > 0.5 ? '#8a8f8a' : '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(i * cell + rnd() * cell, j * cell + rnd() * cell, 4 + rnd() * 14, 3 + rnd() * 10, rnd() * 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawGraffiti(ctx, w, h) {
+  const rnd = mulberry32(31);
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#2f7a36';
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 7; i++) {
+    ctx.globalAlpha = 0.55 + rnd() * 0.4;
+    ctx.lineWidth = 8 + rnd() * 16;
+    ctx.beginPath();
+    let x = w * (0.12 + rnd() * 0.2);
+    let y = h * (0.2 + rnd() * 0.6);
+    ctx.moveTo(x, y);
+    for (let k = 0; k < 4; k++) {
+      x += w * (0.1 + rnd() * 0.18);
+      y += (rnd() - 0.5) * h * 0.5;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawPanel(ctx, s) {
@@ -389,6 +435,9 @@ export function createBazaarKit() {
   const stuccoPink = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#e3a898', '#c47d72', '#f0d2c6', '#d5cdc2'));
   const stuccoWhite = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#e7e1d6', '#bdb6aa', '#f7f4ee', '#cfc6b8'));
   const stuccoBlue = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#7ea4c6', '#688eae', '#c5d4e2', '#e3d2b4'));
+  const stuccoShop = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#9aa694', '#8f9b89', '#a6b2a0'));
+  const tileMap = makeTex(512, drawTile);
+  const graffitiMap = makeRectTex(256, 192, drawGraffiti);
   const panel = makeTex(512, drawPanel);
   const cobbleMap = makeTex(512, drawCobble);
   cobbleMap.repeat.set(22, 22);
@@ -448,6 +497,19 @@ export function createBazaarKit() {
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
     }),
     concrete: new THREE.MeshStandardMaterial({ color: 0xc9bfae, roughness: 0.94 }),
+    shopFloor: mapped(tileMap, {
+      roughness: 0.55,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
+    shopWall: mapped(stuccoShop, { roughness: 0.9 }),
+    ceilDark: new THREE.MeshStandardMaterial({ color: 0x5a5f5c, roughness: 0.95 }),
+    sack: new THREE.MeshStandardMaterial({ color: 0xe6e1d4, roughness: 1 }),
+    graffiti: mapped(graffitiMap, {
+      roughness: 0.9,
+      transparent: true,
+      alphaTest: 0.15,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
     skirtSand: new THREE.MeshStandardMaterial({ color: 0xa88b4a, roughness: 0.96 }),
     skirtPink: new THREE.MeshStandardMaterial({ color: 0xa86b62, roughness: 0.96 }),
     skirtWhite: new THREE.MeshStandardMaterial({ color: 0xb3ab9e, roughness: 0.96 }),
@@ -482,10 +544,5 @@ export function createBazaarKit() {
     },
   };
 
-  const floor = kit.concrete.clone();
-  floor.polygonOffset = true;
-  floor.polygonOffsetFactor = -2;
-  floor.polygonOffsetUnits = -2;
-  kit.floor = floor;
   return kit;
 }
