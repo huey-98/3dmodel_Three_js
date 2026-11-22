@@ -177,6 +177,62 @@ function drawGraffiti(ctx, w, h) {
   ctx.globalAlpha = 1;
 }
 
+function drawStone(ctx, s) {
+  const rnd = mulberry32(55);
+  ctx.fillStyle = '#8f8474';
+  ctx.fillRect(0, 0, s, s);
+  const rows = 5;
+  const h = s / rows;
+  for (let j = 0; j < rows; j++) {
+    const offset = (j % 2) * (s / 6);
+    for (let i = -1; i < 4; i++) {
+      const w = s / 3;
+      const x = i * w + offset;
+      const tone = 196 + Math.floor(rnd() * 26);
+      ctx.fillStyle = `rgb(${tone}, ${tone - 10}, ${tone - 30})`;
+      ctx.fillRect(x + 3, j * h + 3, w - 6, h - 6);
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = rnd() > 0.5 ? '#6f6455' : '#ffffff';
+      ctx.fillRect(x + 3 + rnd() * (w - 20), j * h + 3 + rnd() * (h - 12), 8 + rnd() * 20, 4 + rnd() * 8);
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+function drawAMark(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#c8201a';
+  ctx.font = `bold ${Math.floor(h * 0.6)}px "Arial Black", "Microsoft YaHei", sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('A', w * 0.08, h * 0.9);
+  ctx.strokeStyle = '#c8201a';
+  ctx.lineWidth = h * 0.08;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(w * 0.44, h * 0.4);
+  ctx.lineTo(w * 0.84, h * 0.16);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(w * 0.84, h * 0.16);
+  ctx.lineTo(w * 0.66, h * 0.15);
+  ctx.moveTo(w * 0.84, h * 0.16);
+  ctx.lineTo(w * 0.76, h * 0.32);
+  ctx.stroke();
+}
+
+function drawSign(ctx, w, h) {
+  ctx.fillStyle = '#2e5f8a';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#dfe8ee';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(6, 6, w - 12, h - 12);
+  ctx.fillStyle = '#e8eef2';
+  ctx.fillRect(w * 0.15, h * 0.2, w * 0.7, h * 0.1);
+  ctx.fillRect(w * 0.15, h * 0.42, w * 0.55, h * 0.08);
+  ctx.fillRect(w * 0.15, h * 0.6, w * 0.62, h * 0.08);
+}
+
 function drawPanel(ctx, s) {
   const rnd = mulberry32(11);
   ctx.fillStyle = '#dcc6a4';
@@ -437,7 +493,10 @@ export function createBazaarKit() {
   const stuccoBlue = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#7ea4c6', '#688eae', '#c5d4e2', '#e3d2b4'));
   const stuccoShop = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#9aa694', '#8f9b89', '#a6b2a0'));
   const tileMap = makeTex(512, drawTile);
+  const stoneMap = makeTex(512, drawStone);
   const graffitiMap = makeRectTex(256, 192, drawGraffiti);
+  const aMarkMap = makeRectTex(256, 256, drawAMark);
+  const signMap = makeRectTex(128, 160, drawSign);
   const panel = makeTex(512, drawPanel);
   const cobbleMap = makeTex(512, drawCobble);
   cobbleMap.repeat.set(22, 22);
@@ -502,6 +561,14 @@ export function createBazaarKit() {
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
     }),
     shopWall: mapped(stuccoShop, { roughness: 0.9 }),
+    stone: mapped(stoneMap, { roughness: 0.95 }),
+    aMark: mapped(aMarkMap, {
+      roughness: 0.85,
+      transparent: true,
+      alphaTest: 0.15,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
+    sign: mapped(signMap, { roughness: 0.6 }),
     ceilDark: new THREE.MeshStandardMaterial({ color: 0x5a5f5c, roughness: 0.95 }),
     sack: new THREE.MeshStandardMaterial({ color: 0xe6e1d4, roughness: 1 }),
     graffiti: mapped(graffitiMap, {
