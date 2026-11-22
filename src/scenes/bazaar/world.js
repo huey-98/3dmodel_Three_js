@@ -576,8 +576,8 @@ export function createBazaar() {
   const winTop = shopWinY + shopWinH;
   // 东墙北段的后门，门外通道穿过东边界墙通到场地外。
   const eastDoorZ = -5.2;
-  const eastDoorW = 1.7;
-  const eastDoorH = 2.5;
+  const eastDoorW = 2.4;
+  const eastDoorH = 3.0;
   const eastDoorZ0 = eastDoorZ - eastDoorW / 2;
   const eastDoorZ1 = eastDoorZ + eastDoorW / 2;
   const eastDoorHoles = [{ at: eastDoorZ, w: eastDoorW, y: 0, h: eastDoorH }];
@@ -868,8 +868,8 @@ export function createBazaar() {
     mesh.userData.noReceive = true;
   });
 
-  // 场地边界：北、西实墙；东侧边界墙在东门外通道处断开，通道外再圈出一块空地；
-  // 南侧由南楼封住，楼后再挡一截防止绕出。
+  // 场地边界：北、西实墙；东侧边界墙在东门外通道处断开，通道外再圈出一小块空地，
+  // 空地南端用横墙截断；南侧由南楼封住，楼后再挡一截防止绕出。
   const yellowWall = new THREE.MeshStandardMaterial({ color: 0xb5a898, roughness: 0.9 });
   const wallH = 3.2;
   function barrier(x0, x1, z0, z1) {
@@ -877,18 +877,18 @@ export function createBazaar() {
     solid(x0, x1, z0, z1);
   }
   const lotX1 = 24;
+  const lotZ1 = 1.5;
   barrier(-20, lotX1, -16.2, -14.7);
   barrier(-16.4, -15.5, -16, south.z1);
   barrier(blue.x1 - 0.08, blue.x1 + 0.82, -16, passage.z0 - passage.t);
-  barrier(blue.x1 - 0.08, blue.x1 + 0.82, passage.z1 + passage.t, south.z1);
-  // 通道上方只补一段墙楣，不设碰撞，人能从下面走过去。
+  barrier(blue.x1 - 0.08, blue.x1 + 0.82, passage.z1 + passage.t, lotZ1 + 0.8);
+  // 通道上方补到边界墙同高（门洞加高后这段可能为零），不设碰撞。
   volume(blue.x1 - 0.08, blue.x1 + 0.82, passage.h + 0.2, wallH, passage.z0 - passage.t, passage.z1 + passage.t, yellowWall);
-  barrier(-20, lotX1, south.z1, south.z1 + 0.8);
-  barrier(lotX1 - 0.8, lotX1, -16, south.z1);
+  barrier(-20, blue.x1 + 0.82, south.z1, south.z1 + 0.8);
+  barrier(lotX1 - 0.8, lotX1, -16, lotZ1 + 0.8);
+  barrier(blue.x1 - 0.08, lotX1, lotZ1, lotZ1 + 0.8);
 
-  // 通道外空地上的两只木箱和一堆积沙。
-  crate(20.6, -1.1, 1.15, 1.05, 1.15, 0xc99555);
-  crate(20.3, 0.55, 0.8, 0.72, 0.8, 0xb07f45);
+  // 通道外空地上的一堆积沙。
   const lotPile = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), kit.sandPile);
   lotPile.scale.set(1.15, 0.08, 0.85);
   lotPile.position.set(21.3, 0.04, -8.2);
