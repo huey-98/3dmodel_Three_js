@@ -28,6 +28,8 @@ npm run preview
 
 `vite.config.js` 把根目录 `index.html` 和每个 `src/scenes/<name>/index.html` 都列为 Rollup 入口，所以三个场景会打成独立页面。
 
+任一场景地址后加 `?stats` 会在左上角显示性能面板，见 [architecture.md](./architecture.md)。2026-11-20 采集的各场景性能基线和别墅的 A/B 对比记在 [perf/baseline.md](../perf/baseline.md)。
+
 ## 场景在做什么
 
 **豪华别墅**是唯一带完整玩法的场景。玩家控制鲸尾女仆在草地、桥面和三层别墅里走动，可以开门、自动走进门、上楼梯、在河边上船并沿河划行。碰撞用水平面上的轴对齐矩形，高度由楼层、楼梯踏步和桥面单独计算。

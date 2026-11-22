@@ -74,6 +74,17 @@
 - 鼠标灵敏度：25%–300%，步进 5%，默认 100%。第一人称用它作为 `getLookScale()`。
 - 视野：70°–110°，步进 1°，默认 90°。第一人称用它作为 `getFov()`。第三人称仍用各场景原来的视野。
 
-`withSound` 默认为真，此时面板里还有一个「音效」开关，用于荒漠迷城的开火、换弹和切枪提示音。别墅没有音效，传 `false` 不显示这个开关。
+`withSound` 默认为真，此时面板里还有一个「音效」开关，用于荒漠迷城的开火、挥刀、换弹提示音和敌人的枪声（切枪没有音效）。别墅没有音效，传 `false` 不显示这个开关。
 
 返回 `{ moveScale, lookScale, fov, sound }`，都是读取当前数值的函数。改滑杆或开关时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov, sound }`）。读不到或数值超出范围时，比例回到 1，视野回到 90；`sound` 默认关闭，只有存过 `true` 才打开。面板打开时如果鼠标还被锁定，会先释放锁定。
+
+## 性能面板 `perfStats.js`
+
+`createPerfStats({ renderer, name = '' })` 三个场景都创建，`name` 分别是 `villa`、`maid`、`bazaar-free` / `bazaar-game`。URL 不带 `?stats` 时不创建任何 DOM，返回的两个方法都是空的，主循环不用写分支。
+
+返回 `{ beginFrame, endFrame }`，在主循环里包住一帧：`beginFrame()` 重置 `renderer.info` 并记下 JS 起点，`endFrame(now)` 记录本帧 JS 耗时和与上一帧的间隔。开启时 `renderer.info.autoReset` 置为 `false`，一帧里的多次 `render` 都累加进同一帧。
+
+- 统计窗口是最近 120 帧的环形缓冲；超过 300 毫秒的帧间隔（切后台、重新聚焦）不计入帧时间。
+- 面板是左上角固定的 `#perf-stats`，不接收指针事件，攒够 8 帧后约每 250 毫秒刷一次 DOM。内容为帧率、平均 / P95 / 最大帧时间、JS 平均 / P95、绘制调用、三角面、几何体、贴图数量、像素比和绘制缓冲尺寸。
+- 包一层 `renderer.render`，把最后一次渲染的场景和相机挂到 `window.__perfScene`、`window.__perfCamera`，渲染器本身挂到 `window.__perfRenderer`。
+- `window.__perf.snapshot()` 返回当前统计的数值对象（fps、帧时间和 JS 时间的均值 / P95、调用数、三角面、几何体、贴图、像素比和缓冲尺寸），供控制台 A/B 测量。[perf/baseline.md](../perf/baseline.md) 里的基线就是这样采集的。

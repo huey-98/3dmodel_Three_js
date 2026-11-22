@@ -548,7 +548,8 @@ export function createCombat({ scene, camera, domElement, world, player, setting
       raycaster.set(origin, direction);
       raycaster.far = reach;
 
-      const pick = (list) => raycaster.intersectObjects(list, false)
+      // 墙面要递归进 world.group 的子网格；命中盒本身是网格，递归与否都一样。
+      const pick = (list) => raycaster.intersectObjects(list, true)
         .filter((hit) => hit.object.visible && hit.distance > 0.3);
 
       const wallHits = pick([world.group]);
