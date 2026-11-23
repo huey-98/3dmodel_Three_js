@@ -44,7 +44,7 @@ function facadeDetails(ctx) {
   blindWindow('x', 6, 50, 51.6, 5.6, 1.5, 2.0, -1);
   blindWindow('z', 40, 24, 25.6, 4.6, 1.5, 2.0, -1);
   blindWindow('z', 40, 30, 31.6, 4.6, 1.5, 2.0, -1);
-  box(13.4, 0.6, 0.9, kit.beam, 0, 4.6, 40);                 // 中门过梁
+  box(13.4, 0.6, 0.9, kit.beam, 0, 4.6, 26);                 // 中门过梁
   box(0.6, 0.7, 10.7, kit.sand, -14.3, 8.15, 15);            // B 门洞顶过梁（承城垛）
   volume(43.6, 52.4, 4.9, 5.5, 47.6, 56.4, kit.sand);        // A 大拱门楣
   aSiteFacade(ctx);

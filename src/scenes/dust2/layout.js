@@ -5,7 +5,7 @@
 export const T_Y = 3.25;
 export const GARDEN_Y = 0.0;
 export const B2_Y = 1.6;
-export const B1_Y = 0.0;
+export const B1_Y = -1.6;
 export const B_Y = 2.5;
 export const SAND_W_Y = 2.5;   // 沙地西端（B 门外）
 export const CT_Y = -3.25;
@@ -38,11 +38,10 @@ export const FLOORS = [
   { x0: -6, x1: 6, z0: 26, z1: 40, top: MID_Y, kind: 'road', deep: true },
   { x0: -6, x1: 6, z0: 40, z1: 56, top: MID_Y, kind: 'road', deep: true },
   { x0: -4, x1: 4, z0: 56, z1: 70, top: MID_Y, kind: 'cave', deep: true },   // 暗道（有顶，北出中路，匪家跳下）
-  // 沙地西端平台（B 门外落脚）+ A 小（中门东，警家上方）/ A 平台 / A 大 / A 坑
-  { x0: -14, x1: -11, z0: 10, z1: 26, top: SAND_W_Y, kind: 'sand', deep: true },
+  // 沙地院子（B 斜坡下，标高同警家）+ A 小（中门东，警家上方）/ A 平台 / A 大 / A 坑
+  { x0: 6, x1: 10, z0: 10, z1: 26, top: CT_Y, kind: 'sand', deep: true },   // 沙地院子（-3.25，接警家）
   { x0: 6, x1: 16, z0: 26, z1: 40, top: A_SMALL_Y, kind: 'cobble', deep: false, bottom: -0.2 }, // A 小道猫道（抬高）
   { x0: 6, x1: 16, z0: 44, z1: 52, top: MID_Y, kind: 'cobble', deep: true },   // A 小通道（匪口侧地面入口）
-  { x0: -12, x1: -6, z0: 40, z1: 48, top: MID_Y, kind: 'cobble', deep: true }, // B1 入口通道（匪口侧地面）
   { x0: 26, x1: 44, z0: 6, z1: 26, top: A_PLAT_Y, kind: 'cobble', deep: true },
   { x0: 44, x1: 52, z0: 26, z1: 64, top: LONG_Y, kind: 'road', deep: true },
   { x0: 40, x1: 44, z0: 40, z1: 56, top: PIT_Y, kind: 'cave', deep: true },
@@ -57,10 +56,11 @@ export const RAMPS = [
   { x0: -14, x1: -8, z0: 64, z1: 70, from: T_Y, to: GARDEN_Y, dir: '-x' },   // 匪家西下后花园
   { x0: -40, x1: -32, z0: 52, z1: 56, from: B2_Y, to: GARDEN_Y, dir: 'z' },  // B2 南通道下后花园
   { x0: -36, x1: -30, z0: 20, z1: 26, from: B2_Y, to: B_Y, dir: '-z' },      // B 洞上 B 点
-  { x0: -11, x1: 10, z0: 10, z1: 26, from: SAND_W_Y, to: CT_Y, dir: 'x' },   // 沙地往东下坡到警家
+  { x0: -14, x1: 6, z0: 10, z1: 26, from: B_Y, to: CT_Y, dir: 'x' },        // B 斜坡：B 门长缓坡下沙地（2.5→-3.25）
   { x0: 20, x1: 26, z0: 6, z1: 14, from: CT_Y, to: A_PLAT_Y, dir: 'x' },     // 警家斜坡上 A 平台
   { x0: 16, x1: 26, z0: 20, z1: 26, from: A_SMALL_Y, to: A_PLAT_Y, dir: '-z' }, // A 小楼梯上 A 平台
   { x0: 6, x1: 16, z0: 40, z1: 44, from: MID_Y, to: A_SMALL_Y, dir: '-z' },  // 小道楼梯：A 小通道上 A 小道猫道
+  { x0: -12, x1: -6, z0: 40, z1: 44, from: MID_Y, to: B1_Y, dir: '-x' },     // B1 入口下缓坡（中路左转西下进 B1）
   { x0: 20, x1: 44, z0: 34, z1: 40, from: CT_Y, to: LONG_Y, dir: 'x' },      // 警家往东上坡接 A 大
   { x0: 34, x1: 44, z0: 26, z1: 34, from: LONG_Y, to: A_PLAT_Y, dir: '-z' }, // A 大斜坡向北 uphill
   { x0: 40, x1: 44, z0: 56, z1: 60, from: PIT_Y, to: LONG_Y, dir: 'z' },     // A 坑回 A 大
@@ -74,6 +74,8 @@ export const WALLS = [
   { x0: -44, x1: 56, z0: 88, z1: 88.6 },
   { x0: -40.6, x1: -40, z0: 6, z1: 78 },    // 西缘内墙（B2/后花园西侧封边）
   { x0: -26, x1: -16, z0: 25.4, z1: 26 },   // B1 北墙肩
+  { x0: -16, x1: -6, z0: 25.4, z1: 26 },    // B1 北墙东段
+  { x0: -6.6, x1: -6, z0: 26, z1: 40 },     // B1 东墙（下沉 B1 与中路北段隔墙）
   { x0: -14.6, x1: -14, z0: 6, z1: 10 },    // B 点东墙北段（B 门洞 z[10,20]）
   { x0: -14.6, x1: -14, z0: 20, z1: 26 },   // B 点东墙南段
   { x0: 6, x1: 16, z0: 25.4, z1: 26 },      // A 小北墙肩（A 小楼梯洞 x[16,26]）
@@ -82,7 +84,7 @@ export const WALLS = [
   { x0: 26, x1: 34, z0: 25.4, z1: 26, top: A_PLAT_Y + 1.1, para: true, kind: 'plaster' }, // A 平台南缘矮墙（留 x[34,44] 斜坡上口）
   { x0: 52, x1: 52.6, z0: 26, z1: 64 },     // A 大东墙
   { x0: -6.6, x1: -6, z0: 56, z1: 64 },     // 中路南段西墙肩
-  { x0: -6.6, x1: -6, z0: 40, z1: 44 },     // B1 门北肩（门洞 z[44,48]）
+  { x0: -6.6, x1: -6, z0: 44, z1: 48 },     // B1 入口南肩（入口洞 z[40,44]，中门南面）
   { x0: 5.4, x1: 6, z0: 40, z1: 44 },       // A 小缺口北肩（缺口 z[44,52]）
 ];
 
@@ -90,7 +92,7 @@ export const MASS = [
   { x0: -32, x1: -26, z0: 26, z1: 30 },
   { x0: -32, x1: -26, z0: 40, z1: 56 },
   { x0: -26, x1: -12, z0: 40, z1: 56 },
-  { x0: -12, x1: -6, z0: 48, z1: 56 },
+  { x0: -12, x1: -6, z0: 44, z1: 56 },
   { x0: -14, x1: -6, z0: 56, z1: 64 },
   { x0: -6, x1: -4, z0: 56, z1: 70 },       // 暗道西墙
   { x0: 4, x1: 6, z0: 56, z1: 70 },         // 暗道东墙
@@ -113,13 +115,13 @@ export const MASS = [
 
 export const CEILS = [
   { x0: -40, x1: -32, z0: 26, z1: 56, bottom: B2_Y + 2.4, kind: 'cave', room: true },
-  { x0: -4, x1: 4, z0: 56, z1: 70, bottom: 4.0, kind: 'cave', room: true },   // 暗道顶棚（加高）
+  { x0: -4, x1: 4, z0: 56, z1: 66, bottom: 5.5, kind: 'cave', room: true },   // 暗道顶棚（加高，与匪家留距）
   { x0: 44, x1: 52, z0: 48, z1: 56, bottom: 4.9, kind: 'sand', room: true },
 ];
 
 export const ROOMS = [
   { x0: -40, x1: -32, z0: 26, z1: 56, y0: GARDEN_Y, y1: B2_Y + 2.4 },
-  { x0: -4, x1: 4, z0: 56, z1: 70, y0: MID_Y, y1: 4.0 },
+  { x0: -4, x1: 4, z0: 56, z1: 66, y0: MID_Y, y1: 5.5 },
   { x0: 44, x1: 52, z0: 48, z1: 56, y0: LONG_Y, y1: 4.9 },
 ];
 
@@ -142,8 +144,8 @@ export const ZONES = [
   { name: '匪家', x0: -14, x1: 20, z0: 64, z1: 84, y0: 2.4, y1: 4.4 },
   { name: '后花园', x0: -40, x1: -14, z0: 56, z1: 78, y0: -0.8, y1: 1.2 },
   { name: 'B2/B 通', x0: -40, x1: -32, z0: 26, z1: 56, y0: 0, y1: 2.4 },
-  { name: '旋转楼梯', x0: -32, x1: -26, z0: 30, z1: 40, y0: -0.8, y1: 2.4 },
-  { name: 'B1', x0: -26, x1: -6, z0: 26, z1: 40, y0: -0.8, y1: 1.2 },
+  { name: '旋转楼梯', x0: -32, x1: -26, z0: 30, z1: 40, y0: -2.4, y1: 2.4 },
+  { name: 'B1', x0: -26, x1: -6, z0: 26, z1: 40, y0: -2.4, y1: -0.4 },
   { name: 'B 洞', x0: -36, x1: -30, z0: 20, z1: 26, y0: 0.8, y1: 3.4 },
   { name: 'B 包点', x0: -32, x1: -14, z0: 6, z1: 26, y0: 1.6, y1: 3.4 },
   { name: 'B 门', x0: -16, x1: -12, z0: 10, z1: 20, y0: 1.6, y1: 3.4 },
@@ -153,12 +155,12 @@ export const ZONES = [
   { name: 'A 小楼梯', x0: 16, x1: 26, z0: 20, z1: 26, y0: 0.4, y1: 2.8 },
   { name: 'A 小道', x0: 6, x1: 16, z0: 26, z1: 40, y0: 0.4, y1: 1.8 },
   { name: 'A 小', x0: 6, x1: 16, z0: 40, z1: 52, y0: -0.8, y1: 1.6 },
-  { name: 'B1 入口', x0: -12, x1: -6, z0: 40, z1: 48, y0: -0.8, y1: 1.2 },
-  { name: '中门', x0: -6, x1: 6, z0: 36, z1: 40, y0: -0.8, y1: 1.2 },
+  { name: 'B1 入口', x0: -12, x1: -6, z0: 40, z1: 44, y0: -2.4, y1: 1.2 },
+  { name: '中门', x0: -6, x1: 6, z0: 26, z1: 30, y0: -0.8, y1: 1.2 },
   { name: '中路', x0: -6, x1: 6, z0: 26, z1: 56, y0: -0.8, y1: 1.2 },
   { name: '中远', x0: -6, x1: 6, z0: 44, z1: 56, y0: -0.8, y1: 1.2 },
   { name: '匪口', x0: 6, x1: 20, z0: 56, z1: 70, y0: -0.8, y1: 1.2 },
-  { name: '暗道', x0: -4, x1: 4, z0: 56, z1: 70, y0: -0.8, y1: 4.0 },
+  { name: '暗道', x0: -4, x1: 4, z0: 56, z1: 70, y0: -0.8, y1: 5.5 },
   { name: 'A 平台', x0: 26, x1: 44, z0: 6, z1: 26, y0: 1.2, y1: 2.8 },
   { name: 'A 斜坡', x0: 34, x1: 44, z0: 26, z1: 34, y0: 0, y1: 2.8 },
   { name: '警家东上坡', x0: 20, x1: 44, z0: 34, z1: 40, y0: -4.4, y1: 1.6 },

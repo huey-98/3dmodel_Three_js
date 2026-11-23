@@ -1,15 +1,15 @@
 // 道具层：坐标对应中文点位雷达。箱堆/车/油桶/棕榈/灯火/旗帜/包点喷图。
 import * as THREE from 'three';
-import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, B1_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y } from '../layout.js';
+import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y } from '../layout.js';
 
 const PALMS = [
-  [14, 80, T_Y], [-34, 70, GARDEN_Y], [-13, 12, B_Y], [18, 10, CT_Y],
+  [14, 80, T_Y], [-34, 70, GARDEN_Y], [8, 12, CT_Y], [18, 10, CT_Y],
   [40, 20, A_PLAT_Y], [50, 36, LONG_Y], [-18, 10, B_Y], [14, 64, ROAD_Y],
   [28, 8, A_PLAT_Y], [42, 10, A_PLAT_Y], [11, 20, CT_Y],
 ];
 const BARRELS = [
   [-30, 10, B_Y], [-16, 60, GARDEN_Y], [48, 44, LONG_Y], [12, 66, ROAD_Y],
-  [-36, 48, B2_Y], [12, 22, CT_Y], [-24, 36, B1_Y],
+  [-36, 48, B2_Y], [12, 22, CT_Y],
   [46, 30, LONG_Y], [38, 24, A_PLAT_Y],
 ];
 // g 有值 = 露天灯柱（立柱落地）；无值 = 吊灯（贴顶棚）
@@ -36,9 +36,7 @@ export function buildProps(ctx) {
   box(0.4, 3.2, 0.4, kit.beam, -16, B_Y + 1.6, 8);
   box(0.4, 3.2, 0.4, kit.beam, -15, B_Y + 1.6, 10);
   box(1.6, 0.2, 2.4, kit.beam, -15.5, B_Y + 3.2, 9);
-  addCar(ctx, -12.5, 22, B_Y, 0.4);         // 沙地卡车（B 门外平台）
-  addCar(ctx, -20, 34, B1_Y, -0.5);         // B1 白车
-  crate(1.2, -22, 30, B1_Y);
+  addCar(ctx, 8, 18, CT_Y, 0.4);            // 沙地白车（沙地院子）
   crate(1.2, 4, 42, MID_Y);                 // 中门叉箱（跳 A 小）
   crate(1.6, -4, 48, MID_Y);                // L 位
   crate(1.2, 2, 50, MID_Y);                 // 中远
@@ -84,6 +82,15 @@ export function buildProps(ctx) {
   whiteCrate(1.4, 13.6, 9, CT_Y);
   whiteCrate(1.2, 12, 10.6, CT_Y);
   whiteCrate(1.2, 12, 9, CT_Y + 1.4);
+
+  // 木板脚手架（沙地北墙前）
+  const sy = CT_Y;
+  box(0.3, 3.0, 0.3, kit.beam, 6.5, sy + 1.5, 10.6);
+  box(0.3, 3.0, 0.3, kit.beam, 9.5, sy + 1.5, 10.6);
+  box(3.4, 0.2, 0.3, kit.beam, 8, sy + 2.8, 10.6);
+  box(3.4, 0.2, 0.3, kit.beam, 8, sy + 1.4, 10.6);
+  const plank = box(3.2, 0.15, 1.6, kit.wood, 8, sy + 1.7, 11.4);
+  plank.rotation.x = 0.5;
 }
 
 function sandbagStack(ctx, x, z, y) {
