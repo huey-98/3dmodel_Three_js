@@ -240,6 +240,118 @@ function aptFloorTex() {
     noise(ctx, w, h, 400, 0.07, 2);
   });
 }
+// 白灰泥墙（A 平台矮墙 / 北侧白楼）
+function plasterTex() {
+  return canvasTex(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#e9e1cf';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) {
+      ctx.fillStyle = `rgba(${190 + Math.random() * 40 | 0},${178 + Math.random() * 36 | 0},${150 + Math.random() * 30 | 0},0.35)`;
+      ctx.beginPath();
+      ctx.ellipse(Math.random() * w, Math.random() * h, 10 + Math.random() * 50, 8 + Math.random() * 30, Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const g = ctx.createLinearGradient(0, h, 0, h - 110);
+    g.addColorStop(0, 'rgba(120,96,60,0.4)');
+    g.addColorStop(1, 'rgba(120,96,60,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, h - 110, w, 110);
+    noise(ctx, w, h, 700, 0.06);
+  });
+}
+
+// 蓝布（默认箱顶盖）
+function tarpTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#2f6fb0';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = -h; i < w; i += 26) {
+      ctx.strokeStyle = 'rgba(150,195,235,0.35)';
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + h, h); ctx.stroke();
+      ctx.strokeStyle = 'rgba(16,44,80,0.4)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(i + 12, 0); ctx.lineTo(i + 12 + h, h); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(12,34,64,0.7)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, w - 8, h - 8);
+    noise(ctx, w, h, 400, 0.08);
+  });
+}
+
+// 北侧白楼立面：白灰泥 + 青绿百叶拱窗 + 阳台横带
+function facadeTex() {
+  return canvasTex(1024, 342, (ctx, w, h) => {
+    ctx.fillStyle = '#ece4d3';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 60; i++) {
+      ctx.fillStyle = `rgba(180,160,128,${0.05 + Math.random() * 0.12})`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 20 + Math.random() * 90, 8 + Math.random() * 30);
+    }
+    // 阳台横带
+    ctx.fillStyle = 'rgba(120,96,60,0.35)';
+    ctx.fillRect(0, h * 0.62, w, 10);
+    ctx.fillStyle = '#d8cdb4';
+    ctx.fillRect(0, h * 0.62 + 10, w, 16);
+    const g = ctx.createLinearGradient(0, h, 0, h - 70);
+    g.addColorStop(0, 'rgba(110,86,52,0.45)');
+    g.addColorStop(1, 'rgba(110,86,52,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, h - 70, w, 70);
+    noise(ctx, w, h, 500, 0.05);
+  });
+}
+
+// 沙袋堆叠
+function sandbagTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#b8a06a';
+    ctx.fillRect(0, 0, w, h);
+    const rows = 4, cols = 3;
+    for (let r = 0; r < rows; r++) {
+      const off = (r % 2) * (w / cols / 2);
+      for (let c = -1; c < cols; c++) {
+        const x = c * (w / cols) + off, y = r * (h / rows);
+        ctx.fillStyle = `rgba(${150 + Math.random() * 40 | 0},${126 + Math.random() * 34 | 0},${80 + Math.random() * 28 | 0},0.9)`;
+        ctx.beginPath();
+        ctx.ellipse(x + w / cols / 2, y + h / rows / 2, w / cols / 2 - 3, h / rows / 2 - 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(80,60,32,0.5)';
+        ctx.lineWidth = 2; ctx.stroke();
+      }
+    }
+    noise(ctx, w, h, 500, 0.1);
+  });
+}
+
+// FRAGILE 白木箱（警家拱廊下）
+function fragileTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#d8d2c0';
+    ctx.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 42) {
+      ctx.fillStyle = 'rgba(120,104,76,0.25)';
+      ctx.fillRect(x, 0, 3, h);
+    }
+    ctx.strokeStyle = 'rgba(90,74,50,0.7)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(6, 6, w - 12, h - 12);
+    ctx.fillStyle = 'rgba(40,32,20,0.8)';
+    ctx.font = 'bold 30px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('FRAGILE', w / 2, h / 2 + 6);
+    // 向上箭头
+    for (const ax of [w * 0.25, w * 0.75]) {
+      ctx.beginPath();
+      ctx.moveTo(ax, h * 0.78); ctx.lineTo(ax - 10, h * 0.88); ctx.lineTo(ax + 10, h * 0.88);
+      ctx.closePath(); ctx.fill();
+      ctx.fillRect(ax - 3, h * 0.88, 6, 14);
+    }
+    noise(ctx, w, h, 400, 0.07);
+  });
+}
+
 export function createDust2Kit() {
   const mk = (tex, rough = 0.92) => new THREE.MeshStandardMaterial({ map: tex, roughness: rough, metalness: 0.02 });
   const sand = mk(sandstoneTex());
@@ -254,6 +366,11 @@ export function createDust2Kit() {
   const road = mk(roadTex());
   const wood = mk(woodFloorTex());
   const apt = mk(aptFloorTex());
+  const plaster = mk(plasterTex());
+  const tarp = mk(tarpTex(), 0.8);
+  const facade = mk(facadeTex());
+  const sandbag = mk(sandbagTex());
+  const fragile = mk(fragileTex());
   return {
     sand,
     cobble,
@@ -267,6 +384,12 @@ export function createDust2Kit() {
     door,
     beam,
     mass,
+    plaster,
+    tarp,
+    facade,
+    sandbag,
+    fragile,
+    teal: new THREE.MeshStandardMaterial({ color: 0x2e8b8b, roughness: 0.5, metalness: 0.1 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x241a0e, roughness: 1 }),
     recess: new THREE.MeshStandardMaterial({ color: 0x1c130a, roughness: 1 }),
     letter: new THREE.MeshStandardMaterial({ map: siteLetterTex('A'), transparent: true, roughness: 1 }),

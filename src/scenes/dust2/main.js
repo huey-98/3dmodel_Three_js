@@ -17,7 +17,6 @@ scene.background = new THREE.Color(0xd9bd85);
 scene.fog = new THREE.Fog(0xdcc494, 60, 210);
 
 const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 320);
-camera.position.set(-26, 6, -10);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(innerWidth, innerHeight);
@@ -59,6 +58,8 @@ const person = createWhaleMaid();
 person.group.position.set(spawn.x, spawn.y, spawn.z);
 person.group.rotation.y = spawn.yaw;
 scene.add(person.group);
+// 初始机位：出生点身后 6 米、抬高 4 米（室内出生点由房间夹取收回）
+camera.position.set(spawn.x - Math.sin(spawn.yaw) * 6, spawn.y + 4, spawn.z - Math.cos(spawn.yaw) * 6);
 
 // ---------- 相机控制 ----------
 const controls = new OrbitControls(camera, renderer.domElement);

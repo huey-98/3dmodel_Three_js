@@ -1,139 +1,95 @@
-// 道具层：所有道具都带所在地面高度 y。箱堆、油桶、棕榈、灯火、旗帜、包点喷图。
-// 可动件登记进 ctx.animated（棕榈摆动、旗帜波动）。
+// 道具层：坐标对应中文点位雷达。箱堆/车/油桶/棕榈/灯火/旗帜/包点喷图。
 import * as THREE from 'three';
-import { A_Y, B_Y, T_Y, CT_Y, PIT_Y, BRIDGE_Y, APT1_Y, APT2_Y, B_BACK_Y, TUN_UP_Y, TUN_LO_Y, MID_Y, ROAD_Y, CAT_Y, LONG_Y, A_BACK_Y } from '../layout.js';
+import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, B1_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y } from '../layout.js';
 
-// [x, z, y]
 const PALMS = [
-  [-48, 66, A_Y], [-36, 40, A_Y], [-9, -30, T_Y], [-52, -20, T_Y],
-  [3, 40, ROAD_Y], [13, 3, ROAD_Y], [42, 12, ROAD_Y],
-  [4, 63, CT_Y], [12, 52, CT_Y],
-  [-45, 30, LONG_Y + 0.8], [-10, 26, MID_Y],
-  [30, 76, B_BACK_Y], [21, 68, B_Y],
+  [14, 80, T_Y], [-34, 70, GARDEN_Y], [-13, 12, B_Y], [18, 10, CT_Y],
+  [40, 20, A_PLAT_Y], [50, 36, LONG_Y], [-18, 10, B_Y], [14, 64, ROAD_Y],
+  [28, 8, A_PLAT_Y], [42, 10, A_PLAT_Y], [11, 20, CT_Y],
 ];
 const BARRELS = [
-  [-44.5, 30, LONG_Y + 0.8], [-33, 66, A_Y], [2, 33, ROAD_Y],
-  [36, 62, TUN_LO_Y], [33.5, 12, TUN_UP_Y], [12, 63, CT_Y],
-  [20.5, 50, B_Y], [-52.5, -16, T_Y],
+  [-30, 10, B_Y], [-16, 60, GARDEN_Y], [48, 44, LONG_Y], [12, 66, ROAD_Y],
+  [-36, 48, B2_Y], [12, 22, CT_Y], [-24, 36, B1_Y],
+  [46, 30, LONG_Y], [38, 24, A_PLAT_Y],
 ];
+// g 有值 = 露天灯柱（立柱落地）；无值 = 吊灯（贴顶棚）
 const LAMPS = [
-  { x: 35.5, y: 3.4, z: 3 }, { x: 35.5, y: -0.3, z: 22 }, { x: 35.5, y: -1.9, z: 55 },
-  { x: 24, y: 3.8, z: 19 }, { x: -10, y: 3.9, z: 6 }, { x: -47, y: 4.4, z: 8 },
-  { x: 8, y: 3.6, z: 58 }, { x: 26, y: 5.4, z: 52 }, { x: -34, y: 6.6, z: -16 },
-  { x: 5, y: 3.9, z: 15 }, { x: -24, y: -0.4, z: 42 },
+  { x: -36, y: 4.0, z: 40 }, { x: 0, y: 2.0, z: 60 },
+  { x: 11, y: -0.2, z: 30, g: CT_Y }, { x: -20, y: 5.4, z: 10, g: B_Y }, { x: 30, y: 5.4, z: 20, g: A_PLAT_Y },
+  { x: -4, y: 3.9, z: 28, g: MID_Y }, { x: 48, y: 4.4, z: 50 }, { x: -30, y: 3.4, z: 62, g: GARDEN_Y },
 ];
 
 export function buildProps(ctx) {
-  const { kit, box, volume, solid, crate, group, animated, platform } = ctx;
+  const { kit, box, solid, crate, tarpCrate, whiteCrate, platform, group, animated } = ctx;
 
-  // —— 包点喷图（红圈字母）——
   const letterGeo = new THREE.PlaneGeometry(7, 7);
   const decalA = new THREE.Mesh(letterGeo, kit.letter);
-  decalA.rotation.x = -Math.PI / 2;
-  decalA.position.set(-39, A_Y + 0.03, 68);
-  group.add(decalA);
+  decalA.rotation.x = -Math.PI / 2; decalA.position.set(35, A_PLAT_Y + 0.03, 16); group.add(decalA);
   const decalB = new THREE.Mesh(letterGeo, kit.letterB);
-  decalB.rotation.x = -Math.PI / 2;
-  decalB.position.set(29, B_Y + 0.03, 62);
-  group.add(decalB);
+  decalB.rotation.x = -Math.PI / 2; decalB.position.set(-23, B_Y + 0.03, 16); group.add(decalB);
 
-  // —— A 包点：箱堆 + 旧车 + 蓝斗 ——
-  crate(2.4, -40, 58, A_Y);
-  crate(1.2, -38, 60.6, A_Y);
-  crate(1.2, -40.4, 55, A_Y);
-  crate(2.4, -36, 47, A_Y);
-  crate(1.2, -47, 47, A_Y);
-  addCar(ctx, -49, 42, A_Y, 0.5);
-  box(2.6, 1.5, 4.6, kit.blue, -33.4, A_Y + 0.75, 66);
-  solid(-34.7, -32.1, 63.7, 68.3);
-  // A 后条沙袋
-  crate(0.8, -50, 66, A_BACK_Y);
-  crate(0.8, -49.2, 67.6, A_BACK_Y);
+  // B 包点：大箱/高箱/矮箱/狙位/脚手架
+  crate(2.4, -28, 20, B_Y);
+  crate(1.6, -26, 18, B_Y);
+  crate(1.2, -24, 12, B_Y);
+  crate(1.2, -30, 8, B_Y);
+  box(0.4, 3.2, 0.4, kit.beam, -16, B_Y + 1.6, 8);
+  box(0.4, 3.2, 0.4, kit.beam, -15, B_Y + 1.6, 10);
+  box(1.6, 0.2, 2.4, kit.beam, -15.5, B_Y + 3.2, 9);
+  addCar(ctx, -12.5, 22, B_Y, 0.4);         // 沙地卡车（B 门外平台）
+  addCar(ctx, -20, 34, B1_Y, -0.5);         // B1 白车
+  crate(1.2, -22, 30, B1_Y);
+  crate(1.2, 4, 42, MID_Y);                 // 中门叉箱（跳 A 小）
+  crate(1.6, -4, 48, MID_Y);                // L 位
+  crate(1.2, 2, 50, MID_Y);                 // 中远
+  tarpCrate(1.6, 36, 16, A_PLAT_Y);              // A 默认大箱（蓝布盖）
+  tarpCrate(1.6, 38.2, 16, A_PLAT_Y);            // A 默认大箱（蓝布盖）
+  tarpCrate(1.2, 34, 12, A_PLAT_Y);              // A 小箱
+  crate(1.2, 30, 8, A_PLAT_Y);                   // 鹅位
+  sandbagStack(ctx, 30, 24.6, A_PLAT_Y);         // 矮墙内侧沙袋
+  sandbagStack(ctx, 33, 24.6, A_PLAT_Y);
+  addCar(ctx, 48, 30, LONG_Y, 0.2);         // 蓝车
+  crate(1.2, 48, 44, LONG_Y);              // 蓝车死点
+  crate(1.6, 46, 40, LONG_Y);              // 蓝箱
+  crate(1.6, 42, 50, PIT_Y);                // A 坑跳箱
+  addCar(ctx, 30, 62, ROAD_Y, -0.3);        // 黄车
+  addCar(ctx, -20, 72, GARDEN_Y, 0.6);      // 匪家蓝车
+  crate(1.6, 2, 78, T_Y);
+  crate(1.2, 4.4, 78, T_Y);
+  crate(1.2, 2, 80.2, T_Y + 1.6);
 
-  // —— A 坑：出坑跳箱 ——
-  crate(1.6, -27, 44, PIT_Y);
-  crate(1.2, -23.5, 38.5, PIT_Y);
-
-  // —— A 大 ——
-  crate(1.6, -46, 20, LONG_Y + 0.8);
-  crate(1.2, -44.4, 22.2, LONG_Y + 0.8);
-  crate(1.2, -49, 6, LONG_Y);
-
-  // —— 匪家平台 ——
-  crate(1.6, -33, -19, T_Y);
-  crate(1.2, -30.6, -19, T_Y);
-  crate(1.2, -33, -21.2, T_Y + 1.6);
-  crate(1.2, -16, -10, T_Y);
-
-  // —— 中路 ——
-  crate(2.4, -9, 12, MID_Y);
-  crate(1.2, -11.4, 14.2, MID_Y);
-  crate(1.6, -12.2, 3, MID_Y);
-  crate(1.2, -8, 26, MID_Y);
-
-  // —— 桥洞 ——
-  crate(1.6, -15, 38, PIT_Y);
-  crate(1.2, -8, 55, BRIDGE_Y);
-  crate(1.2, -12, 60, BRIDGE_Y);
-
-  // —— 90° / 东北街 ——
-  crate(1.6, 2, 26, ROAD_Y);
-  crate(1.2, 4, 24, ROAD_Y);
-  crate(1.2, 10, -6, ROAD_Y);
-  // 木围栏（B 门外院）
-  box(8, 1.6, 0.3, kit.beam, 24, ROAD_Y + 0.8, 34);
-  solid(20, 28, 33.8, 34.3);
-
-  // —— 公寓一层 / 二层 ——
-  crate(1.4, 20, 25, APT1_Y);
-  crate(1.2, 27, 12, APT1_Y);
-  crate(1.6, 28, 25, APT2_Y);
-  crate(1.2, 19, 25, APT2_Y);
-  crate(1.2, 20, 15, APT2_Y);
-
-  // —— B 包点 ——
-  crate(2.4, 24, 54, B_Y);
-  crate(2.4, 24, 56.5, B_Y);
-  crate(1.2, 26.6, 55, B_Y + 2.4);
-  crate(1.6, 21, 65, B_Y);
-  crate(1.2, 31, 63, B_Y);
-  addCar(ctx, 30, 51, B_Y, -0.6);
-
-  // —— B 后 / 下水道 ——
-  crate(1.2, 30, 74, B_BACK_Y);
-  crate(1.2, 35, 20, TUN_UP_Y);
-  crate(1.4, 34, 45, TUN_LO_Y);
-  crate(1.2, 36.5, 47, TUN_LO_Y);
-
-  // —— 警家 ——
-  crate(1.6, 4, 60, CT_Y);
-  crate(1.2, 6.2, 62, CT_Y);
-  crate(1.2, 13, 53, CT_Y);
-
-  // —— 猫道：横板条 ——
-  for (let x = -33; x <= -5; x += 2) box(1.7, 0.12, 6, kit.beam, x, CAT_Y + 0.06, 19);
-
-  // —— 棕榈 / 油桶 / 灯火 / 旗帜 ——
   for (const [x, z, y] of PALMS) addPalm(ctx, x, z, y);
   for (const [x, z, y] of BARRELS) {
     const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.05, 12), kit.blue);
     barrel.position.set(x, y + 0.52, z);
-    barrel.castShadow = true;
-    barrel.receiveShadow = true;
-    group.add(barrel);
+    barrel.castShadow = true; barrel.receiveShadow = true; group.add(barrel);
     solid(x - 0.42, x + 0.42, z - 0.42, z + 0.42);
   }
   for (const lp of LAMPS) {
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 0.5), kit.lampGlow);
-    lamp.position.set(lp.x, lp.y, lp.z);
-    group.add(lamp);
+    lamp.position.set(lp.x, lp.y, lp.z); group.add(lamp);
     const light = new THREE.PointLight(0xffb060, 20, 13, 1.8);
-    light.position.set(lp.x, lp.y - 0.4, lp.z);
-    group.add(light);
-    box(0.16, 0.5, 0.16, kit.mass, lp.x, lp.y + 0.42, lp.z);
+    light.position.set(lp.x, lp.y - 0.4, lp.z); group.add(light);
+    if (lp.g !== undefined) {
+      box(0.14, lp.y - lp.g, 0.14, kit.mass, lp.x, (lp.y + lp.g) / 2, lp.z);
+    } else {
+      box(0.16, 0.5, 0.16, kit.mass, lp.x, lp.y + 0.42, lp.z);
+    }
   }
-  addFlag(ctx, -40, -21, T_Y + 0.2, 0xb0352a);
-  addFlag(ctx, 14, 64, CT_Y + 0.2, 0x3a6ea8);
+  addFlag(ctx, 0, 82, T_Y + 0.2, 0xb0352a);
+  addFlag(ctx, 18, 8, CT_Y + 0.2, 0x3a6ea8);
+
+  // 警家：FRAGILE 白箱堆（木拱廊下）+ 警家斜坡缓坡观感
+  whiteCrate(1.4, 12, 9, CT_Y);
+  whiteCrate(1.4, 13.6, 9, CT_Y);
+  whiteCrate(1.2, 12, 10.6, CT_Y);
+  whiteCrate(1.2, 12, 9, CT_Y + 1.4);
+}
+
+function sandbagStack(ctx, x, z, y) {
+  const { kit, box, platform } = ctx;
+  box(2.4, 0.6, 0.9, kit.sandbag, x, y + 0.3, z);
+  platform(x - 1.2, x + 1.2, z - 0.45, z + 0.45, y + 0.6, y);
 }
 
 function addCar(ctx, x, z, y, yaw) {
@@ -143,19 +99,15 @@ function addCar(ctx, x, z, y, yaw) {
   const body = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.7, 4.4), bodyMat);
   body.position.y = 0.62;
   const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.62, 2.2), bodyMat);
-  cabin.position.set(0, 1.22, -0.2);
+  cabin.position.set(0, 1.2, -0.3);
   car.add(body, cabin);
   const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 10);
   const wheelMat = new THREE.MeshStandardMaterial({ color: 0x241f1a, roughness: 1 });
   for (const [wx, wz] of [[-0.95, 1.4], [0.95, 1.4], [-0.95, -1.4], [0.95, -1.4]]) {
     const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-    wheel.rotation.z = Math.PI / 2;
-    wheel.position.set(wx, 0.4, wz);
-    car.add(wheel);
+    wheel.rotation.z = Math.PI / 2; wheel.position.set(wx, 0.4, wz); car.add(wheel);
   }
-  car.position.set(x, y, z);
-  car.rotation.y = yaw;
-  group.add(car);
+  car.position.set(x, y, z); car.rotation.y = yaw; group.add(car);
   car.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
   solid(x - 1.1, x + 1.1, z - 2.4, z + 2.4);
 }
@@ -169,9 +121,7 @@ function addPalm(ctx, x, z, y) {
   for (let i = 0; i < 5; i++) {
     const seg = new THREE.Mesh(new THREE.CylinderGeometry(0.26 - i * 0.03, 0.3 - i * 0.03, trunkH / 5, 8), kit.trunk);
     seg.position.set(Math.sin(i * 0.7) * 0.1, ty + trunkH / 10, 0);
-    seg.rotation.z = Math.sin(i * 0.9) * 0.05;
-    seg.castShadow = true;
-    palm.add(seg);
+    seg.rotation.z = Math.sin(i * 0.9) * 0.05; seg.castShadow = true; palm.add(seg);
     ty += trunkH / 5;
   }
   const crown = new THREE.Group();
@@ -182,13 +132,10 @@ function addPalm(ctx, x, z, y) {
     pivot.rotation.y = (i / 7) * Math.PI * 2;
     frond.position.set(0, 0.12, 1.3);
     frond.rotation.x = -Math.PI / 2 + 0.5 + Math.random() * 0.25;
-    pivot.add(frond);
-    crown.add(pivot);
+    pivot.add(frond); crown.add(pivot);
   }
   const nut = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), kit.trunk);
-  nut.position.y = ty - 0.1;
-  crown.add(nut);
-  palm.add(crown);
+  nut.position.y = ty - 0.1; crown.add(nut); palm.add(crown);
   group.add(palm);
   animated.push({ kind: 'palm', obj: crown, seed: Math.random() * Math.PI * 2 });
   solid(x - 0.4, x + 0.4, z - 0.4, z + 0.4);
@@ -197,13 +144,10 @@ function addPalm(ctx, x, z, y) {
 function addFlag(ctx, x, z, y, color) {
   const { group, animated, kit } = ctx;
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 7, 8), kit.mass);
-  pole.position.set(x, y + 3.5, z);
-  pole.castShadow = true;
-  group.add(pole);
+  pole.position.set(x, y + 3.5, z); pole.castShadow = true; group.add(pole);
   const clothMat = new THREE.MeshStandardMaterial({ color, roughness: 0.9, side: THREE.DoubleSide });
   const cloth = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.3, 6, 1), clothMat);
-  cloth.position.set(x + 1.3, y + 6.2, z);
-  group.add(cloth);
+  cloth.position.set(x + 1.3, y + 6.2, z); group.add(cloth);
   animated.push({ kind: 'flag', obj: cloth, seed: x * 0.7 });
 }
 
@@ -222,3 +166,4 @@ export function updateProps(animated, t) {
     }
   }
 }
+

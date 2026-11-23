@@ -69,9 +69,77 @@ export function createWorldHelpers(ctx) {
   // 可跳上去的木箱：挡人 + 顶面可站，y 是箱子底。
   function crate(size, x, z, y = 0, standTop = true) {
     box(size, size, size, kit.crate, x, y + size / 2, z);
-    solid(x - size / 2, x + size / 2, z - size / 2, z + size / 2);
+    // 只登记顶面平台（不登记全高 solid）：地面高度挡人、跳起后可落箱顶
     if (standTop) platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + size, y);
     return null;
+  }
+
+  // 蓝布默认箱：木箱身 + 顶部蓝布盖（略外挑），顶面可站
+  function tarpCrate(size, x, z, y = 0) {
+    box(size, size, size, kit.crate, x, y + size / 2, z);
+    const lid = 0.12;
+    box(size + 0.16, lid, size + 0.16, kit.tarp, x, y + size + lid / 2, z);
+    platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + size + lid, y);
+  }
+
+  // 拱形面片（圆拱顶），镜像 bazaar getArch 技法；局部底边在 y=0，朝 +Z。
+  function archPane(w, h, mat) {
+    const key = `arch|${w.toFixed(2)}|${h.toFixed(2)}`;
+    let geo = geoCache.get(key);
+    if (!geo) {
+      const r = Math.min(w / 2 - 0.001, Math.max(0.2, h - 0.25));
+      const shape = new THREE.Shape();
+      shape.moveTo(-w / 2, 0);
+      shape.lineTo(w / 2, 0);
+      shape.lineTo(w / 2, h - r);
+      shape.absarc(0, h - r, r, 0, Math.PI, false);
+      shape.closePath();
+      geo = new THREE.ShapeGeometry(shape, 14);
+      geoCache.set(key, geo);
+    }
+    return new THREE.Mesh(geo, mat);
+  }
+
+  // 拱楣实体（拱洞上方两角填充），镜像 bazaar placeArchSpandrel；局部拱心在 (0,h-r)，沿 +Z 挤出 depth。
+  function archSpandrel(w, h, depth, mat) {
+    const r = Math.min(w / 2 - 0.001, Math.max(0.2, h - 0.25));
+    const shape = new THREE.Shape();
+    shape.moveTo(-w / 2, h - r);
+    shape.lineTo(-w / 2, h);
+    shape.lineTo(w / 2, h);
+    shape.lineTo(w / 2, h - r);
+    shape.absarc(0, h - r, r, 0, Math.PI, false);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 14 });
+    return new THREE.Mesh(geo, mat);
+  }
+
+  // FRAGILE 白箱：顶面可站
+  function whiteCrate(size, x, z, y = 0) {
+    box(size, size, size, kit.fragile, x, y + size / 2, z);
+    platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + size, y);
+  }
+
+  // 平滑斜坡楔体：侧面梯形（底 VOID_Y、顶 from→to）沿宽度挤出，按 dir/axis 定位。
+  function rampMesh(r, mat) {
+    const along = r.dir.includes('x') ? 'x' : 'z';
+    const len = along === 'x' ? r.x1 - r.x0 : r.z1 - r.z0;
+    const width = along === 'x' ? r.z1 - r.z0 : r.x1 - r.x0;
+    const shape = new THREE.Shape();
+    shape.moveTo(0, VOID_Y);
+    shape.lineTo(len, VOID_Y);
+    shape.lineTo(len, r.to);
+    shape.lineTo(0, r.from);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: width, bevelEnabled: false });
+    const mesh = new THREE.Mesh(geo, mat);
+    if (along === 'x') {
+      if (r.dir === 'x') mesh.position.set(r.x0, 0, r.z0);
+      else { mesh.position.set(r.x1, 0, r.z1); mesh.rotation.y = Math.PI; }
+    } else if (r.dir === 'z') { mesh.position.set(r.x1, 0, r.z0); mesh.rotation.y = -Math.PI / 2; }
+    else { mesh.position.set(r.x0, 0, r.z1); mesh.rotation.y = Math.PI / 2; }
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    return mesh;
   }
 
   // 拱门框：两根柱 + 顶梁，中间过人是空的。axis 'z' 表示洞朝 Z 开口。
@@ -92,5 +160,6 @@ export function createWorldHelpers(ctx) {
     volume(cx - w / 2, cx + w / 2, y0, y0 + h, cz - d / 2, cz + d / 2, kit.recess);
   }
 
-  return { add, box, volume, solid, platform, block, crate, archGate, darkOpening };
+  return { add, box, volume, solid, platform, block, crate, tarpCrate, whiteCrate, archPane, archSpandrel, rampMesh, archGate, darkOpening };
 }
+
