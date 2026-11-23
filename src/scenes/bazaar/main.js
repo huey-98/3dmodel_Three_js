@@ -106,6 +106,9 @@ const gun = createCarbine({
 const PERSON_R = 0.32 * CHAR_SCALE;
 let jumpVel = 0;
 let grounded = true;
+// 逻辑脚底高度（碰撞/落地判定用，按台阶吸附）；渲染高度 p.y 平滑逼近它，
+// 避免上下台阶时整级跳变造成画面抖动。
+let feetY = 0;
 
 // 战斗模块只需要这几个跟玩家有关的方法，弹药和血量都还留在 gun.js 里。
 const player = {
@@ -139,6 +142,7 @@ if (combat) dismissHint = showModeHint('游戏模式：按 G 开始第 1 波');
 function placePlayer(spawn) {
   person.group.position.set(spawn.x, groundAt(world, spawn.x, spawn.z, 0.29), spawn.z);
   person.group.rotation.y = spawn.yaw;
+  feetY = person.group.position.y;
   controls.target.set(spawn.x, 1.6, spawn.z);
 }
 
@@ -244,12 +248,12 @@ function animate(now) {
     const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7 : 3.6) * settings.moveScale();
     const nx = p.x + move.x * speed * dt;
     const nz = p.z + move.z * speed * dt;
-    if (!blockedAt(world, nx, nz, PERSON_R, p.y)) {
+    if (!blockedAt(world, nx, nz, PERSON_R, feetY)) {
       p.x = nx;
       p.z = nz;
-    } else if (!blockedAt(world, nx, p.z, PERSON_R, p.y)) {
+    } else if (!blockedAt(world, nx, p.z, PERSON_R, feetY)) {
       p.x = nx;
-    } else if (!blockedAt(world, p.x, nz, PERSON_R, p.y)) {
+    } else if (!blockedAt(world, p.x, nz, PERSON_R, feetY)) {
       p.z = nz;
     }
     person.group.rotation.y = Math.atan2(move.x, move.z);
@@ -266,17 +270,25 @@ function animate(now) {
   }
   if (!grounded) {
     jumpVel -= GRAVITY * dt;
-    p.y += jumpVel * dt;
-    if (jumpVel <= 0 && p.y <= floorY) {
-      p.y = floorY;
+    feetY += jumpVel * dt;
+    if (jumpVel <= 0 && feetY <= floorY) {
+      feetY = floorY;
       jumpVel = 0;
       grounded = true;
     }
-  } else if (p.y - floorY > 0.12) {
+  } else if (feetY - floorY > 0.12) {
     grounded = false;
     jumpVel = 0;
   } else {
-    p.y = floorY;
+    feetY = floorY;
+  }
+  // 渲染高度平滑逼近逻辑脚底高度：落地时把台阶的整级跳变抹成连续升降，
+  // 跳跃/下落（离地）时直接跟随，保持干脆的抛物线。
+  if (grounded) {
+    p.y += (feetY - p.y) * (1 - Math.exp(-dt * 16));
+    if (Math.abs(feetY - p.y) < 0.002) p.y = feetY;
+  } else {
+    p.y = feetY;
   }
 
   world.update(elapsed);
