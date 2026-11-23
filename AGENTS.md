@@ -26,7 +26,7 @@ AGENTS.md          本文件：规范与文档检索
 doc/               按模块展开的实现说明
 index.html         场景目录页
 src/shared/        跨场景代码
-src/scenes/<name>/ 单个场景的页面和逻辑
+src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹拆分模块，子文件夹不放 index.html）
 ```
 
 ## 开发规范

@@ -17,9 +17,28 @@ src/shared/
   firstPerson.js           第一人称切换、鼠标转向和准星
   playSettings.js          移动速度、鼠标灵敏度、第一人称视野和音效开关
   perfStats.js             ?stats 性能面板
-src/scenes/villa/          别墅玩法场景
-src/scenes/maid/           女仆展示
-src/scenes/bazaar/         荒漠街区
+src/scenes/villa/
+  main.js                  页面入口：场景、输入、碰撞、楼层高度、自动行走、划船、镜头
+  rayBox.js                第三人称相机避墙的两个射线-AABB 纯函数
+  building.js              建筑编排入口；纯数据在 building/layout.js，本文件重新导出
+  building/layout.js       尺寸、楼梯、墙矩形、门窗洞数据
+  interior.js              三层室内与家具
+  environment.js           地面、河、桥、公路、树石花草；含 bridgeHeight
+  villaMaterials.js        别墅贴图与材质
+src/scenes/maid/           女仆展示（单 main.js）
+src/scenes/bazaar/
+  main.js                  页面入口：模式分支、玩家、镜头、碰撞接线
+  constants.js             地图水平尺度 MAP_SCALE
+  world.js                 街区编排入口；分节构建在 world/ 下，布局变量经 ctx 传递
+  world/                   地面棚、西楼、北楼、小卖部、通道、南楼、货车、远景、东空地十个分节
+  materials.js             程序化贴图与材质包
+  physics.js               AABB 碰撞、地面高度、视线检测
+  gun.js                   第一人称武器状态机入口；子模块在 gun/ 下
+  gun/                     武器常量、共享几何贴图与向量、手部、匕首动作、HUD、音效、特效、近景模型
+  combat.js                波次防守状态机与命中判定入口；子模块在 combat/ 下
+  combat/                  刷怪纯数据、敌人特效、敌人枪声、波次 HUD DOM
+  enemy.js                 单个敌人实例
+  operator.js              CT 干员角色
 ```
 
 每个场景是一个独立 HTML 页面，只引入自己的 `main.js`。场景之间不互相 import。共享代码只从 `@shared/...` 进来。

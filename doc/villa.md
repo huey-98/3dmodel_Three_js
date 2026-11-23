@@ -21,16 +21,17 @@
 | 文件 | 职责 |
 | --- | --- |
 | `main.js` | 场景、输入、碰撞、楼层高度、自动行走、划船、镜头跟随 |
-| `building.js` | 外立面、门窗、楼板、楼梯、门动画，并导出碰撞与楼层常量 |
+| `building.js` | 外立面、门窗、楼板、楼梯、门动画；尺寸、楼梯、墙矩形、门窗洞的纯数据在 `building/layout.js`，本文件原样重新导出，调用方仍从 `building.js` 取 |
+| `rayBox.js` | `maxRayInside` / `rayHitT`：第三人称相机沿视线裁剪的射线-AABB 纯数学 |
 | `villaMaterials.js` | 石材、大理石、木地板、地毯等 canvas 贴图，以及黄铜、玻璃材质 |
 | `interior.js` | 三层家具、窗帘、吊灯、壁炉火焰 |
-| `environment.js` | 草地、河、桥、公路、树石花草 |
+| `environment.js` | 草地、河、桥、公路、树石花草，并导出 `bridgeHeight` |
 
 `main.js` 把建筑、室内、环境依次加入场景，再在 `(7.5, WATER_Y, 22.2)` 放一条船。
 
 ## 建筑尺寸
 
-定义在 `building.js`：
+定义在 `building/layout.js`（`building.js` 重新导出）：
 
 - 外墙宽 16（X）、深 12（Z）、厚 0.3，共 3 层，层高 `FLOOR_H = 4.2`
 - 占地 `BUILDING_FOOTPRINT`：X ∈ [-8, 8]，Z ∈ [-6, 6]
@@ -79,7 +80,7 @@
 - 河南岸外侧 Z = 48 有一条东西向公路，南引桥尽头有短岔路接上。
 - 石头、草丛、花用 `InstancedMesh`，树木和灌木是独立网格。`isReserved` 避开建筑周边、河道、桥、小路和公路，装饰物不生成在这些地方。装饰物本身没有碰撞。
 
-人在室外的高度由 `bridgeHeight` 决定：引桥段按 Z 在 0 和 `deckY` 之间线性插值，主桥面为 `deckY`，其余为 0。
+人在室外的高度由 `environment.js` 的 `bridgeHeight` 决定：引桥段按 Z 在 0 和 `deckY` 之间线性插值，主桥面为 `deckY`，其余为 0。
 
 ## 主循环里的状态
 
