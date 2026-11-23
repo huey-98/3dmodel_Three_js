@@ -53,6 +53,16 @@ export function waterHeight(x, z, t) {
   return Math.sin(x * 0.32 + t * 1.5) * 0.09 + Math.sin(lz * 0.55 - t * 1.1) * 0.05;
 }
 
+// 桥面/引桥高度（桥面高于河面，人可走上桥）
+export function bridgeHeight(x, z) {
+  const b = BRIDGE;
+  if (x <= b.x0 || x >= b.x1) return 0;
+  if (z <= b.rampZ0 || z >= b.rampZ1) return 0;
+  if (z < b.deckZ0) return b.deckY * (z - b.rampZ0) / (b.deckZ0 - b.rampZ0);
+  if (z <= b.deckZ1) return b.deckY;
+  return b.deckY * (b.rampZ1 - z) / (b.rampZ1 - b.deckZ1);
+}
+
 export function createEnvironment() {
   const group = new THREE.Group();
 

@@ -6,8 +6,9 @@ import {
   stairSurfaceY,
 } from './building.js';
 import {
-  createEnvironment, ENV_RECTS, BRIDGE, RIVER_Z0, RIVER_Z1, WATER_Y, PIER_RECTS, waterHeight,
+  createEnvironment, ENV_RECTS, RIVER_Z0, RIVER_Z1, WATER_Y, PIER_RECTS, waterHeight, bridgeHeight,
 } from './environment.js';
+import { maxRayInside, rayHitT } from './rayBox.js';
 import { createBoat } from '@shared/boat.js';
 import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createPlaySettings } from '@shared/playSettings.js';
@@ -172,16 +173,6 @@ let floorIndex = 0;    // 当前所在楼层：0 一层 / 1 二层 / 2 三层
 let lastRamp = null;   // 上一次踩到的楼梯段
 let lastT = 0;         // 楼梯上的进度（0 底部 → 1 顶部）
 
-// 桥面/引桥高度（桥面高于河面，人可走上桥）
-function bridgeHeight(x, z) {
-  const b = BRIDGE;
-  if (x <= b.x0 || x >= b.x1) return 0;
-  if (z <= b.rampZ0 || z >= b.rampZ1) return 0;
-  if (z < b.deckZ0) return b.deckY * (z - b.rampZ0) / (b.deckZ0 - b.rampZ0);
-  if (z <= b.deckZ1) return b.deckY;
-  return b.deckY * (b.rampZ1 - z) / (b.rampZ1 - b.deckZ1);
-}
-
 // 返回 (x,z) 处的地面高度；踩在楼梯上时按坡度插值
 function resolveGroundY(x, z) {
   if (x > INTERIOR.minX && x < INTERIOR.maxX && z > INTERIOR.minZ && z < INTERIOR.maxZ) {
@@ -287,55 +278,6 @@ const followTarget = new THREE.Vector3();
 const worldPos = new THREE.Vector3();
 const camDir = new THREE.Vector3();
 const eye = new THREE.Vector3();
-
-function maxRayInside(origin, dir, box) {
-  let tExit = Infinity;
-  const axes = [
-    ['x', box.minX, box.maxX],
-    ['y', box.minY, box.maxY],
-    ['z', box.minZ, box.maxZ],
-  ];
-  for (const [axis, min, max] of axes) {
-    const o = origin[axis];
-    const d = dir[axis];
-    if (Math.abs(d) < 1e-8) {
-      if (o < min || o > max) return 0;
-      continue;
-    }
-    const tFar = Math.max((min - o) / d, (max - o) / d);
-    tExit = Math.min(tExit, tFar);
-  }
-  return Number.isFinite(tExit) ? Math.max(0, tExit) : 0;
-}
-
-function rayHitT(origin, dir, box) {
-  let tmin = 0;
-  let tmax = Infinity;
-  const axes = [
-    ['x', box.minX, box.maxX],
-    ['y', box.minY, box.maxY],
-    ['z', box.minZ, box.maxZ],
-  ];
-  for (const [axis, min, max] of axes) {
-    const o = origin[axis];
-    const d = dir[axis];
-    if (Math.abs(d) < 1e-8) {
-      if (o < min || o > max) return Infinity;
-      continue;
-    }
-    let t1 = (min - o) / d;
-    let t2 = (max - o) / d;
-    if (t1 > t2) {
-      const tmp = t1;
-      t1 = t2;
-      t2 = tmp;
-    }
-    tmin = Math.max(tmin, t1);
-    tmax = Math.min(tmax, t2);
-    if (tmin > tmax) return Infinity;
-  }
-  return tmin;
-}
 
 function animate(now) {
   requestAnimationFrame(animate);
@@ -635,4 +577,3 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
-
