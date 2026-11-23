@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+import { canvasTex } from '@shared/canvasTex.js';
+
 // 按 .screenshots/cs_CT 的正面、背面、两侧和两个斜侧视角拼的 CT 干员。
 // 面朝局部 +Z。外层 group 管位移、朝向和跳跃；胸腔组只管呼吸和走路扭转。
 
@@ -19,17 +21,6 @@ const PAD = 0x32383f;
 const RIFLE = 0x4a515a;
 const RIFLE_DARK = 0x2b3036;
 const METAL = 0x6a727c;
-
-function canvasTex(w, h, draw) {
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  draw(canvas.getContext('2d'), w, h);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  return tex;
-}
 
 function plateTexture(fontPx) {
   return canvasTex(160, 72, (ctx, w, h) => {

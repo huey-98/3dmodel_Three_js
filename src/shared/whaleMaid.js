@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+
+import { canvasTex } from './canvasTex.js';
 // 已去掉头侧深色鲸耳块
 
 const C = {
@@ -32,17 +34,6 @@ function mesh(geo, material) {
 
 function v(x, y, z) {
   return new THREE.Vector3(x, y, z);
-}
-
-function canvasTex(w, h, draw) {
-  const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
-  draw(canvas.getContext('2d'), w, h);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
-  return tex;
 }
 
 function colorAlong(geo, c0, c1) {
