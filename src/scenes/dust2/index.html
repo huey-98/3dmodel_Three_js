@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D 场景 - 炙热沙城</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #d9bd85; }
+    canvas { display: block; }
+    #info {
+      display: block;
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      color: #fff;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 10px 14px;
+      border-radius: 8px;
+      pointer-events: none;
+      user-select: none;
+      box-sizing: border-box;
+      max-width: calc(100vw - 272px);
+    }
+    #home {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      color: #fff;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    #zone {
+      position: absolute;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%);
+      color: #ffe9b8;
+      font-family: "Microsoft YaHei", sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.75);
+      pointer-events: none;
+      user-select: none;
+      transition: opacity 0.3s;
+    }
+    #zone.flash { color: #ffffff; }
+  </style>
+</head>
+<body>
+  <div id="info">
+    CS2 经典地图炙热沙城二（Dust2）· 多层还原：匪家高台 +3.25m 逐级下行，A 坑/桥洞下沉 -3m，B 点是架高平台 +2.4m，公寓两层 + 猫道栈道 + 地下下水道<br />
+    <b>WASD</b>：相对视角移动（Shift 加速）&nbsp;|&nbsp;<b>方向键</b>：固定方向<br />
+    <b>空格</b>：跳跃 &nbsp;|&nbsp; <b>V</b>：第一人称/第三人称切换 &nbsp;|&nbsp; <b>鼠标拖拽</b>：旋转 &nbsp;|&nbsp; <b>滚轮</b>：缩放<br />
+    地址栏加 <b>?spawn=long / a / pit / mid / bridge / corner / apartments / b / bback / tunnels / ct</b> 可从对应点位出生；跳下窗口可进 90°，从 A 坑木箱可跳回 A 点
+  </div>
+  <div id="zone">匪家</div>
+  <a id="home" href="/">返回目录</a>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

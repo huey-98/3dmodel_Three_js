@@ -8,12 +8,13 @@
 
 | 要做的事 | 打开 |
 | --- | --- |
-| 确认项目是什么、怎么运行、三个场景各做什么 | [doc/overview.md](doc/overview.md) |
+| 确认项目是什么、怎么运行、四个场景各做什么 | [doc/overview.md](doc/overview.md) |
 | 改目录结构、Vite 入口、渲染器、键位、碰撞或角色动画接口 | [doc/architecture.md](doc/architecture.md) |
 | 改简易小人、鲸尾女仆或小木船 | [doc/shared.md](doc/shared.md) |
 | 改别墅的建筑、室内、河桥、行走、上楼、开门或划船 | [doc/villa.md](doc/villa.md) |
 | 改女仆展示页的灯光、镜头或站立动画 | [doc/maid.md](doc/maid.md) |
 | 改荒漠迷城的街区、贴图、碰撞、棚内镜头、CT 干员或武器 | [doc/bazaar.md](doc/bazaar.md) |
+| 改炙热沙城的地图拓扑、门洞、可跳平台、出生点或点位 HUD | [doc/dust2.md](doc/dust2.md) |
 | 看文档目录 | [doc/README.md](doc/README.md) |
 
 场景之间不互相引用。改某个场景时只读该场景文档和它用到的共享模块；共享模块的签名被两个场景使用时，同时看 [doc/shared.md](doc/shared.md) 和调用方。
