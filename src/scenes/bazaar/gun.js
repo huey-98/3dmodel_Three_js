@@ -1,24 +1,14 @@
 import * as THREE from 'three';
-import { MAP_SCALE } from './world.js';
+import {
+  WEAPONS, RANGE, KNIFE_REACH, KNIFE_TIME, KNIFE_HIT,
+  RIFLE_MUZZLE_Z, RIFLE_ROLL, PISTOL_MUZZLE_Z, FLAME_LEN, HOLE_LIFE, TRACER_SPEED,
+} from './gun/constants.js';
 
 // 只给荒漠迷城的第一人称用。1 步枪连发，2 手枪单点，3 匕首刺击。
-const RANGE = 48 * MAP_SCALE;
-const KNIFE_REACH = 2.1;
-const KNIFE_TIME = 0.48;
-const KNIFE_HIT = 0.2;
-const RIFLE_MUZZLE_Z = 0.9;
-const RIFLE_ROLL = THREE.MathUtils.degToRad(2);
-const PISTOL_MUZZLE_Z = 0.415;
-const WEAPONS = {
-  rifle: { label: '步枪', mag: 30, reserve: 90, auto: true, gap: 0.09, reload: 1.65, flame: 1, recoil: 0.028 },
-  pistol: { label: '手枪', mag: 12, reserve: 36, auto: false, gap: 0.2, reload: 1.3, flame: 0.62, recoil: 0.018 },
-  knife: { label: '匕首', auto: false, gap: 0.48 },
-};
 
 const chipGeo = new THREE.BoxGeometry(0.035, 0.02, 0.05);
 const holeGeo = new THREE.PlaneGeometry(0.18, 0.18);
 const slashGeo = new THREE.PlaneGeometry(0.58, 0.05);
-const FLAME_LEN = 0.4;
 const flameGeo = new THREE.PlaneGeometry(FLAME_LEN, 0.12);
 const xAxis = new THREE.Vector3(1, 0, 0);
 const zAxis = new THREE.Vector3(0, 0, 1);
@@ -29,8 +19,6 @@ const hitNormal = new THREE.Vector3();
 const gunMuzzle = new THREE.Vector3();
 const flightDir = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();
-const HOLE_LIFE = 3;
-const TRACER_SPEED = 120;
 
 const _origin = new THREE.Vector3();
 const _aim = new THREE.Vector3();
