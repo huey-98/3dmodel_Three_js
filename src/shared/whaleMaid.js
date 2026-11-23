@@ -547,7 +547,7 @@ export function createWhaleMaid() {
     }
   }
 
-  // 与 createPerson 相同签名：walking / 划船坐姿，idle 时保持轻摆
+  // 行走 / 划船坐姿，idle 时保持轻摆
   function update(dt, moving = false, row = null) {
     const t = performance.now() * 0.001;
     blink(dt);

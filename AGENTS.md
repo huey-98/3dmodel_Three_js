@@ -65,13 +65,13 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 
 ### 角色与船
 
-`createPerson()` 和 `createWhaleMaid()` 都提供：
+`createWhaleMaid()` 提供：
 
 ```text
 update(dt, moving, row)
 ```
 
-`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`createPerson()` 没有默认值，少传时按停下处理。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改两处实现，以及别墅、荒漠迷城和女仆展示页里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
+`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改实现，以及别墅和女仆展示页里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
 
 ### 改完代码之后
 

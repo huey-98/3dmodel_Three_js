@@ -11,7 +11,6 @@ index.html                 场景目录页
 vite.config.js             多页入口、@shared 别名
 jsconfig.json              编辑器路径映射，与别名一致
 src/shared/
-  person.js                简易方块小人
   whaleMaid.js             鲸尾女仆
   boat.js                  小木船
   firstPerson.js           第一人称切换、鼠标转向和准星
@@ -105,13 +104,13 @@ src/scenes/bazaar/
 
 ## 角色动画接口
 
-`createPerson()` 和 `createWhaleMaid()` 都返回 `{ group, update }`。
+`createWhaleMaid()` 返回 `{ group, update }`（女仆还多返回几个部件，见下）。
 
 ```text
 update(dt, moving, row)
 ```
 
-`createWhaleMaid()` 给后两个参数写了默认值 `false` 和 `null`。`createPerson()` 没有默认值；少传时 `moving` 为 `undefined`，按停下处理。
+`createWhaleMaid()` 给后两个参数写了默认值 `false` 和 `null`。
 
 - `moving` 为真时摆腿，幅度从 0 平滑到目标值。
 - `row` 为 `{ phase, active }` 时进入划船坐姿，腿前伸，手臂随 `sin(phase)` 摆动。
