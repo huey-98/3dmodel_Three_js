@@ -27,7 +27,7 @@ WASD、方向键、Shift、空格、V、鼠标和滚轮与[架构文档](./archi
 | `physics.js` | 玩家和敌人共用的 AABB 碰撞、地面高度和视线检测 |
 | `world.js` / `world/` | 街区几何、碰撞矩形、篷布动画。`world.js` 只做编排：创建共享上下文 `ctx`，依次调用 `world/` 里的地面棚、西蓝楼、北白楼、东小卖部、通道、南楼凹槽、货车、远景、东空地分节，分节之间用返回值挂回 ctx 传递布局变量 |
 | `constants.js` | 地图水平尺度 `MAP_SCALE = 1.5`，由 `world.js` 重新导出 |
-| `materials.js` | 程序化贴图和材质包 `createBazaarKit()` |
+| `materials.js` / `materials/` | 程序化贴图和材质包 `createBazaarKit()`。`materials.js` 只 re-export；`materials/textures.js` 放 `mulberry32`、贴图绘制与材质助手，`materials/index.js` 放 `createBazaarKit()` |
 
 ## 场地
 
@@ -48,7 +48,7 @@ WASD、方向键、Shift、空格、V、鼠标和滚轮与[架构文档](./archi
 
 ## 材质
 
-`materials.js` 用固定种子的 `mulberry32` 画可重复的贴图：灰泥（粉、白、蓝、沙黄、灰绿）、沙黄大地砖、浅灰方砖、砌块石、木板、绿篷、橙布、木箱、树皮、棕榈叶、带圈红字 B、箭头招牌、绿色涂鸦、红 A 箭头、蓝牌。`mulberry32` 从 `materials.js` 导出，`world/shop.js` 也用它摆放袋装货和纸屑。墙上的重复尺度由 `world/helpers.js` 的 `makeBox` 处理：它按盒子各面的实际宽高重写 UV。粉、白、蓝带剥落；沙黄和灰绿没有。粉灰泥仍在材质包里，场景网格不再使用。`cream` / `creamFloor` 是浅黄纯色，用在西楼二楼室内。`shopFloor`（浅灰方砖）铺在小卖部室内，`shopWall`（灰绿墙板）贴小卖部四面内墙，`ceilDark` 是深色吊顶和搁栅，`sack` 是袋装货的白色织物，`stone` 是凹槽石墙和警家台阶的砌块，`aMark` / `sign` 是凹槽蓝楼立面的红 A 箭头和蓝牌。`bark` / `leaf` 仍在材质包里，场景网格不再使用（棕榈树已移除）。
+`materials.js` 用固定种子的 `mulberry32` 画可重复的贴图：灰泥（粉、白、蓝、沙黄、灰绿）、沙黄大地砖、浅灰方砖、砌块石、木板、绿篷、橙布、木箱、树皮、棕榈叶、带圈红字 B、箭头招牌、绿色涂鸦、红 A 箭头、蓝牌。`mulberry32` 实现在 `materials/textures.js`、经 `materials.js` 导出，`world/shop.js` 也用它摆放袋装货和纸屑。墙上的重复尺度由 `world/helpers.js` 的 `makeBox` 处理：它按盒子各面的实际宽高重写 UV。粉、白、蓝带剥落；沙黄和灰绿没有。粉灰泥仍在材质包里，场景网格不再使用。`cream` / `creamFloor` 是浅黄纯色，用在西楼二楼室内。`shopFloor`（浅灰方砖）铺在小卖部室内，`shopWall`（灰绿墙板）贴小卖部四面内墙，`ceilDark` 是深色吊顶和搁栅，`sack` 是袋装货的白色织物，`stone` 是凹槽石墙和警家台阶的砌块，`aMark` / `sign` 是凹槽蓝楼立面的红 A 箭头和蓝牌。`bark` / `leaf` 仍在材质包里，场景网格不再使用（棕榈树已移除）。
 
 玻璃是深色不透明材质，不是物理透射。叶子和破洞篷布用 `alphaTest` 抠边。
 

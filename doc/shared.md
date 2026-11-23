@@ -2,7 +2,13 @@
 
 `src/shared` 里这些文件都不依赖具体场景。别墅用鲸尾女仆和小木船；女仆展示页只用鲸尾女仆。荒漠迷城的玩家不在这里，而是场景内的 CT 干员，见 [bazaar.md](./bazaar.md)。
 
+## 共用贴图助手 `canvasTex.js`
+
+`canvasTex(w, h, draw)` 创建 w×h 的 `CanvasTexture`：回调拿到 (ctx, w, h)，生成后设 `SRGBColorSpace`、`anisotropy = 8`。荒漠迷城的 `operator.js` 与 `whaleMaid/textures.js` 用它；各场景自己的方形贴图助手（materials、villaMaterials、gun、combat）尺度不同，仍是独立实现。
+
 ## 鲸尾女仆 `whaleMaid.js`
+
+`whaleMaid.js` 是编排入口，实现拆在 `whaleMaid/`：`base.js` 配色表 `C` 与 `mat` / `mesh` / `v` 基础件，`parts.js` 顶点着色 `colorAlong`、发束 `strand`、蝴蝶结 `makeBow`、尾鳍轮廓 `flukeGeo`，`textures.js` 脸、鲸鱼胸标、围裙、裙子四张 canvas 贴图。`createWhaleMaid()` 的签名与返回值不变。
 
 `createWhaleMaid()` 按设定还原一名蓝发、海军蓝女仆装、身后带鲸尾的角色。几何体全部程序化，脸、围裙、裙子和胸前鲸鱼标记用 canvas 贴图。
 

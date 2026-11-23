@@ -11,7 +11,8 @@ index.html                 场景目录页
 vite.config.js             多页入口、@shared 别名
 jsconfig.json              编辑器路径映射，与别名一致
 src/shared/
-  whaleMaid.js             鲸尾女仆
+  canvasTex.js             共用的 w×h CanvasTexture 助手（SRGB、各向异性 8）
+  whaleMaid.js             鲸尾女仆编排入口；子模块在 whaleMaid/（base 基础件、parts 部件、textures 贴图）
   boat.js                  小木船
   firstPerson.js           第一人称切换、鼠标转向和准星
   playSettings.js          移动速度、鼠标灵敏度、第一人称视野和音效开关
@@ -30,7 +31,7 @@ src/scenes/bazaar/
   constants.js             地图水平尺度 MAP_SCALE
   world.js                 街区编排入口；分节构建在 world/ 下，布局变量经 ctx 传递
   world/                   地面棚、西楼、北楼、小卖部、通道、南楼、货车、远景、东空地十个分节
-  materials.js             程序化贴图与材质包
+  materials.js             材质包对外入口（re-export）；实现拆在 materials/（textures 贴图绘制、index 材质包）
   physics.js               AABB 碰撞、地面高度、视线检测
   gun.js                   第一人称武器状态机入口；子模块在 gun/ 下
   gun/                     武器常量、共享几何贴图与向量、手部、匕首动作、HUD、音效、特效、近景模型

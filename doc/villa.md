@@ -24,7 +24,7 @@
 | `building.js` | 外立面、门窗、楼板、楼梯、门动画；尺寸、楼梯、墙矩形、门窗洞的纯数据在 `building/layout.js`，本文件原样重新导出，调用方仍从 `building.js` 取 |
 | `rayBox.js` | `maxRayInside` / `rayHitT`：第三人称相机沿视线裁剪的射线-AABB 纯数学 |
 | `villaMaterials.js` | 石材、大理石、木地板、地毯等 canvas 贴图，以及黄铜、玻璃材质 |
-| `interior.js` | 三层家具、窗帘、吊灯、壁炉火焰 |
+| `interior.js` / `interior/` | 三层家具、窗帘、吊灯、壁炉火焰。`interior.js` 保留 `createInterior()` 编排与 `FURNITURE_RECTS` 导出；`interior/data.js` 放碰撞登记与 `solid` / `footprint`，`interior/parts.js` 放室内材质与 `box` / `cyl`，`interior/furniture.js` 放各家具建造器，`interior/floor1..3.js` 放三层摆放 |
 | `environment.js` | 草地、河、桥、公路、树石花草，并导出 `bridgeHeight` |
 
 `main.js` 把建筑、室内、环境依次加入场景，再在 `(7.5, WATER_Y, 22.2)` 放一条船。
