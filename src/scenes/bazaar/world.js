@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { createBazaarKit, mulberry32 } from './materials.js';
+import { MAP_SCALE } from './constants.js';
+
+export { MAP_SCALE };
 
 // 参考图布局：中央绿篷棚屋（正面红字 B），左蓝楼、后白楼、右沙黄楼、南沙黄楼（露天凹槽），沙黄大地砖环绕。
 // 只放大水平尺度，层高、窗台和跳板高度不变，人物仍能跳窗、上车。
-export const MAP_SCALE = 1.5;
 const BOOTH = { x0: -4.95, x1: 5.25, z0: -4.2, z1: 5.05, h: 5.25 };
 
 export function createBazaar() {
