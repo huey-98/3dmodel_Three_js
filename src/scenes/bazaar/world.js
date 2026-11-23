@@ -986,8 +986,8 @@ export function createBazaar() {
   barrier(-20, blue.x1 + 0.82, south.z1, south.z1 + 0.8);
   barrier(lotX1 - 0.8, lotX1, lotZ0 - 0.8, lotZ1 + 0.8);
   // 南墙在 X≈69（世界坐标）处向南开一个宽约 10、深约 8 米的凹槽，
-  // 凹槽是 CT 出生点，朝北看是参考图的警家街景：左手北墙西段剥落蓝楼
-  // 大木门红 A 朝北（警家凹槽），正中白楼木门立面，右手警家宽缓台阶
+  // 凹槽是 CT 出生点，朝北看是参考图的警家街景：左手白楼木门立面（西），
+  // 右手剥落蓝楼大木门红 A 朝南（东，警家凹槽），再东是警家宽缓台阶
   // 带铁栏向北延伸、顶端收口，地面细石铺装。
   const alcX0 = 42.8;
   const alcX1 = 49.5;
@@ -1028,45 +1028,40 @@ export function createBazaar() {
   lotFloor.userData.noShadow = true;
   add(lotFloor);
 
-  // 空地北墙西段（通道口以北）换成剥落蓝楼（警家凹槽），立面朝北：
+  // 空地北墙东段换成剥落蓝楼（警家凹槽），带红 A 的立面朝南（朝出生点）：
   // 大木门、门楣横窗、红 A 箭头、蓝牌、高窗、空调外机和带托木的出檐。
-  // 从凹槽朝北看它在左手边，不挡通道和空地。
-  const blueB = { x0: 38, x1: alcX0, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.4 };
-  const bbFace = lotZ0 - 0.83;
+  // 白楼在西、蓝楼在东，两者直接相接，中间不再设连接墙。
+  const blueB = { x0: 43.3, x1: 48.6, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.4 };
+  const bbFace = lotZ0 + 0.03;
   block(blueB.x0, blueB.x1, blueB.z0, blueB.z1, blueB.h, kit.blue);
   skirt(blueB.x0, blueB.x1, blueB.z0, blueB.z1, kit.skirtBlue);
-  const alcDoorX = 40;
+  const alcDoorX = 45.9;
   const alcDoorMat = kit.wood.clone();
   alcDoorMat.color.set(0x9a6b42);
-  box(2.6, 2.9, 0.08, alcDoorMat, alcDoorX, 1.45, bbFace - 0.01);
-  box(2.84, 0.12, 0.1, kit.trim, alcDoorX, 2.96, bbFace - 0.02);
+  box(2.6, 2.9, 0.08, alcDoorMat, alcDoorX, 1.45, bbFace + 0.01);
+  box(2.84, 0.12, 0.1, kit.trim, alcDoorX, 2.96, bbFace + 0.02);
   for (const s of [-1, 1]) {
-    box(0.12, 2.9, 0.1, kit.trim, alcDoorX + s * 1.36, 1.45, bbFace - 0.02);
+    box(0.12, 2.9, 0.1, kit.trim, alcDoorX + s * 1.36, 1.45, bbFace + 0.02);
   }
-  box(0.05, 2.9, 0.09, kit.trim, alcDoorX, 1.45, bbFace - 0.015);
+  box(0.05, 2.9, 0.09, kit.trim, alcDoorX, 1.45, bbFace + 0.015);
   // 门楣上的横窗（暗玻璃带框）。
   box(1.7, 0.62, 0.05, kit.glass, alcDoorX, 3.55, bbFace);
-  box(1.86, 0.08, 0.07, kit.trim, alcDoorX, 3.9, bbFace - 0.01);
-  box(1.86, 0.08, 0.07, kit.trim, alcDoorX, 3.2, bbFace - 0.01);
+  box(1.86, 0.08, 0.07, kit.trim, alcDoorX, 3.9, bbFace + 0.01);
+  box(1.86, 0.08, 0.07, kit.trim, alcDoorX, 3.2, bbFace + 0.01);
   const aMark = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), kit.aMark);
-  aMark.rotation.y = Math.PI;
-  aMark.position.set(41.9, 3.3, bbFace);
+  aMark.position.set(47.5, 3.3, bbFace);
   aMark.userData.noShadow = true;
   add(aMark);
   const alcSign = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 1.1), kit.sign);
-  alcSign.rotation.y = Math.PI;
-  alcSign.position.set(38.7, 1.7, bbFace);
+  alcSign.position.set(44.0, 1.7, bbFace);
   alcSign.userData.noShadow = true;
   add(alcSign);
-  placeWindow(41.9, 4.6, bbFace, 1.0, 1.2, Math.PI);
-  box(0.7, 0.36, 0.34, kit.ac, 38.9, 5.1, bbFace - 0.16);
-  box(blueB.x1 - blueB.x0 + 0.3, 0.14, 0.5, kit.trim, (blueB.x0 + blueB.x1) / 2, blueB.h - 0.05, blueB.z0 - 0.15);
+  placeWindow(47.5, 4.6, bbFace, 1.0, 1.2, 0);
+  box(0.7, 0.36, 0.34, kit.ac, 44.2, 5.1, bbFace + 0.16);
+  box(blueB.x1 - blueB.x0 + 0.3, 0.14, 0.5, kit.trim, (blueB.x0 + blueB.x1) / 2, blueB.h - 0.05, blueB.z1 + 0.15);
   for (let x = blueB.x0 + 0.4; x < blueB.x1; x += 0.85) {
-    box(0.12, 0.18, 0.34, kit.beam, x, blueB.h - 0.28, blueB.z0 - 0.1);
+    box(0.12, 0.18, 0.34, kit.beam, x, blueB.h - 0.28, blueB.z1 + 0.1);
   }
-  // 蓝楼取代该段北墙屏障（避免共面闪烁），凹槽西墙仍是普通围墙。
-  barrier(blue.x1 - 0.08, blueB.x0, lotZ0 - 0.8, lotZ0);
-  solid(blueB.x0, blueB.x1, blueB.z0, blueB.z1);
 
   // 东侧：矮石墙压顶加黑铁栏杆，栏后只留远处白楼（界外布景，不可达）。
   const stoneH = 1.15;
@@ -1126,38 +1121,38 @@ export function createBazaar() {
   }
   solid(alcX1 - 0.35, alcX1 + 1.95, lotZ1, lotZ1 + 1.95);
 
-  // 凹槽正北：剥落白楼立面（朝南），大木门、门旁小窗、上层双窗、
-  // 空调外机、出檐和屋顶水箱，对应参考图正中的白楼。
-  const wf = { x0: 43.8, x1: 48.6, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.8 };
+  // 凹槽正北偏西：剥落白楼立面（朝南），大木门、门旁小窗、上层双窗、
+  // 空调外机、出檐和屋顶水箱。白楼在西、蓝楼在东，两者直接相接。
+  const wf = { x0: 38, x1: 43.4, z0: lotZ0 - 0.8, z1: lotZ0, h: 6.8 };
   block(wf.x0, wf.x1, wf.z0, wf.z1, wf.h, kit.white);
   skirt(wf.x0, wf.x1, wf.z0, wf.z1, kit.skirtWhite);
   const wfFace = wf.z1 + 0.03;
-  const wfDoorX = 46.6;
+  const wfDoorX = 40.8;
   box(2.2, 2.7, 0.08, kit.door, wfDoorX, 1.35, wfFace + 0.01);
   box(2.44, 0.12, 0.1, kit.trim, wfDoorX, 2.76, wfFace + 0.02);
   for (const s of [-1, 1]) {
     box(0.12, 2.7, 0.1, kit.trim, wfDoorX + s * 1.16, 1.35, wfFace + 0.02);
   }
   box(0.05, 2.7, 0.09, kit.trim, wfDoorX, 1.35, wfFace + 0.015);
-  placeWindow(44.7, 1.15, wfFace, 0.7, 0.95, 0);
-  placeWindow(44.9, 4.1, wfFace, 0.95, 1.25, 0);
-  placeWindow(47.3, 4.1, wfFace, 0.95, 1.25, 0);
-  box(0.7, 0.36, 0.34, kit.ac, 47.9, 3.1, wfFace + 0.15);
+  placeWindow(38.9, 1.15, wfFace, 0.7, 0.95, 0);
+  placeWindow(39.1, 4.1, wfFace, 0.95, 1.25, 0);
+  placeWindow(41.5, 4.1, wfFace, 0.95, 1.25, 0);
+  box(0.7, 0.36, 0.34, kit.ac, 42.1, 3.1, wfFace + 0.15);
   box(wf.x1 - wf.x0 + 0.3, 0.14, 0.5, kit.trim, (wf.x0 + wf.x1) / 2, wf.h - 0.05, wf.z1 + 0.15);
   for (let x = wf.x0 + 0.4; x < wf.x1; x += 0.85) {
     box(0.12, 0.18, 0.34, kit.beam, x, wf.h - 0.28, wf.z1 + 0.1);
   }
   const wfTank = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.9, 12), kit.tank);
-  wfTank.position.set(44.8, wf.h + 0.45, wf.z0 + 0.4);
+  wfTank.position.set(39.0, wf.h + 0.45, wf.z0 + 0.4);
   add(wfTank);
-  // 白楼西侧接回北墙屏障；东侧留给警家台阶。
-  barrier(alcX0, wf.x0, lotZ0 - 0.8, lotZ0);
+  // 白楼西侧接回北墙屏障；东侧与蓝楼相接，蓝楼以东留给警家台阶。
+  barrier(blue.x1 - 0.08, wf.x0, lotZ0 - 0.8, lotZ0);
 
   // 警家台阶：第一级在北墙外皮一线，宽缓实心台阶向北延伸 7 级
   // （每级升 0.1 米、踏面约 0.83 米，升到约 0.7 米），顶端用矮石墙压顶
   // 加黑铁栏杆收口；西侧矮墙栏杆逐级抬升，东侧贴东边界墙。北段台阶和
   // 界外高台已去掉，台阶到顶即止。
-  const stairX0 = wf.x1 + 0.1;
+  const stairX0 = blueB.x1 + 0.1;
   const stairX1 = lotX1 - 0.8;
   const stairStartZ = lotZ0 - 0.8;
   const stairTop = 0.7;
