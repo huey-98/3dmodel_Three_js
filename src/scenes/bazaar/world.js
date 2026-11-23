@@ -988,7 +988,7 @@ export function createBazaar() {
   // 南墙在 X≈69（世界坐标）处向南开一个宽约 10、深约 8 米的凹槽，
   // 凹槽是 CT 出生点，朝北看是参考图的警家街景：左手北墙西段剥落蓝楼
   // 大木门红 A 朝北（警家凹槽），正中白楼木门立面，右手警家宽缓台阶
-  // 带铁栏向北延伸上墙外高台，地面细石铺装。
+  // 带铁栏向北延伸、顶端收口，地面细石铺装。
   const alcX0 = 42.8;
   const alcX1 = 49.5;
   const alcZ1 = lotZ1 + 0.8 + 5.3;
@@ -1153,18 +1153,17 @@ export function createBazaar() {
   // 白楼西侧接回北墙屏障；东侧留给警家台阶。
   barrier(alcX0, wf.x0, lotZ0 - 0.8, lotZ0);
 
-  // 警家台阶：第一级在北墙外皮一线，整条宽缓实心台阶向北延伸到界外，
-  // 16 级、每级升 0.2 米、踏面约 0.83 米（约 20° 坡），上到墙外高台
-  // （台面与边界墙齐高）；西侧矮石墙压顶加黑铁栏杆逐级抬升，东侧贴东边界墙。
+  // 警家台阶：第一级在北墙外皮一线，宽缓实心台阶向北延伸 7 级
+  // （每级升 0.1 米、踏面约 0.83 米，升到约 0.7 米），顶端用矮石墙压顶
+  // 加黑铁栏杆收口；西侧矮墙栏杆逐级抬升，东侧贴东边界墙。北段台阶和
+  // 界外高台已去掉，台阶到顶即止。
   const stairX0 = wf.x1 + 0.1;
   const stairX1 = lotX1 - 0.8;
-  const terrX1 = lotX1;
   const stairStartZ = lotZ0 - 0.8;
-  const stairTop = wallH;
-  const stairN = 16;
+  const stairTop = 0.7;
+  const stairN = 7;
   const stairTread = 0.55;
-  const terrZ1 = stairStartZ - stairN * stairTread;
-  const terrZ0 = terrZ1 - 2.2;
+  const stairEndZ = stairStartZ - stairN * stairTread;
   const parH = 0.65;
   const railH = 1.05;
   for (let i = 0; i < stairN; i++) {
@@ -1187,37 +1186,18 @@ export function createBazaar() {
       box(0.07, railH + 0.08, 0.07, kit.metalDark, px, top + parH + railH / 2 - 0.01, (sz0 + sz1) / 2);
     }
   }
-  // 高台：台阶北端再向外 2.2 米，东到东墙外皮，台面与边界墙齐高，
-  // 南沿与最高一级台阶齐平相接。
-  volume(stairX0, terrX1, 0, stairTop, terrZ0, terrZ1, kit.stone);
-  platform(stairX0, terrX1, terrZ0, terrZ1, stairTop);
-  // 北墙在台阶通道处断开豁口；东边界墙沿台阶东侧一直延到高台南沿，
-  // 角部由高台补满到东墙外皮，避免共面闪烁。
-  barrier(terrX1 - 0.8, terrX1, terrZ1, lotZ1 + 0.8);
-  // 高台临空四边中除南沿接台阶外都设矮石墙加同式栏杆。
-  function terraceEdge(x0, x1, z0, z1) {
-    volume(x0, x1, stairTop, stairTop + parH, z0, z1, kit.stone);
-    solid(x0, x1, z0, z1);
-    const alongX = x1 - x0 > z1 - z0;
-    const cx = (x0 + x1) / 2;
-    const cz = (z0 + z1) / 2;
-    for (const off of [0.22, railH - 0.05]) {
-      box(alongX ? x1 - x0 : 0.04, 0.05, alongX ? 0.04 : z1 - z0, kit.metalDark, cx, stairTop + parH + off, cz);
-    }
-    if (alongX) {
-      for (let x = x0 + 0.2; x <= x1 - 0.1; x += 0.34) {
-        box(0.03, railH - 0.1, 0.03, kit.metalDark, x, stairTop + parH + railH / 2 - 0.05, cz);
-      }
-    } else {
-      for (let z = z0 + 0.2; z <= z1 - 0.1; z += 0.34) {
-        box(0.03, railH - 0.1, 0.03, kit.metalDark, cx, stairTop + parH + railH / 2 - 0.05, z);
-      }
-    }
+  // 北墙在台阶通道处断开豁口；东边界墙沿台阶东侧延到台阶顶端。
+  barrier(lotX1 - 0.8, lotX1, stairEndZ, lotZ1 + 0.8);
+  // 顶端收口：最高一级北沿一道矮石墙压顶加黑铁栏杆，挡住向北走出台阶。
+  volume(stairX0, stairX1, stairTop, stairTop + parH, stairEndZ, stairEndZ + 0.15, kit.stone);
+  solid(stairX0, stairX1, stairEndZ, stairEndZ + 0.15);
+  const capCz = stairEndZ + 0.075;
+  for (const off of [0.22, railH - 0.05]) {
+    box(stairX1 - stairX0, 0.05, 0.04, kit.metalDark, (stairX0 + stairX1) / 2, stairTop + parH + off, capCz);
   }
-  terraceEdge(stairX0, terrX1, terrZ0, terrZ0 + 0.3);
-  terraceEdge(terrX1 - 0.3, terrX1, terrZ0, terrZ1);
-  terraceEdge(stairX0, stairX0 + 0.3, terrZ0, terrZ1);
-  terraceEdge(stairX1, terrX1, terrZ1 - 0.3, terrZ1);
+  for (let x = stairX0 + 0.2; x <= stairX1 - 0.1; x += 0.34) {
+    box(0.03, railH - 0.1, 0.03, kit.metalDark, x, stairTop + parH + railH / 2 - 0.05, capCz);
+  }
 
   // 通道外空地上的一堆积沙。
   const lotPile = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), kit.sandPile);
