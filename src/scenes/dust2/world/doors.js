@@ -46,11 +46,10 @@ function halfClosedDoor(ctx, fixed, a0, a1, into, sill = 0, mat) {
 export function buildDoors(ctx) {
   const { kit, archGate, box } = ctx;
   halfClosedDoor(ctx, 26, -4, 4, 1, 0, kit.metalDoor);
-  doubleDoor(ctx, 'x', 62, 45, 53, 1, 0, kit.metalDoor);
-  doubleDoor(ctx, 'x', 58, 45, 53, -1, LONG_Y, kit.metalDoor);
+  doubleDoor(ctx, 'x', 50, 30, 38, -1, LONG_Y, kit.metalDoor);
   doubleDoor(ctx, 'z', -14, 12, 20, 1, B_Y, kit.metalDoor);
   box(0.4, 2.2, 5.2, kit.mass, -14.1, B_Y + 3.2, 8.5);
   archGate(-35, 24, 6, 4.6, 0.7, 'z', kit.cave, B2_Y);
   archGate(-36, 56, 8, 4.4, 0.7, 'z', kit.cave, GARDEN_Y);
-  archGate(42, 26, 8, 4.6, 0.7, 'z', kit.sand, LONG_Y);
+  archGate(48, 23, 10, 4.6, 0.7, 'z', kit.sand, LONG_Y);
 }

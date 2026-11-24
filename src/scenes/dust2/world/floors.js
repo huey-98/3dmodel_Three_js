@@ -1,5 +1,5 @@
 // 多层地面系统：FLOORS 楼板、STAIRS 自动踏步、CEILS 顶棚、MASS 楼体。
-import { FLOORS, STAIRS, RAMPS, CEILS, MASS, WALL_H, VOID_Y, SLAB, LONG_Y, B2_Y } from '../layout.js';
+import { FLOORS, STAIRS, RAMPS, CEILS, MASS, WALL_H, VOID_Y, SLAB, B2_Y } from '../layout.js';
 
 const KIND_MAT = { road: 'road', sand: 'dirt', cobble: 'cobble', cave: 'cave', wood: 'wood', apt: 'apt', asphalt: 'asphalt' };
 
@@ -77,7 +77,6 @@ export function buildFloors(ctx) {
   }
 
   // 下沉沿口警示石条（纯视觉，放在下落前一侧的地面上）
-  box(0.7, 0.25, 16, kit.mass, 55.8, LONG_Y + 0.12, 34);
   box(8, 0.25, 0.7, kit.mass, -36, B2_Y + 0.12, 51.8);
 }
 

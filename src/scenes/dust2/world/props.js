@@ -43,9 +43,9 @@ export function buildProps(ctx) {
 
   aSiteCrates(ctx);
   gooseCrates(ctx);
-  addCar(ctx, 50, 34, LONG_Y, 0.15);
-  crate(1.6, 58, 28, PIT_Y);
-  addContainer(ctx, 32, 70, ROAD_Y, 0.1);
+  addCar(ctx, 48, 34, LONG_Y, 0.15);
+  crate(1.5, 45.2, 66, PIT_Y);
+  addContainer(ctx, 34, 72, ROAD_Y, 0.1);
   crate(1.6, 8, 80, T_Y);
   crate(1.2, 10.2, 80, T_Y);
   crate(1.2, 8, 82.2, T_Y + 1.6);
