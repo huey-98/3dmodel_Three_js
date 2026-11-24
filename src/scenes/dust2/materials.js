@@ -416,6 +416,48 @@ function weatheredTex() {
   });
 }
 
+// 风化灰木（警家木拱廊立柱与拱梁）
+function timberTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#9c9486';
+    ctx.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 32) {
+      ctx.fillStyle = `rgba(${150 + Math.random() * 36 | 0},${140 + Math.random() * 28 | 0},${118 + Math.random() * 22 | 0},0.55)`;
+      ctx.fillRect(x + 1, 0, 28, h);
+      ctx.fillStyle = 'rgba(62,54,42,0.45)';
+      ctx.fillRect(x, 0, 2, h);
+    }
+    for (let i = 0; i < 16; i++) {
+      ctx.strokeStyle = `rgba(48,40,30,${0.18 + Math.random() * 0.22})`;
+      ctx.lineWidth = 1.5;
+      const x = Math.random() * w;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.bezierCurveTo(x + 4, h * 0.3, x - 3, h * 0.7, x + 2, h);
+      ctx.stroke();
+    }
+    noise(ctx, w, h, 240, 0.07);
+  });
+}
+
+// 棚内望板（浅色木条）
+function plankTex() {
+  return canvasTex(512, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#c4ae86';
+    ctx.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 22) {
+      ctx.fillStyle = `rgba(${180 + Math.random() * 40 | 0},${150 + Math.random() * 30 | 0},${100 + Math.random() * 24 | 0},0.7)`;
+      ctx.fillRect(0, y + 1, w, 19);
+      ctx.strokeStyle = 'rgba(90,70,42,0.45)';
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    noise(ctx, w, h, 360, 0.07);
+  });
+}
+
 // 竹席顶（警家拱廊）
 function bambooTex() {
   return canvasTex(512, 256, (ctx, w, h) => {
@@ -587,6 +629,8 @@ export function createDust2Kit() {
   const asphalt = mk(asphaltTex(), 0.88);
   const weathered = mk(weatheredTex());
   const bamboo = mk(bambooTex(), 0.9);
+  const timber = mk(timberTex(), 0.88);
+  const plank = mk(plankTex(), 0.9);
   const aCrate = mk(aCrateTex(), 0.75);
   const banner = mk(pharmacyBannerTex(), 0.85);
   const ochre = mk(ochreTex());
@@ -617,6 +661,8 @@ export function createDust2Kit() {
     asphalt,
     weathered,
     bamboo,
+    timber,
+    plank,
     aCrate,
     banner,
     ochre,

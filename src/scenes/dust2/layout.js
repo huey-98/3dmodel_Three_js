@@ -132,7 +132,7 @@ export const CEILS = [
 export const ROOMS = [
   { x0: -42, x1: -32, z0: 28, z1: 52, y0: GARDEN_Y, y1: B2_Y + 2.4 },
   { x0: 45, x1: 53, z0: 56, z1: 62, y0: LONG_Y, y1: 4.9 },
-  { x0: 10, x1: 21.2, z0: 4, z1: 16.2, y0: CT_Y, y1: CT_Y + 3.8 },
+  { x0: 10, x1: 21.4, z0: 4, z1: 16.4, y0: CT_Y, y1: CT_Y + 4.05 },
   { x0: 26, x1: 36, z0: 16, z1: 22, y0: GOOSE_Y, y1: 2.85 },
 ];
 

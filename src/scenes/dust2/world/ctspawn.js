@@ -1,49 +1,109 @@
-// 警家木构拱廊：竹席顶、木梁拱门、铁窗、Boost 出口。对照 CS2 警家内外两张图。
+// 警家木构拱廊：风化灰木拱门、望板顶、棚内沙地、FRAGILE 箱堆。
+// 对照 CS2 从 A 大 / Cross 朝西看进棚内（A 小在上沿左、A 包点在上沿右）。
 import * as THREE from 'three';
-import { CT_Y } from '../layout.js';
+import { A_PLAT_Y, CT_Y } from '../layout.js';
+
+const FACE_X = 21.05;
+const HALL_X0 = 10.4;
+const HALL_Z0 = 6.5;
+const HALL_Z1 = 15.5;
+const POST_H = 3.35;
+const CEIL_Y = CT_Y + 3.55;
 
 export function buildCtSpawn(ctx) {
-  woodenHall(ctx);
+  eastFacade(ctx);
+  hallInterior(ctx);
   barredWindows(ctx);
   hangingLamps(ctx);
+  boostCrates(ctx);
   interiorDressing(ctx);
 }
 
-function woodenHall(ctx) {
-  const { kit, box, solid, group, archSpandrel } = ctx;
+function eastFacade(ctx) {
+  const { kit, box, solid, platform, group } = ctx;
   const y0 = CT_Y;
-  const posts = [
-    [11.3, 5.4], [11.3, 10.4], [11.3, 15.2],
-  ];
-  for (const [x, z] of posts) {
-    box(0.42, 3.15, 0.42, kit.beam, x, y0 + 1.55, z);
-    solid(x - 0.22, x + 0.22, z - 0.22, z + 0.22);
-  }
-  box(0.58, 3.6, 0.58, kit.beam, 20.55, y0 + 1.8, 6.3);
-  box(0.58, 3.6, 0.58, kit.beam, 20.55, y0 + 1.8, 13.7);
-  box(0.4, 3.4, 0.4, kit.beam, 20.15, y0 + 1.7, 6.55);
-  box(0.4, 3.4, 0.4, kit.beam, 20.15, y0 + 1.7, 13.45);
-  solid(20.24, 20.86, 6.0, 6.7);
-  solid(20.24, 20.86, 13.3, 14.0);
+  const zMid = (HALL_Z0 + HALL_Z1) / 2;
+  const openW = HALL_Z1 - HALL_Z0;
+  const headerBot = y0 + POST_H + 0.15;
+  const headerTop = y0 + 6.45;
 
-  const sp = archSpandrel(7.6, 2.7, 0.85, kit.beam);
-  sp.position.set(20.95, y0 + 1.08, 10);
-  sp.rotation.y = Math.PI / 2;
-  sp.castShadow = true;
-  sp.receiveShadow = true;
-  group.add(sp);
-  box(0.85, 0.32, 8.2, kit.beam, 20.55, y0 + 3.62, 10);
-  box(0.28, 2.6, 0.28, kit.beam, 20.72, y0 + 1.3, 10);
+  box(0.7, headerTop - y0, 2.55, kit.weathered, FACE_X, (y0 + headerTop) / 2, HALL_Z0 - 1.15);
+  solid(FACE_X - 0.38, FACE_X + 0.38, 4.12, HALL_Z0 + 0.08);
+  box(0.55, 2.9, 0.7, kit.weathered, FACE_X + 0.15, y0 + 1.45, HALL_Z1 + 0.28);
 
-  box(10.4, 0.12, 11.2, kit.bamboo, 15.8, y0 + 3.62, 10.4);
-  for (const z of [5.6, 8.0, 10.4, 12.8, 15.2]) {
-    box(10.2, 0.2, 0.28, kit.beam, 15.8, y0 + 3.48, z);
+  box(0.62, headerTop - headerBot, openW + 1.5, kit.weathered, FACE_X, (headerBot + headerTop) / 2, zMid);
+  platform(FACE_X - 0.22, FACE_X + 0.38, HALL_Z0 - 0.3, HALL_Z1 + 0.5, headerTop, headerBot);
+  box(0.78, 0.24, openW + 1.7, kit.weathered, FACE_X + 0.04, headerTop + 0.08, zMid);
+  box(0.4, 0.12, openW + 1.85, kit.mass, FACE_X + 0.12, headerTop + 0.22, zMid);
+
+  const zL = HALL_Z1 - 0.18;
+  const zR = HALL_Z0 + 0.18;
+  for (const z of [zL, zR]) {
+    box(0.58, POST_H, 0.58, kit.timber, FACE_X, y0 + POST_H / 2, z);
+    box(0.4, POST_H - 0.15, 0.4, kit.timber, FACE_X - 0.42, y0 + (POST_H - 0.15) / 2, z);
+    solid(FACE_X - 0.32, FACE_X + 0.32, z - 0.3, z + 0.3);
   }
-  for (const x of [12.2, 15.8, 19.4]) {
-    box(0.22, 0.2, 11.0, kit.beam, x, y0 + 3.5, 10.4);
+
+  const archW = openW - 0.55;
+  const rise = 1.28;
+  const pts = [];
+  for (let i = 0; i <= 18; i++) {
+    const t = i / 18;
+    const z = zMid - archW / 2 + archW * t;
+    const y = y0 + POST_H - 0.12 + rise * (1 - (2 * t - 1) ** 2);
+    pts.push(new THREE.Vector3(FACE_X + 0.18, y, z));
   }
-  box(10.6, 0.18, 0.35, kit.beam, 15.8, y0 + 3.72, 5.3);
-  box(10.6, 0.18, 0.35, kit.beam, 15.8, y0 + 3.72, 15.5);
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 22, 0.28, 8, false),
+    kit.timber,
+  );
+  tube.castShadow = true;
+  tube.receiveShadow = true;
+  group.add(tube);
+
+  box(0.7, 0.32, archW + 1.05, kit.timber, FACE_X + 0.08, y0 + POST_H + rise + 0.05, zMid);
+
+  const span = ctx.archSpandrel(archW + 0.2, rise + 0.25, 0.55, kit.weathered);
+  span.position.set(FACE_X + 0.32, y0 + POST_H - 0.18, zMid);
+  span.rotation.y = Math.PI / 2;
+  span.castShadow = true;
+  span.receiveShadow = true;
+  group.add(span);
+}
+
+function hallInterior(ctx) {
+  const { kit, box, solid } = ctx;
+  const y0 = CT_Y;
+  const x0 = HALL_X0;
+  const x1 = FACE_X - 0.35;
+  const z0 = HALL_Z0;
+  const z1 = HALL_Z1;
+  const cx = (x0 + x1) / 2;
+  const cz = (z0 + z1) / 2;
+  const spanX = x1 - x0;
+  const spanZ = z1 - z0;
+
+  box(spanX + 0.35, 0.1, spanZ + 0.3, kit.plank, cx, CEIL_Y + 0.1, cz);
+  for (let x = x0 + 0.7; x < x1 - 0.2; x += 2.05) {
+    box(0.28, 0.24, spanZ + 0.1, kit.timber, x, CEIL_Y - 0.04, cz);
+  }
+  for (let z = z0 + 1.1; z < z1 - 0.5; z += 2.35) {
+    box(spanX + 0.15, 0.14, 0.18, kit.timber, cx, CEIL_Y + 0.04, z);
+  }
+
+  const cols = [12.15, 16.05];
+  const rows = [z0 + 0.32, z1 - 0.32];
+  for (const x of cols) {
+    for (const z of rows) {
+      box(0.42, POST_H, 0.42, kit.timber, x, y0 + POST_H / 2, z);
+      solid(x - 0.22, x + 0.22, z - 0.22, z + 0.22);
+    }
+    box(0.44, 0.2, spanZ + 0.15, kit.timber, x, CEIL_Y - 0.16, cz);
+  }
+
+  box(5.1, 3.05, 0.22, kit.weathered, 12.9, y0 + 1.48, z1 + 0.1);
+  solid(10.45, 15.35, z1 - 0.02, z1 + 0.3);
+  box(0.2, 2.5, 2.4, kit.recess, x0 + 0.16, y0 + 1.2, z1 - 1.65);
 }
 
 function barredWindows(ctx) {
@@ -65,23 +125,51 @@ function barredWindows(ctx) {
 function hangingLamps(ctx) {
   const { kit, box, group } = ctx;
   const y0 = CT_Y;
-  for (const [x, z] of [[14.2, 8.6], [17.8, 12.2]]) {
-    box(0.04, 0.55, 0.04, kit.iron, x, y0 + 3.25, z);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), kit.lampGlow);
-    bulb.position.set(x, y0 + 2.9, z);
+  for (const [x, z] of [[14.6, 9.6], [17.4, 12.4]]) {
+    box(0.04, 0.42, 0.04, kit.iron, x, CEIL_Y - 0.28, z);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), kit.lampGlow);
+    bulb.position.set(x, y0 + 2.95, z);
     group.add(bulb);
-    const light = new THREE.PointLight(0xffc078, 14, 9, 1.6);
-    light.position.set(x, y0 + 2.7, z);
+    const light = new THREE.PointLight(0xffc078, 18, 11, 1.55);
+    light.position.set(x, y0 + 2.75, z);
     group.add(light);
   }
 }
 
+function rampY(x) {
+  const t = Math.min(1, Math.max(0, (x - 20) / 8));
+  return CT_Y + t * (A_PLAT_Y - CT_Y);
+}
+
+function boostCrates(ctx) {
+  const { kit, box, platform, group } = ctx;
+  function put(size, x, z, lift = 0) {
+    const y = rampY(x) + lift;
+    box(size, size, size, kit.fragile, x, y + size / 2, z);
+    platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + size, y);
+  }
+  put(1.55, 22.6, 5.28);
+  put(1.5, 24.15, 5.48);
+  put(1.42, 22.95, 6.62);
+  put(1.32, 24.45, 6.55);
+  put(1.22, 23.4, 5.35, 1.52);
+  put(1.18, 24.35, 5.52, 1.48);
+  put(1.15, 23.05, 5.42, 1.55);
+  put(1.08, 23.7, 6.45, 1.4);
+  put(1.05, 23.55, 5.45, 2.72);
+
+  const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.85), kit.grate);
+  grate.rotation.x = -Math.PI / 2;
+  grate.position.set(21.7, CT_Y + 0.03, 14.7);
+  group.add(grate);
+}
+
 function interiorDressing(ctx) {
-  const { kit, box, solid } = ctx;
+  const { kit, box, solid, crate } = ctx;
   const y0 = CT_Y;
-  box(0.12, 1.5, 2.4, kit.wood, 12.2, y0 + 0.85, 7.4);
-  box(0.12, 1.3, 2.0, kit.wood, 12.35, y0 + 0.75, 7.6);
-  box(1.6, 0.12, 0.9, kit.wood, 12.6, y0 + 0.08, 9.5);
-  box(1.4, 0.12, 0.8, kit.wood, 12.7, y0 + 0.18, 9.6);
-  solid(12.1, 12.5, 6.3, 8.6);
+  crate(1.18, 13.6, 13.4, y0);
+  crate(1.08, 14.75, 13.75, y0);
+  crate(0.98, 13.75, 14.5, y0);
+  box(0.12, 1.45, 2.2, kit.wood, 12.2, y0 + 0.8, 8.15);
+  solid(12.08, 12.42, 7.15, 9.15);
 }

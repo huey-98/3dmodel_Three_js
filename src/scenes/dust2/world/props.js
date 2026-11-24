@@ -21,7 +21,7 @@ const LAMPS = [
 ];
 
 export function buildProps(ctx) {
-  const { kit, box, solid, crate, whiteCrate, platform, group } = ctx;
+  const { kit, box, solid, crate, platform, group } = ctx;
 
   const letterGeo = new THREE.PlaneGeometry(7, 7);
   const decalA = new THREE.Mesh(letterGeo, kit.letter);
@@ -41,7 +41,6 @@ export function buildProps(ctx) {
   box(2.6, 0.16, 1.4, kit.wood, -12.3, CT_Y + 1.7, 8.5);
   platform(-13.6, -11.0, 7.8, 9.2, CT_Y + 1.78, CT_Y);
 
-  crate(1.2, 8.2, 29, MID_Y);
   aSiteCrates(ctx);
   gooseCrates(ctx);
   addCar(ctx, 50, 34, LONG_Y, 0.15);
@@ -71,13 +70,6 @@ export function buildProps(ctx) {
   }
   addFlag(ctx, 0, 82, T_Y + 0.2, 0xb0352a);
   addFlag(ctx, 12, 22, CT_Y + 0.2, 0x3a6ea8);
-
-  whiteCrate(1.45, 22.8, 5.5, 0.35);
-  whiteCrate(1.45, 24.2, 6.2, 0.55);
-  whiteCrate(1.25, 22.6, 7.0, 0.4);
-  whiteCrate(1.2, 23.4, 5.6, 1.8);
-  whiteCrate(1.1, 24.1, 7.0, 1.7);
-  box(1.5, 1.35, 0.12, kit.fragile, 24.9, 1.2, 5.8);
 
   box(0.18, 6.4, 0.18, kit.mass, 7.2, MID_Y + 3.2, 48);
   box(0.5, 0.12, 1.6, kit.mass, 7.2, MID_Y + 6.5, 48);

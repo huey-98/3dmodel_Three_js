@@ -7,6 +7,7 @@ import { buildFloors } from './world/floors.js';
 import { buildWalls } from './world/walls.js';
 import { buildASite } from './world/asite.js';
 import { buildCtSpawn } from './world/ctspawn.js';
+import { buildMid } from './world/mid.js';
 import { buildShort } from './world/short.js';
 import { buildDoors } from './world/doors.js';
 import { buildProps, updateProps } from './world/props.js';
@@ -30,6 +31,7 @@ export function createDust2World() {
   buildWalls(ctx);
   buildASite(ctx);
   buildCtSpawn(ctx);
+  buildMid(ctx);
   buildShort(ctx);
   buildDoors(ctx);
   buildProps(ctx);
