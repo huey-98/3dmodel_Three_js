@@ -142,6 +142,28 @@ function doorTex() {
   });
 }
 
+function metalDoorTex() {
+  return canvasTex(256, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#6a7580';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#4e5964';
+    ctx.fillRect(10, 10, w - 20, h - 20);
+    ctx.strokeStyle = 'rgba(30,36,42,0.7)';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(18, 18, w - 36, h - 36);
+    ctx.strokeRect(18, h / 2 - 8, w - 36, 16);
+    ctx.fillStyle = '#8a96a2';
+    for (const [x, y] of [[28, 32], [w - 36, 32], [28, h - 44], [w - 36, h - 44], [28, h / 2 - 6], [w - 36, h / 2 - 6]]) {
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#2c333a';
+    ctx.fillRect(w - 48, h * 0.46, 18, 36);
+    noise(ctx, w, h, 280, 0.08);
+  });
+}
+
 // 屋顶檐口/木梁
 function beamTex() {
   return canvasTex(256, 128, (ctx, w, h) => {
@@ -338,9 +360,11 @@ function fragileTex() {
     ctx.lineWidth = 8;
     ctx.strokeRect(6, 6, w - 12, h - 12);
     ctx.fillStyle = 'rgba(40,32,20,0.8)';
-    ctx.font = 'bold 30px Arial, sans-serif';
+    ctx.font = 'bold 28px Arial, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('FRAGILE', w / 2, h / 2 + 6);
+    ctx.fillText('FRAGILE', w / 2, h / 2 - 8);
+    ctx.font = 'bold 48px Arial, sans-serif';
+    ctx.fillText('14', w / 2, h / 2 + 48);
     // 向上箭头
     for (const ax of [w * 0.25, w * 0.75]) {
       ctx.beginPath();
@@ -352,6 +376,194 @@ function fragileTex() {
   });
 }
 
+// 沥青街道（A 大）：深灰砂石 + 虚线
+function asphaltTex() {
+  return canvasTex(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#8a8680';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 80; i++) {
+      ctx.fillStyle = `rgba(${90 + Math.random() * 50 | 0},${88 + Math.random() * 46 | 0},${80 + Math.random() * 40 | 0},0.45)`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 12 + Math.random() * 70, 8 + Math.random() * 36);
+    }
+    ctx.fillStyle = 'rgba(230,224,210,0.7)';
+    for (let y = 10; y < h; y += 72) ctx.fillRect(w * 0.5 - 5, y, 10, 36);
+    noise(ctx, w, h, 1100, 0.08, 2);
+  });
+}
+
+// 风化白墙（药房）：剥落 + 水渍
+function weatheredTex() {
+  return canvasTex(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#e4dccb';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 50; i++) {
+      ctx.fillStyle = `rgba(${170 + Math.random() * 50 | 0},${158 + Math.random() * 40 | 0},${130 + Math.random() * 36 | 0},0.4)`;
+      ctx.beginPath();
+      ctx.ellipse(Math.random() * w, Math.random() * h, 12 + Math.random() * 60, 8 + Math.random() * 40, Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const g = ctx.createLinearGradient(0, h, 0, h - 160);
+    g.addColorStop(0, 'rgba(110,88,52,0.5)');
+    g.addColorStop(1, 'rgba(110,88,52,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, h - 160, w, 160);
+    ctx.fillStyle = 'rgba(90,70,40,0.18)';
+    for (let i = 0; i < 12; i++) {
+      const x = Math.random() * w;
+      ctx.fillRect(x, 0, 3 + Math.random() * 8, h * (0.3 + Math.random() * 0.5));
+    }
+    noise(ctx, w, h, 800, 0.07);
+  });
+}
+
+// 竹席顶（警家拱廊）
+function bambooTex() {
+  return canvasTex(512, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#8a6a3c';
+    ctx.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 10) {
+      ctx.fillStyle = `rgba(${140 + Math.random() * 40 | 0},${100 + Math.random() * 30 | 0},${50 + Math.random() * 20 | 0},0.85)`;
+      ctx.fillRect(0, y + 1, w, 8);
+      ctx.strokeStyle = 'rgba(50,32,12,0.45)';
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    }
+    for (let x = 0; x < w; x += 48) {
+      ctx.fillStyle = 'rgba(40,24,8,0.25)';
+      ctx.fillRect(x, 0, 3, h);
+    }
+    noise(ctx, w, h, 400, 0.08);
+  });
+}
+
+// A 包点淡绿铁箱
+function aCrateTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#b8c4b0';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#9aada0';
+    ctx.fillRect(12, 12, w - 24, h - 24);
+    ctx.strokeStyle = 'rgba(50,64,56,0.7)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(8, 8, w - 16, h - 16);
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(w / 2, 12); ctx.lineTo(w / 2, h - 12); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(12, h / 2); ctx.lineTo(w - 12, h / 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(40,56,48,0.7)';
+    ctx.font = 'bold 36px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('A', w / 2, h / 2 + 12);
+    for (let i = 0; i < 18; i++) {
+      ctx.fillStyle = `rgba(90,70,40,${0.08 + Math.random() * 0.18})`;
+      ctx.fillRect(Math.random() * w, Math.random() * h, 8 + Math.random() * 30, 4 + Math.random() * 16);
+    }
+    noise(ctx, w, h, 350, 0.07);
+  });
+}
+
+// A 小转角塔：暖赭黄灰泥，剥落 + 水渍
+function ochreTex() {
+  return canvasTex(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#d2a05a';
+    ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 55; i++) {
+      ctx.fillStyle = `rgba(${180 + Math.random() * 50 | 0},${140 + Math.random() * 40 | 0},${70 + Math.random() * 30 | 0},0.4)`;
+      ctx.beginPath();
+      ctx.ellipse(Math.random() * w, Math.random() * h, 10 + Math.random() * 55, 8 + Math.random() * 36, Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    const g = ctx.createLinearGradient(0, h, 0, h - 170);
+    g.addColorStop(0, 'rgba(110,72,32,0.55)');
+    g.addColorStop(1, 'rgba(110,72,32,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, h - 170, w, 170);
+    ctx.fillStyle = 'rgba(90,60,28,0.2)';
+    for (let i = 0; i < 14; i++) {
+      const x = Math.random() * w;
+      ctx.fillRect(x, 0, 2 + Math.random() * 7, h * (0.25 + Math.random() * 0.55));
+    }
+    ctx.fillStyle = 'rgba(150,110,60,0.25)';
+    for (let i = 0; i < 8; i++) {
+      ctx.fillRect(Math.random() * w, Math.random() * h * 0.6, 18 + Math.random() * 50, 10 + Math.random() * 28);
+    }
+    noise(ctx, w, h, 850, 0.07);
+  });
+}
+
+// Short Stairs 灰石踏步
+function stoneTex() {
+  return canvasTex(512, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#8a8680';
+    ctx.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 48) {
+      const inset = (y / 48) % 2 ? 36 : 0;
+      for (let x = -36; x < w + 36; x += 72) {
+        ctx.fillStyle = `rgba(${120 + Math.random() * 40 | 0},${118 + Math.random() * 36 | 0},${110 + Math.random() * 30 | 0},0.7)`;
+        ctx.fillRect(x + inset + 2, y + 2, 68, 44);
+        ctx.strokeStyle = 'rgba(50,48,44,0.45)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + inset + 2, y + 2, 68, 44);
+      }
+    }
+    noise(ctx, w, h, 700, 0.08, 2);
+  });
+}
+
+// 石板排水篦子
+function grateTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#3a3834';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#6a6660';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(8, 8, w - 16, h - 16);
+    ctx.strokeStyle = '#2a2824';
+    ctx.lineWidth = 5;
+    for (let x = 28; x < w - 20; x += 22) {
+      ctx.beginPath();
+      ctx.moveTo(x, 18);
+      ctx.lineTo(x, h - 18);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(20,18,14,0.45)';
+    ctx.fillRect(16, 16, w - 32, h - 32);
+  });
+}
+
+function pharmacyCrossTex() {
+  return canvasTex(256, 256, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#2f7a48';
+    const arm = 52;
+    ctx.fillRect(w / 2 - arm / 2, 18, arm, h - 36);
+    ctx.fillRect(18, h / 2 - arm / 2, w - 36, arm);
+    ctx.fillStyle = 'rgba(20,40,24,0.25)';
+    ctx.fillRect(w / 2 - arm / 2 + 6, 24, arm - 12, h - 48);
+  });
+}
+
+function pharmacyBannerTex() {
+  return canvasTex(128, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#1f5c48';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#2a6e56';
+    ctx.fillRect(8, 8, w - 16, h - 16);
+    ctx.fillStyle = '#e8e4d4';
+    ctx.beginPath();
+    ctx.arc(w / 2, 70, 28, Math.PI * 0.15, Math.PI * 1.85, false);
+    ctx.arc(w / 2 + 10, 70, 22, Math.PI * 1.75, Math.PI * 0.25, true);
+    ctx.fill();
+    ctx.save();
+    ctx.translate(w / 2, 280);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = '#f2eee0';
+    ctx.font = 'bold 22px "Times New Roman", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PHARMACIE  LES OLIVES', 0, 6);
+    ctx.restore();
+    noise(ctx, w, h, 200, 0.06);
+  });
+}
+
 export function createDust2Kit() {
   const mk = (tex, rough = 0.92) => new THREE.MeshStandardMaterial({ map: tex, roughness: rough, metalness: 0.02 });
   const sand = mk(sandstoneTex());
@@ -360,6 +572,7 @@ export function createDust2Kit() {
   const crate = mk(crateTex());
   const blue = mk(blueMetalTex(), 0.7);
   const door = mk(doorTex());
+  const metalDoor = new THREE.MeshStandardMaterial({ map: metalDoorTex(), roughness: 0.45, metalness: 0.55 });
   const beam = mk(beamTex());
   const mass = mk(sandstoneTex());
   const cobble = mk(cobbleTex());
@@ -371,6 +584,17 @@ export function createDust2Kit() {
   const facade = mk(facadeTex());
   const sandbag = mk(sandbagTex());
   const fragile = mk(fragileTex());
+  const asphalt = mk(asphaltTex(), 0.88);
+  const weathered = mk(weatheredTex());
+  const bamboo = mk(bambooTex(), 0.9);
+  const aCrate = mk(aCrateTex(), 0.75);
+  const banner = mk(pharmacyBannerTex(), 0.85);
+  const ochre = mk(ochreTex());
+  const stone = mk(stoneTex(), 0.9);
+  const grate = new THREE.MeshStandardMaterial({ map: grateTex(), roughness: 0.55, metalness: 0.45 });
+  const cross = new THREE.MeshStandardMaterial({
+    map: pharmacyCrossTex(), transparent: true, roughness: 0.7, metalness: 0.05,
+  });
   return {
     sand,
     cobble,
@@ -382,6 +606,7 @@ export function createDust2Kit() {
     crate,
     blue,
     door,
+    metalDoor,
     beam,
     mass,
     plaster,
@@ -389,7 +614,22 @@ export function createDust2Kit() {
     facade,
     sandbag,
     fragile,
+    asphalt,
+    weathered,
+    bamboo,
+    aCrate,
+    banner,
+    ochre,
+    stone,
+    grate,
+    shutter: new THREE.MeshStandardMaterial({ color: 0x8a3a32, roughness: 0.75, metalness: 0.05 }),
+    cross,
     teal: new THREE.MeshStandardMaterial({ color: 0x2e8b8b, roughness: 0.5, metalness: 0.1 }),
+    tealRail: new THREE.MeshStandardMaterial({ color: 0x3aa0a0, roughness: 0.4, metalness: 0.25 }),
+    curbRed: new THREE.MeshStandardMaterial({ color: 0xa33a3a, roughness: 0.7, metalness: 0.05 }),
+    curbWhite: new THREE.MeshStandardMaterial({ color: 0xe8e2d4, roughness: 0.7, metalness: 0.05 }),
+    greenPaint: new THREE.MeshStandardMaterial({ color: 0x2f7a48, roughness: 0.65, metalness: 0.08 }),
+    iron: new THREE.MeshStandardMaterial({ color: 0x3a3a38, roughness: 0.55, metalness: 0.4 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x241a0e, roughness: 1 }),
     recess: new THREE.MeshStandardMaterial({ color: 0x1c130a, roughness: 1 }),
     letter: new THREE.MeshStandardMaterial({ map: siteLetterTex('A'), transparent: true, roughness: 1 }),

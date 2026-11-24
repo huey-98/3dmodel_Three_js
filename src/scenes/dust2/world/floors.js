@@ -1,7 +1,7 @@
 // 多层地面系统：FLOORS 楼板、STAIRS 自动踏步、CEILS 顶棚、MASS 楼体。
 import { FLOORS, STAIRS, RAMPS, CEILS, MASS, WALL_H, VOID_Y, SLAB, LONG_Y, B2_Y } from '../layout.js';
 
-const KIND_MAT = { road: 'road', sand: 'dirt', cobble: 'cobble', cave: 'cave', wood: 'wood', apt: 'apt' };
+const KIND_MAT = { road: 'road', sand: 'dirt', cobble: 'cobble', cave: 'cave', wood: 'wood', apt: 'apt', asphalt: 'asphalt' };
 
 export function maxTopNear(rects, x0, x1, z0, z1, pad = 1.4) {
   let best = -Infinity;
@@ -17,7 +17,7 @@ export function buildFloors(ctx) {
   const { kit, box, volume, solid, platform, rampMesh, group } = ctx;
   const matFor = (kind) => kit[KIND_MAT[kind] || 'dirt'] || kit.dirt;
 
-  box(110, 0.3, 96, kit.dirt, 6, VOID_Y + 0.15, 44);
+  box(128, 0.3, 96, kit.dirt, 12, VOID_Y + 0.15, 44);
 
   for (const f of FLOORS) {
     const bottom = f.bottom ?? (f.deep ? VOID_Y : f.top - SLAB);
@@ -29,10 +29,10 @@ export function buildFloors(ctx) {
     const along = s.dir.includes('x') ? 'x' : 'z';
     const len = along === 'x' ? s.x1 - s.x0 : s.z1 - s.z0;
     const rise = s.to - s.from;
-    const n = Math.max(2, Math.ceil(Math.abs(rise) / 0.34));
+    const n = Math.max(2, Math.ceil(Math.abs(rise) / (s.stepH || 0.34)));
     const stepD = len / n;
     const stepH = rise / n;
-    const mat = Math.min(s.from, s.to) < -1.5 ? kit.cave : kit.cobble;
+    const mat = s.kind === 'stone' ? kit.stone : (Math.min(s.from, s.to) < -1.5 ? kit.cave : kit.cobble);
     for (let i = 0; i < n; i++) {
       const t = s.from + stepH * (i + 1);
       const off = (along === 'x' ? (s.dir === 'x' ? s.x0 + i * stepD : s.x1 - (i + 1) * stepD) : 0);
@@ -77,8 +77,8 @@ export function buildFloors(ctx) {
   }
 
   // 下沉沿口警示石条（纯视觉，放在下落前一侧的地面上）
-  box(0.7, 0.25, 16, kit.mass, 44.2, LONG_Y + 0.12, 48); // A 坑东沿（A 大侧）
-  box(8, 0.25, 0.7, kit.mass, -36, B2_Y + 0.12, 51.8); // B2 南通道口沿（B2 侧）
+  box(0.7, 0.25, 16, kit.mass, 55.8, LONG_Y + 0.12, 34);
+  box(8, 0.25, 0.7, kit.mass, -36, B2_Y + 0.12, 51.8);
 }
 
 

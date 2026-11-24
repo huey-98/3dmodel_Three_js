@@ -5,6 +5,9 @@ import { createDust2Kit } from './materials.js';
 import { createWorldHelpers } from './world/helpers.js';
 import { buildFloors } from './world/floors.js';
 import { buildWalls } from './world/walls.js';
+import { buildASite } from './world/asite.js';
+import { buildCtSpawn } from './world/ctspawn.js';
+import { buildShort } from './world/short.js';
 import { buildDoors } from './world/doors.js';
 import { buildProps, updateProps } from './world/props.js';
 import { buildBackdrop } from './world/backdrop.js';
@@ -25,6 +28,9 @@ export function createDust2World() {
 
   buildFloors(ctx);
   buildWalls(ctx);
+  buildASite(ctx);
+  buildCtSpawn(ctx);
+  buildShort(ctx);
   buildDoors(ctx);
   buildProps(ctx);
   buildBackdrop(ctx);
