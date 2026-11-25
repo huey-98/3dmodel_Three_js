@@ -9,7 +9,7 @@ export const B2_Y = 1.6;
 export const B1_Y = -1.6;
 export const B_Y = 2.0;
 export const CT_Y = -1.0;
-export const MID_N_Y = 0.0;
+export const MID_N_Y = -1.0;
 export const MID_S_Y = 1.2;
 export const MID_Y = MID_N_Y;
 export const A_SMALL_Y = 1.6;
@@ -38,7 +38,7 @@ export const FLOORS = [
   { x0: 5, x1: 8, z0: 57, z1: 63, top: MID_S_Y, kind: 'road', deep: true },
   { x0: 8, x1: 17, z0: 56, z1: 63, top: MID_S_Y, kind: 'road', deep: true },
   { x0: 26, x1: 42, z0: 42, z1: 50, top: LONG_Y, kind: 'asphalt', deep: true },
-  { x0: -42, x1: -32, z0: 22, z1: 52, top: B2_Y, kind: 'cave', deep: true },
+  { x0: -38, x1: -32, z0: 22, z1: 52, top: B2_Y, kind: 'cave', deep: true },
   { x0: -28, x1: -16, z0: 28, z1: 40, top: B1_Y, kind: 'cobble', deep: true },
   { x0: -36, x1: -14, z0: 4, z1: 22, top: B_Y, kind: 'cobble', deep: false, bottom: -1.0 },
   { x0: -42, x1: -36, z0: 4, z1: 20, top: B_Y, kind: 'cobble', deep: true },
@@ -48,9 +48,9 @@ export const FLOORS = [
   { x0: 21, x1: 26, z0: 4, z1: 24, top: CT_Y, kind: 'cobble', deep: true },
   { x0: 10, x1: 21, z0: 16, z1: 24, top: CT_Y, kind: 'cobble', deep: true },
   { x0: -10, x1: 10, z0: 26, z1: 30, top: MID_N_Y, kind: 'road', deep: true },
-  { x0: 10, x1: 22, z0: 26, z1: 50, top: A_SMALL_Y, kind: 'cobble', deep: false, bottom: -0.2 },
+  { x0: 10, x1: 22, z0: 26, z1: 50, top: A_SMALL_Y, kind: 'cobble', deep: false, bottom: CT_Y },
   { x0: 22, x1: 26, z0: 30.5, z1: 46, top: A_SMALL_Y, kind: 'cobble', deep: false, bottom: -0.2 },
-  { x0: 10, x1: 22.2, z0: 24.2, z1: 26, top: A_SMALL_Y, kind: 'cobble', deep: false, bottom: -0.2 },
+  { x0: 10, x1: 22.2, z0: 24.2, z1: 26, top: A_SMALL_Y, kind: 'cobble', deep: false, bottom: CT_Y },
   { x0: 26, x1: 42, z0: 4, z1: 16, top: A_PLAT_Y, kind: 'cobble', deep: true },
   { x0: 36, x1: 42, z0: 16, z1: 22, top: A_PLAT_Y, kind: 'cobble', deep: true },
   { x0: 42, x1: 54, z0: 4, z1: 16, top: A_PLAT_Y, kind: 'cobble', deep: true },
@@ -72,7 +72,7 @@ export const STAIRS = [
 export const RAMPS = [
   { x0: -18, x1: -10, z0: 68, z1: 80, from: T_Y, to: GARDEN_Y, dir: '-x' },
   { x0: 12, x1: 36, z0: 68, z1: 78, from: T_Y, to: ROAD_Y, dir: 'x' },
-  { x0: -42, x1: -32, z0: 52, z1: 56, from: B2_Y, to: GARDEN_Y, dir: 'z' },
+  { x0: -38, x1: -32, z0: 52, z1: 56, from: B2_Y, to: GARDEN_Y, dir: 'z' },
   { x0: -38, x1: -32, z0: 20, z1: 24, from: B2_Y, to: B_Y, dir: '-z' },
   { x0: -14, x1: -6, z0: 12, z1: 20, from: B_Y, to: CT_Y, dir: 'x' },
   { x0: 20, x1: 28, z0: 4, z1: 14, from: CT_Y, to: A_PLAT_Y, dir: 'x' },
@@ -85,7 +85,6 @@ export const RAMPS = [
   { x0: 30, x1: 42, z0: 50, z1: 64, from: LONG_Y, to: ROAD_Y, dir: 'z' },
   { x0: 42, x1: 54, z0: 16, z1: 24, from: A_PLAT_Y, to: LONG_Y, dir: 'z' },
   { x0: 42, x1: 54, z0: 50, z1: 58, from: LONG_Y, to: PIT_Y, dir: 'z' },
-  { x0: -4, x1: 4, z0: 22, z1: 26, from: CT_Y, to: MID_N_Y, dir: 'z' },
 ];
 
 export const WALLS = [
@@ -110,6 +109,7 @@ export const WALLS = [
 
 export const MASS = [
   { x0: -32, x1: -28, z0: 24, z1: 30 },
+  { x0: -42, x1: -38, z0: 22, z1: 56 },
   { x0: -32, x1: -28, z0: 40, z1: 56 },
   { x0: -28, x1: -16, z0: 40, z1: 56 },
   { x0: -16, x1: -10, z0: 36, z1: 56 },
@@ -119,9 +119,9 @@ export const MASS = [
   { x0: 26, x1: 41.6, z0: 34, z1: 42 },
   { x0: 18, x1: 30.02, z0: 50, z1: 56 }, // 东缘收 2cm，避开 A 门西门柱共面闪烁
   { x0: 22, x1: 26, z0: 46, z1: 50 },
-  { x0: 16.4, x1: 22.2, z0: 24.2, z1: 32.8, top: CT_Y + SLAB },
-  { x0: 10.0, x1: 14.6, z0: 24.2, z1: 27.8, top: CT_Y + SLAB },
-  { x0: 10.0, x1: 11.5, z0: 33.2, z1: 38.0, top: CT_Y + SLAB },
+  { x0: 16.4, x1: 22.2, z0: 24.2, z1: 32.8, top: CT_Y - 0.05 },
+  { x0: 10.0, x1: 14.6, z0: 24.2, z1: 27.8, top: CT_Y - 0.05 },
+  { x0: 10.0, x1: 11.5, z0: 33.2, z1: 38.0, top: CT_Y - 0.05 },
   { x0: -44, x1: 68, z0: 0, z1: 4 },
   { x0: -44, x1: 68, z0: 84, z1: 88 },
   { x0: -44, x1: -18, z0: 80, z1: 84 },
@@ -135,12 +135,12 @@ export const MASS = [
 ];
 
 export const CEILS = [
-  { x0: -42, x1: -32, z0: 28, z1: 52, bottom: B2_Y + 2.4, kind: 'cave', room: true },
+  { x0: -38, x1: -32, z0: 28, z1: 52, bottom: B2_Y + 3.4, kind: 'cave', room: true },
   { x0: 0, x1: 5, z0: 54, z1: 63, bottom: 2.7, kind: 'cave', room: true },
 ];
 
 export const ROOMS = [
-  { x0: -42, x1: -32, z0: 28, z1: 52, y0: GARDEN_Y, y1: B2_Y + 2.4 },
+  { x0: -38, x1: -32, z0: 28, z1: 52, y0: GARDEN_Y, y1: B2_Y + 3.4 },
   { x0: 0, x1: 5, z0: 54, z1: 63, y0: ROAD_Y, y1: 2.7 },
   { x0: 10, x1: 21.4, z0: 4, z1: 16.4, y0: CT_Y, y1: CT_Y + 4.05 },
   { x0: 26, x1: 36, z0: 16, z1: 22, y0: GOOSE_Y, y1: 2.85 },
@@ -149,7 +149,7 @@ export const ROOMS = [
 export const SPAWNS = {
   t: { x: 2, y: T_Y, z: 76, yaw: Math.PI, label: '匪家' },
   garden: { x: -28, y: GARDEN_Y, z: 66, yaw: Math.PI, label: '后花园' },
-  b2: { x: -37, y: B2_Y, z: 38, yaw: Math.PI, label: 'B2' },
+  b2: { x: -35, y: B2_Y, z: 38, yaw: Math.PI, label: 'B2' },
   b: { x: -24, y: B_Y, z: 14, yaw: 0, label: 'B 包点' },
   b1: { x: -22, y: B1_Y, z: 34, yaw: 0, label: 'B1' },
   mid: { x: 0, y: MID_N_Y, z: 28, yaw: Math.PI, label: '中路' },
@@ -165,7 +165,7 @@ export const ZONES = [
   { name: '匪家', x0: -10, x1: 12, z0: 68, z1: 84, y0: 2.4, y1: 4.4 },
   { name: '东斜坡', x0: 12, x1: 36, z0: 68, z1: 78, y0: 0.2, y1: 4.2 },
   { name: '后花园', x0: -42, x1: -16, z0: 56, z1: 80, y0: -0.8, y1: 1.2 },
-  { name: 'B2/B 通', x0: -42, x1: -32, z0: 22, z1: 56, y0: 0, y1: 2.4 },
+  { name: 'B2/B 通', x0: -38, x1: -32, z0: 22, z1: 56, y0: 0, y1: 2.4 },
   { name: '旋转楼梯', x0: -32, x1: -28, z0: 30, z1: 40, y0: -2.4, y1: 2.4 },
   { name: 'B1', x0: -28, x1: -16, z0: 28, z1: 40, y0: -2.4, y1: -0.4 },
   { name: 'B1 入口', x0: -18, x1: -10, z0: 28, z1: 36, y0: -2.4, y1: 1.2 },
@@ -182,8 +182,8 @@ export const ZONES = [
   { name: 'A 小楼梯', x0: 22, x1: 26, z0: 22, z1: 31, y0: 1.0, y1: 3.8 },
   { name: 'A 小道', x0: 10, x1: 26, z0: 26, z1: 50, y0: 0.8, y1: 2.2 },
   { name: '小道楼梯', x0: 8, x1: 18, z0: 50, z1: 56, y0: 0.4, y1: 2.2 },
-  { name: '中门', x0: -4, x1: 4, z0: 24, z1: 30, y0: -0.8, y1: 1.2 },
-  { name: '中路', x0: -10, x1: 10, z0: 26, z1: 60, y0: -0.8, y1: 1.8 },
+  { name: '中门', x0: -4, x1: 4, z0: 24, z1: 30, y0: -1.4, y1: 1.2 },
+  { name: '中路', x0: -10, x1: 10, z0: 26, z1: 60, y0: -1.4, y1: 1.8 },
   { name: '暗道', x0: 0, x1: 24, z0: 54, z1: 70, y0: -0.8, y1: 1.0 },
   { name: '空地', x0: 24, x1: 42, z0: 63, z1: 78, y0: -0.6, y1: 1.2 },
   { name: 'A 平台', x0: 22, x1: 54, z0: 4, z1: 22, y0: 2.2, y1: 3.8 },

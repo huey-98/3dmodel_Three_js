@@ -1,6 +1,6 @@
 // A 小（Short）：赭黄转角塔、Short Stairs、Lower Tunnels 拱廊。对照 CS2 从院子北望石阶。
 import * as THREE from 'three';
-import { A_SMALL_Y, A_PLAT_Y, CT_Y, SLAB } from '../layout.js';
+import { A_SMALL_Y, A_PLAT_Y } from '../layout.js';
 
 export function buildShort(ctx) {
   cornerTower(ctx);
@@ -11,7 +11,7 @@ export function buildShort(ctx) {
 }
 
 function cornerTower(ctx) {
-  const { kit, box, volume, solid } = ctx;
+  const { kit, box, volume } = ctx;
   const y0 = A_SMALL_Y;
   const x0 = 16.4;
   const x1 = 22.2;
@@ -22,9 +22,6 @@ function cornerTower(ctx) {
   const h = 8.4;
 
   volume(x0, x1, y0, y0 + h, z0, z1, kit.ochre);
-  // 补角楼与 Lower Tunnels 之间、A 小楼板下的缝，防止走进去坠入虚空
-  volume(14.6, 16.4, CT_Y, CT_Y + SLAB, 24.2, 26.0, kit.ochre);
-  solid(14.6, 16.4, 24.2, 26.0);
   box((x1 - x0) + 0.22, 0.28, (z1 - z0) + 0.22, kit.ochre, cx, y0 + h + 0.12, cz);
   box((x1 - x0) + 0.08, 0.16, (z1 - z0) + 0.08, kit.mass, cx, y0 + h + 0.34, cz);
 

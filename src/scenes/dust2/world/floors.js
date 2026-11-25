@@ -77,7 +77,7 @@ export function buildFloors(ctx) {
   }
 
   // 下沉沿口警示石条（纯视觉，放在下落前一侧的地面上）
-  box(8, 0.25, 0.7, kit.mass, -36, B2_Y + 0.12, 51.8);
+  box(6, 0.25, 0.7, kit.mass, -35, B2_Y + 0.12, 51.8);
 }
 
 
