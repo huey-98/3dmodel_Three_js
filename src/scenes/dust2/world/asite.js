@@ -14,10 +14,10 @@ function pharmacyFacade(ctx) {
   const { kit, box, volume, group, archPane, darkOpening } = ctx;
   const face = 42.04;
   const y0 = LONG_Y;
-  volume(36, 42, y0 + 6.4, y0 + 9.2, 26, 40, kit.weathered);
+  volume(36.02, 41.98, y0 + 6.4, y0 + 9.2, 26, 40, kit.weathered);
   box(0.28, 8.6, 12.2, kit.weathered, face, y0 + 4.3, 33);
   box(0.2, 0.35, 12.4, kit.mass, face + 0.08, y0 + 8.6, 33);
-  for (let z = 27; z < 40; z += 1.6) {
+  for (let z = 27; z < 39.2; z += 1.6) {
     box(0.22, 0.28, 0.9, kit.mass, face + 0.12, y0 + 8.9, z);
   }
 
@@ -27,7 +27,7 @@ function pharmacyFacade(ctx) {
   rec.position.set(face + 0.02, y0, doorZ);
   rec.rotation.y = Math.PI / 2;
   group.add(rec);
-  box(0.12, 2.5, 1.5, kit.door, face + 0.08, y0 + 1.25, doorZ);
+  box(0.12, 2.5, 1.5, kit.door, face + 0.10, y0 + 1.25, doorZ);
   box(1.4, 0.18, 2.2, kit.mass, 41.2, y0 + 0.1, doorZ);
 
   box(0.18, 1.1, 1.3, kit.iron, face + 0.1, y0 + 3.55, 42.4);
@@ -40,10 +40,10 @@ function pharmacyFacade(ctx) {
   group.add(cross);
 
   const banner = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 3.4), kit.banner);
-  banner.position.set(face + 0.14, y0 + 3.6, 29.2);
+  banner.position.set(face + 0.18, y0 + 3.6, 29.2);
   banner.rotation.y = Math.PI / 2;
   group.add(banner);
-  box(0.12, 3.5, 0.9, kit.greenPaint, face + 0.08, y0 + 3.6, 29.2);
+  box(0.12, 3.5, 0.9, kit.greenPaint, face + 0.10, y0 + 3.6, 29.2);
 
   box(0.28, 0.7, 0.5, kit.iron, face + 0.2, y0 + 0.7, 36.2);
   box(0.12, 2.2, 0.12, kit.iron, face + 0.22, y0 + 1.4, 37.4);
@@ -114,16 +114,8 @@ function gooseTunnel(ctx) {
 }
 
 function retainingAndDoor(ctx) {
-  const { kit, box, group } = ctx;
-  const y0 = LONG_Y;
-  const top = A_PLAT_Y;
-  box(6, top - y0, 0.55, kit.plaster, 39, (y0 + top) / 2, 21.72);
-  box(6.2, 0.28, 0.7, kit.plaster, 39, top + 0.12, 21.85);
-  box(1.15, 2.15, 0.12, kit.greenPaint, 39.4, y0 + 1.15, 22.05);
-  const doorA = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), kit.letter);
-  doorA.position.set(39.4, y0 + 1.55, 22.14);
-  group.add(doorA);
-  box(0.35, 0.9, 0.35, kit.iron, 37.6, y0 + 0.45, 22.0);
+  const { kit, box } = ctx;
+  box(6.2, 0.28, 0.7, kit.plaster, 39, A_PLAT_Y + 0.12, 21.85);
 }
 
 function longStreetDressing(ctx) {
@@ -134,12 +126,12 @@ function longStreetDressing(ctx) {
   }
   box(0.18, 7.2, 0.18, kit.iron, 53.2, LONG_Y + 3.6, 40);
   box(0.7, 0.14, 1.8, kit.iron, 53.2, LONG_Y + 7.3, 40);
-  const a = new THREE.Vector3(46, LONG_Y + 7.1, 32);
+  const a = new THREE.Vector3(42.3, LONG_Y + 7.1, 32);
   const b = new THREE.Vector3(53.2, LONG_Y + 7.2, 40);
-  const c = new THREE.Vector3(53.2, LONG_Y + 6.8, 46);
+  const c = new THREE.Vector3(54, LONG_Y + 6.8, 46);
   addWire(group, a, b, 0.9);
   addWire(group, b, c, 1.1);
-  addWire(group, new THREE.Vector3(46, LONG_Y + 6.7, 32), new THREE.Vector3(53.2, LONG_Y + 6.8, 40), 0.8);
+  addWire(group, new THREE.Vector3(42.3, LONG_Y + 6.7, 32), new THREE.Vector3(53.2, LONG_Y + 6.8, 40), 0.8);
   box(0.7, 0.22, 6, kit.cobble, 42.4, LONG_Y + 0.12, 36);
   solid(53.1, 53.3, 39.9, 40.1);
 }

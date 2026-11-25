@@ -74,11 +74,6 @@ function caveTex() {
       ctx.fillRect(Math.random() * w, Math.random() * h, 30 + Math.random() * 90, 14 + Math.random() * 40);
     }
     noise(ctx, w, h, 1300, 0.16, 3);
-    const g = ctx.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, 'rgba(30,18,6,0.55)');
-    g.addColorStop(0.5, 'rgba(30,18,6,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
   });
 }
 
@@ -213,7 +208,7 @@ function cobbleTex() {
   });
 }
 
-// 柏油/砂石街道（带中心线和散砖）
+// 柏油/砂石街道（散砖）
 function roadTex() {
   return canvasTex(512, 512, (ctx, w, h) => {
     ctx.fillStyle = '#a89066';
@@ -222,8 +217,6 @@ function roadTex() {
       ctx.fillStyle = `rgba(${130 + Math.random() * 60 | 0},${108 + Math.random() * 50 | 0},${70 + Math.random() * 40 | 0},0.4)`;
       ctx.fillRect(Math.random() * w, Math.random() * h, 20 + Math.random() * 90, 10 + Math.random() * 40);
     }
-    ctx.fillStyle = 'rgba(196,176,138,0.5)';
-    for (let y = 8; y < h; y += 64) ctx.fillRect(w * 0.5 - 6, y, 12, 34);
     noise(ctx, w, h, 900, 0.08, 2);
   });
 }
@@ -376,7 +369,7 @@ function fragileTex() {
   });
 }
 
-// 沥青街道（A 大）：深灰砂石 + 虚线
+// 沥青街道（A 大）：深灰砂石
 function asphaltTex() {
   return canvasTex(512, 512, (ctx, w, h) => {
     ctx.fillStyle = '#8a8680';
@@ -385,8 +378,6 @@ function asphaltTex() {
       ctx.fillStyle = `rgba(${90 + Math.random() * 50 | 0},${88 + Math.random() * 46 | 0},${80 + Math.random() * 40 | 0},0.45)`;
       ctx.fillRect(Math.random() * w, Math.random() * h, 12 + Math.random() * 70, 8 + Math.random() * 36);
     }
-    ctx.fillStyle = 'rgba(230,224,210,0.7)';
-    for (let y = 10; y < h; y += 72) ctx.fillRect(w * 0.5 - 5, y, 10, 36);
     noise(ctx, w, h, 1100, 0.08, 2);
   });
 }
@@ -639,7 +630,7 @@ export function createDust2Kit() {
   const cross = new THREE.MeshStandardMaterial({
     map: pharmacyCrossTex(), transparent: true, roughness: 0.7, metalness: 0.05,
   });
-  return {
+  const kit = {
     sand,
     cobble,
     road,
@@ -685,4 +676,12 @@ export function createDust2Kit() {
     lampGlow: new THREE.MeshStandardMaterial({ color: 0x120c06, emissive: 0xffb45c, emissiveIntensity: 1.6 }),
     shade: new THREE.MeshBasicMaterial({ color: 0x241606, transparent: true, opacity: 0.34 }),
   };
+  // 楼板/坡面的 UV 按米放大，默认 ClampToEdge 会把贴图拉成边缘色和条纹。
+  for (const mat of Object.values(kit)) {
+    if (mat && mat.map) {
+      mat.map.wrapS = mat.map.wrapT = THREE.RepeatWrapping;
+      mat.map.needsUpdate = true;
+    }
+  }
+  return kit;
 }

@@ -132,6 +132,26 @@ export function createWorldHelpers(ctx) {
     shape.lineTo(0, r.from);
     shape.closePath();
     const geo = new THREE.ExtrudeGeometry(shape, { depth: width, bevelEnabled: false });
+    // Extrude 的侧面 UV 用 (x,y) 映射，宽面会被拉成条纹；顶面改按 (x,z) 投影。
+    const rampUV = UV_PER_M;
+    const pos = geo.attributes.position;
+    const uv = geo.attributes.uv;
+    const index = geo.index;
+    const triCount = index ? index.count / 3 : pos.count / 3;
+    const va = new THREE.Vector3(), vb = new THREE.Vector3(), vc = new THREE.Vector3();
+    const ab = new THREE.Vector3(), ac = new THREE.Vector3(), nrm = new THREE.Vector3();
+    for (let t = 0; t < triCount; t++) {
+      const ia = index ? index.getX(t * 3) : t * 3;
+      const ib = index ? index.getX(t * 3 + 1) : t * 3 + 1;
+      const ic = index ? index.getX(t * 3 + 2) : t * 3 + 2;
+      va.fromBufferAttribute(pos, ia); vb.fromBufferAttribute(pos, ib); vc.fromBufferAttribute(pos, ic);
+      ab.subVectors(vb, va); ac.subVectors(vc, va); nrm.crossVectors(ab, ac).normalize();
+      const avgY = (va.y + vb.y + vc.y) / 3;
+      if (Math.abs(nrm.y) > 0.2 && avgY > VOID_Y + 0.5) {
+        for (const i of [ia, ib, ic]) uv.setXY(i, pos.getX(i) * rampUV, pos.getZ(i) * rampUV);
+      }
+    }
+    uv.needsUpdate = true;
     const mesh = new THREE.Mesh(geo, mat);
     if (along === 'x') {
       if (r.dir === 'x') mesh.position.set(r.x0, 0, r.z0);

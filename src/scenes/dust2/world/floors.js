@@ -71,7 +71,7 @@ export function buildFloors(ctx) {
   }
 
   for (const m of MASS) {
-    const top = maxTopNear(FLOORS, m.x0, m.x1, m.z0, m.z1) + WALL_H;
+    const top = m.top ?? maxTopNear(FLOORS, m.x0, m.x1, m.z0, m.z1) + WALL_H;
     volume(m.x0, m.x1, VOID_Y, top, m.z0, m.z1, kit.mass);
     solid(m.x0, m.x1, m.z0, m.z1);
   }

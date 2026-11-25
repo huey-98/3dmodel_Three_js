@@ -26,8 +26,8 @@ function halfClosedDoor(ctx, fixed, a0, a1, into, sill = 0, mat) {
   const { kit, box, solid } = ctx;
   const leafMat = mat || kit.metalDoor;
   const th = 0.3;
-  box(0.7, DOOR_H + 0.9, 0.9, kit.mass, a0 - 0.35, sill + (DOOR_H + 0.9) / 2, fixed);
-  box(0.7, DOOR_H + 0.9, 0.9, kit.mass, a1 + 0.35, sill + (DOOR_H + 0.9) / 2, fixed);
+  box(0.7, DOOR_H + 0.9, 0.9, kit.mass, a0 - 0.37, sill + (DOOR_H + 0.9) / 2, fixed);
+  box(0.7, DOOR_H + 0.9, 0.9, kit.mass, a1 + 0.37, sill + (DOOR_H + 0.9) / 2, fixed);
   box(a1 - a0 + 1.4, 0.6, 0.9, kit.mass, (a0 + a1) / 2, sill + DOOR_H + 0.8, fixed);
   const mid = (a0 + a1) / 2;
   box(a1 - mid, DOOR_H, th, leafMat, (mid + a1) / 2, sill + DOOR_H / 2, fixed);

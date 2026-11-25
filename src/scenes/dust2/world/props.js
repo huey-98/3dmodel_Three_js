@@ -48,7 +48,7 @@ export function buildProps(ctx) {
   addContainer(ctx, 34, 72, ROAD_Y, 0.1);
   crate(1.6, 8, 80, T_Y);
   crate(1.2, 10.2, 80, T_Y);
-  crate(1.2, 8, 82.2, T_Y + 1.6);
+  crate(1.2, 8, 80, T_Y + 1.6);
 
   for (const [x, z, y] of PALMS) addPalm(ctx, x, z, y);
   for (const [x, z, y] of BARRELS) {
@@ -68,8 +68,8 @@ export function buildProps(ctx) {
       box(0.16, 0.5, 0.16, kit.mass, lp.x, lp.y + 0.42, lp.z);
     }
   }
-  addFlag(ctx, 0, 82, T_Y + 0.2, 0xb0352a);
-  addFlag(ctx, 12, 22, CT_Y + 0.2, 0x3a6ea8);
+  addFlag(ctx, 0, 82, T_Y, 0xb0352a);
+  addFlag(ctx, 12, 22, CT_Y, 0x3a6ea8);
 
   box(0.18, 6.4, 0.18, kit.mass, 7.2, MID_Y + 3.2, 48);
   box(0.5, 0.12, 1.6, kit.mass, 7.2, MID_Y + 6.5, 48);
@@ -119,7 +119,8 @@ function addContainer(ctx, x, z, y, yaw) {
   body.rotation.y = yaw;
   body.castShadow = true; body.receiveShadow = true;
   group.add(body);
-  solid(x - 3.2, x + 3.2, z - 1.4, z + 1.4);
+  const c = Math.abs(Math.cos(yaw)), s = Math.abs(Math.sin(yaw));
+  solid(x - (1.2 * c + 3.1 * s), x + (1.2 * c + 3.1 * s), z - (1.2 * s + 3.1 * c), z + (1.2 * s + 3.1 * c));
 }
 
 function addCar(ctx, x, z, y, yaw) {
@@ -139,7 +140,10 @@ function addCar(ctx, x, z, y, yaw) {
   }
   car.position.set(x, y, z); car.rotation.y = yaw; group.add(car);
   car.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  solid(x - 1.1, x + 1.1, z - 2.4, z + 2.4);
+  const c = Math.abs(Math.cos(yaw)), s = Math.abs(Math.sin(yaw));
+  const hx = 0.95 * c + 2.2 * s;
+  const hz = 0.95 * s + 2.2 * c;
+  solid(x - hx, x + hx, z - hz, z + hz);
 }
 
 function addPalm(ctx, x, z, y) {
@@ -165,7 +169,7 @@ function addPalm(ctx, x, z, y) {
     pivot.add(frond); crown.add(pivot);
   }
   const nut = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), kit.trunk);
-  nut.position.y = ty - 0.1; crown.add(nut); palm.add(crown);
+  nut.position.y = -0.1; crown.add(nut); palm.add(crown);
   group.add(palm);
   animated.push({ kind: 'palm', obj: crown, seed: Math.random() * Math.PI * 2 });
   solid(x - 0.4, x + 0.4, z - 0.4, z + 0.4);

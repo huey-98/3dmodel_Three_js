@@ -19,7 +19,7 @@ function midDoorsFrame(ctx) {
   box(6.4, 5.6, 0.7, kit.sand, 7.15, y0 + 2.7, z);
   box(16.4, 0.55, 0.95, kit.mass, 0, y0 + 5.15, z);
   box(16.8, 0.22, 1.15, kit.beam, 0, y0 + 5.52, z);
-  volume(-4.2, 4.2, y0 + 4.35, y0 + 5.05, z - 0.45, z + 0.45, kit.sand);
+  volume(-4.2, 4.2, y0 + 4.35, y0 + 5.05, z - 0.42, z + 0.42, kit.sand);
   box(0.55, 4.8, 0.55, kit.mass, -4.35, y0 + 2.4, z);
   box(0.55, 4.8, 0.55, kit.mass, 4.35, y0 + 2.4, z);
   box(0.22, 0.7, 10.6, kit.mass, 0, y0 + 0.12, 25.55);

@@ -1,6 +1,6 @@
 // A 小（Short）：赭黄转角塔、Short Stairs、Lower Tunnels 拱廊。对照 CS2 从院子北望石阶。
 import * as THREE from 'three';
-import { A_SMALL_Y, A_PLAT_Y } from '../layout.js';
+import { A_SMALL_Y, A_PLAT_Y, CT_Y, SLAB } from '../layout.js';
 
 export function buildShort(ctx) {
   cornerTower(ctx);
@@ -11,7 +11,7 @@ export function buildShort(ctx) {
 }
 
 function cornerTower(ctx) {
-  const { kit, box, volume } = ctx;
+  const { kit, box, volume, solid } = ctx;
   const y0 = A_SMALL_Y;
   const x0 = 16.4;
   const x1 = 22.2;
@@ -22,6 +22,9 @@ function cornerTower(ctx) {
   const h = 8.4;
 
   volume(x0, x1, y0, y0 + h, z0, z1, kit.ochre);
+  // 补角楼与 Lower Tunnels 之间、A 小楼板下的缝，防止走进去坠入虚空
+  volume(14.6, 16.4, CT_Y, CT_Y + SLAB, 24.2, 26.0, kit.ochre);
+  solid(14.6, 16.4, 24.2, 26.0);
   box((x1 - x0) + 0.22, 0.28, (z1 - z0) + 0.22, kit.ochre, cx, y0 + h + 0.12, cz);
   box((x1 - x0) + 0.08, 0.16, (z1 - z0) + 0.08, kit.mass, cx, y0 + h + 0.34, cz);
 
@@ -43,7 +46,7 @@ function cornerTower(ctx) {
   volume(17.2, 21.6, y0 + h, y0 + h + 1.7, 24.4, 27.4, kit.ochre);
   box(4.6, 0.22, 3.2, kit.mass, 19.4, y0 + h + 1.82, 25.9);
 
-  box(0.22, 5.6, 8.4, kit.ochre, 22.08, A_PLAT_Y + 2.9, 20.2);
+  box(0.22, 5.6, 8.4, kit.ochre, 22.06, A_PLAT_Y + 2.9, 20.2);
   box(0.28, 0.22, 8.5, kit.ochre, 22.1, A_PLAT_Y + 5.8, 20.2);
 }
 
@@ -121,7 +124,7 @@ function shortDressing(ctx) {
   box(0.16, 6.8, 0.16, kit.iron, 13.2, y0 + 3.4, 39.4);
   box(0.55, 0.12, 1.4, kit.iron, 13.2, y0 + 6.9, 39.4);
   addWire(group, new THREE.Vector3(13.2, y0 + 6.75, 39.4), new THREE.Vector3(22.1, y0 + 8.6, 28.4), 1.1);
-  addWire(group, new THREE.Vector3(13.2, y0 + 6.55, 39.4), new THREE.Vector3(25.6, A_PLAT_Y + 5.4, 20.5), 1.4);
+  addWire(group, new THREE.Vector3(13.2, y0 + 6.55, 39.4), new THREE.Vector3(22.2, A_PLAT_Y + 5.4, 20.5), 1.4);
   addWire(group, new THREE.Vector3(11.2, y0 + 6.2, 35.8), new THREE.Vector3(13.2, y0 + 6.75, 39.4), 0.5);
 
 }
