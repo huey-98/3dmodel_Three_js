@@ -2,6 +2,11 @@ import * as THREE from 'three';
 
 // 第一人称切换。进入时记下轨道镜头相对目标的偏移，退出时按当前目标还原。
 const PITCH_LIMIT = Math.PI / 2 - 0.02;
+// 指针锁定切换（按 V、点画面、ESC、窗口失焦）前后，浏览器会补发一条 movementX/Y 很大的 mousemove。
+// 这条被当成正常转向消费时，视线会在一帧内甩几十到上百度，看着就像视角瞬移。
+// 处理：切换后开一个宽限窗口整条丢弃；窗口外单条位移再夹到上限，防止残留跳变。
+const WARP_GRACE_MS = 90;
+const WARP_STEP_PX = 110;
 
 export function createFirstPersonView({ camera, domElement, controls, subject, getLookScale, getFov }) {
   let active = false;
@@ -9,6 +14,8 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
   let pitch = 0;
   let lastX = null;
   let lastY = null;
+  let graceUntil = 0;
+  let lookLocked = false;
   const savedOffset = new THREE.Vector3();
   const look = new THREE.Vector3();
   const facing = new THREE.Vector3();
@@ -89,6 +96,21 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     clampPitch();
   }
 
+  // 指针跳变防护：切换后的宽限窗口内整条 mousemove 丢弃，坐标基准也重新取。
+  function armWarpGrace() {
+    graceUntil = performance.now() + WARP_GRACE_MS;
+    lastX = null;
+    lastY = null;
+  }
+
+  function clampStep(v) {
+    return v > WARP_STEP_PX ? WARP_STEP_PX : v < -WARP_STEP_PX ? -WARP_STEP_PX : v;
+  }
+
+  function stepValue(v) {
+    return Number.isFinite(v) ? clampStep(v) : 0;
+  }
+
   function lookScale() {
     const value = getLookScale ? getLookScale() : 1;
     return Number.isFinite(value) && value > 0 ? value : 1;
@@ -101,8 +123,17 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
 
   function onMouseMove(event) {
     if (!active) return;
-    if (document.pointerLockElement === domElement) {
-      applyLookDelta(event.movementX, event.movementY);
+    if (performance.now() < graceUntil) return;
+    const locked = document.pointerLockElement === domElement;
+    // 锁定状态一变，上一条留下的基准坐标就不可比了：这条只用来重建基准。
+    if (locked !== lookLocked) {
+      lookLocked = locked;
+      lastX = null;
+      lastY = null;
+      return;
+    }
+    if (locked) {
+      applyLookDelta(stepValue(event.movementX), stepValue(event.movementY));
       return;
     }
     if (event.target !== domElement) {
@@ -119,7 +150,8 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     const dy = event.clientY - lastY;
     lastX = event.clientX;
     lastY = event.clientY;
-    if (Math.abs(dx) > 150 || Math.abs(dy) > 150) return;
+    // 未锁定时光标可能被系统复位（切窗口、跨屏幕边缘），超出一次正常移动的幅度就不算转向。
+    if (Math.abs(dx) > WARP_STEP_PX || Math.abs(dy) > WARP_STEP_PX) return;
     applyLookDelta(dx, dy);
   }
 
@@ -142,9 +174,14 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     if (active && document.pointerLockElement !== domElement) requestLock();
   });
   document.addEventListener('pointerlockchange', () => {
-    lastX = null;
-    lastY = null;
+    armWarpGrace();
     syncCursor();
+  });
+  document.addEventListener('pointerlockerror', armWarpGrace);
+  // 失焦/切标签页时浏览器会解除锁定并把光标复位，回来的第一下往往是天价位移。
+  addEventListener('blur', armWarpGrace);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) armWarpGrace();
   });
 
   addEventListener('keydown', (event) => {
@@ -207,8 +244,8 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     controls.enabled = false;
     setSubjectVisible(false);
     crosshair.style.display = 'block';
-    lastX = null;
-    lastY = null;
+    armWarpGrace();
+    lookLocked = document.pointerLockElement === domElement;
     syncCursor();
     requestLock();
   }
@@ -219,8 +256,8 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     controls.enabled = true;
     setSubjectVisible(true);
     crosshair.style.display = 'none';
-    lastX = null;
-    lastY = null;
+    armWarpGrace();
+    lookLocked = false;
     camera.up.set(0, 1, 0);
     if (getFov) {
       camera.fov = savedFov;
