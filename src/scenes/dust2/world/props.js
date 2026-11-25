@@ -1,6 +1,6 @@
 // 道具层：CS2 点位掩体。箱堆/车/集装箱/沙袋/脚手架/灯火/旗帜/包点喷图。
 import * as THREE from 'three';
-import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y, GOOSE_Y } from '../layout.js';
+import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, B1_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y, GOOSE_Y } from '../layout.js';
 
 const PALMS = [
   [6, 80, T_Y], [-34, 70, GARDEN_Y],
@@ -8,10 +8,12 @@ const PALMS = [
 ];
 const BARRELS = [
   [-30, 8, B_Y], [48, 36, LONG_Y], [38, 18, A_PLAT_Y], [12, 10, CT_Y],
-  [-36, 44, B2_Y],
+  [-36, 44, B2_Y], [-24, 30.6, B1_Y], [-25.2, 31.2, B1_Y],
 ];
 const LAMPS = [
   { x: -35, y: 5.0, z: 38 },
+  { x: -21, y: 2.55, z: 33 },          // B1 顶板下吊灯（顶板底 2.8）
+  { x: -25.5, y: 2.55, z: 37.5 },
   { x: -4, y: 3.9, z: 28, g: MID_Y },
   { x: 18, y: 2.4, z: 18, g: CT_Y },
   { x: -28, y: 5.4, z: 10, g: B_Y },
@@ -35,6 +37,11 @@ export function buildProps(ctx) {
   crate(1.2, -30, 7, B_Y);
   addCar(ctx, -20, 10, B_Y, 0.5);
   woodFence(ctx, -18, 18, B_Y, 6);
+
+  // B1 底层掩体：从中门沿通道望进去有东西读深度，靠旋转楼梯一侧留出通路
+  crate(1.4, -19.4, 38.6, B1_Y);
+  crate(1.1, -20.9, 38.9, B1_Y);
+  box(0.3, 2.2, 0.3, kit.beam, -26.6, B1_Y + 1.1, 29.2);
 
   box(0.3, 2.6, 0.3, kit.beam, -13.4, CT_Y + 1.3, 8.2);
   box(0.3, 2.6, 0.3, kit.beam, -11.2, CT_Y + 1.3, 8.2);

@@ -42,19 +42,41 @@ function xbox(ctx) {
   crate(0.95, 9.05, 30.4, MID_Y + 1.42);
 }
 
+// B1 入口原来被一张 recess 拱形面片加一块 0.8 米厚的近黑实体堵死，站在中门只看得见一个黑方块。
+// 改成真正的下行通道：拱肩只填拱上方墙角、洞内贴石砌内衬和壁灯，顶板走 CEILS，视线一路到 B1 底层。
 function lowerTunnelsMouth(ctx) {
-  const { kit, box, group, archPane, darkOpening } = ctx;
-  const face = -10.08;
-  const y0 = MID_N_Y;
+  const { kit, box, volume, group, archSpandrel } = ctx;
+  const face = -10.08;      // 洞口立面（中路西墙外皮）
+  const back = -16.05;      // 通道内接 B1 地面
+  const y0 = MID_N_Y;       // 中路北段标高
+  const head = y0 + 3.8;    // 洞内净空顶（与 CEILS 的通道顶板齐平）
+  const zA = 27.98, zB = 36.02;  // 通道内侧
+
   box(0.42, 4.6, 1.1, kit.sand, face, y0 + 2.3, 27.55);
   box(0.42, 4.6, 1.1, kit.sand, face, y0 + 2.3, 36.45);
   box(0.5, 0.55, 9.4, kit.sand, face, y0 + 4.55, 32);
-  darkOpening(face - 0.4, 32, 0.8, 7.6, 3.6, y0);
-  const rec = archPane(7.4, 3.7, kit.recess);
-  rec.position.set(face + 0.02, y0, 32);
-  rec.rotation.y = Math.PI / 2;
-  group.add(rec);
-  box(0.22, 0.18, 7.8, kit.mass, face + 0.12, y0 + 3.85, 32);
+
+  // 拱肩：拱以内留空，只填拱上方的墙角，从洞口直接看进通道。
+  const sp = archSpandrel(7.4, 4.0, 0.42, kit.sand);
+  sp.position.set(face, y0, 32);
+  sp.rotation.y = Math.PI / 2;
+  group.add(sp);
+
+  // 通道内衬：两侧石壁与洞口过梁，替掉原来的黑色填充体
+  volume(back, face + 0.42, y0 - 0.6, head, zA, zA + 0.2, kit.stone);
+  volume(back, face + 0.42, y0 - 0.6, head, zB - 0.2, zB, kit.stone);
+  box(0.3, 0.34, 7.9, kit.beam, face + 0.2, head + 0.15, 32);
+
+  // 两盏壁灯贴通道南壁（内壁面 z=28.18）：洞口一盏、中段一盏，里面看得见层次而不是剪影
+  for (const lx of [-11.6, -14.8]) {
+    box(0.12, 0.5, 0.12, kit.iron, lx, head - 1.0, 28.42);
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.26), kit.lampGlow);
+    lamp.position.set(lx, head - 1.35, 28.56);
+    group.add(lamp);
+    const light = new THREE.PointLight(0xffb060, 14, 10, 1.8);
+    light.position.set(lx, head - 1.5, 28.9);
+    group.add(light);
+  }
 }
 
 function ctMidPlaza(ctx) {
