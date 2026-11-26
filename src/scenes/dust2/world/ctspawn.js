@@ -1,7 +1,8 @@
 // 警家木构拱廊：风化灰木拱门、望板顶、棚内沙地、FRAGILE 箱堆。
-// 对照 CS2 从 A 大 / Cross 朝西看进棚内（A 小在上沿左、A 包点在上沿右）。
+// 警家是 A 侧的第一层(-1.0)：东出院门只到台壁脚下，上 A 包点必须走南侧的 Cross 坡 -> Goose ->
+// A 后巷 -> A 大。望板顶与箱堆都只做掩体和了望，不构成任何通往 A 平台的高度。
 import * as THREE from 'three';
-import { A_PLAT_Y, CT_Y } from '../layout.js';
+import { CT_Y } from '../layout.js';
 
 const FACE_X = 21.05;
 const HALL_X0 = 10.4;
@@ -15,12 +16,12 @@ export function buildCtSpawn(ctx) {
   hallInterior(ctx);
   barredWindows(ctx);
   hangingLamps(ctx);
-  boostCrates(ctx);
+  yardCrates(ctx);
   interiorDressing(ctx);
 }
 
 function eastFacade(ctx) {
-  const { kit, box, solid, platform, group } = ctx;
+  const { kit, box, solid, group } = ctx;
   const y0 = CT_Y;
   const zMid = (HALL_Z0 + HALL_Z1) / 2;
   const openW = HALL_Z1 - HALL_Z0;
@@ -32,7 +33,7 @@ function eastFacade(ctx) {
   box(0.55, 2.9, 0.7, kit.weathered, FACE_X + 0.15, y0 + 1.45, HALL_Z1 + 0.28);
 
   box(0.62, headerTop - headerBot, openW + 1.5, kit.weathered, FACE_X, (headerBot + headerTop) / 2, zMid);
-  platform(FACE_X - 0.22, FACE_X + 0.38, HALL_Z0 - 0.3, HALL_Z1 + 0.5, headerTop, headerBot);
+  // 望板顶只作檐口：不登记 platform，警家没有任何可站的台壁可通往第二层的 A 包点
   box(0.78, 0.24, openW + 1.7, kit.weathered, FACE_X + 0.04, headerTop + 0.08, zMid);
   box(0.4, 0.12, openW + 1.85, kit.mass, FACE_X + 0.12, headerTop + 0.22, zMid);
 
@@ -136,27 +137,22 @@ function hangingLamps(ctx) {
   }
 }
 
-function rampY(x) {
-  const t = Math.min(1, Math.max(0, (x - 20) / 8));
-  return CT_Y + t * (A_PLAT_Y - CT_Y);
-}
-
-function boostCrates(ctx) {
+function yardCrates(ctx) {
   const { kit, box, platform, group } = ctx;
+  // 东院的三层白箱堆：底面平铺在 -1.0 的警家地面上，
+  // 最高面 2.68，距台壁顶 2.7 > 跳高 1.54，所以它只是掩体与了望台，不是上 A 的台阶。
   function put(size, x, z, lift = 0) {
-    const y = rampY(x) + lift;
+    const y = CT_Y + lift;
     box(size, size, size, kit.fragile, x, y + size / 2, z);
     platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + size, y);
   }
-  put(1.55, 22.6, 5.28);
-  put(1.5, 24.15, 5.48);
-  put(1.42, 22.95, 6.62);
-  put(1.32, 24.45, 6.55);
-  put(1.22, 23.4, 5.35, 1.52);
-  put(1.18, 24.35, 5.52, 1.48);
-  put(1.15, 23.05, 5.42, 1.55);
-  put(1.08, 23.7, 6.45, 1.4);
-  put(1.05, 23.55, 5.45, 2.72);
+  put(1.3, 22.4, 5.3);
+  put(1.2, 23.8, 5.1);
+  put(1.42, 22.7, 6.6);
+  put(1.18, 24.2, 6.5);
+  put(1.22, 23.2, 5.6, 1.3);
+  put(1.15, 24.1, 6.2, 1.42);
+  put(1.08, 23.6, 5.9, 2.6);
 
   const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.85), kit.grate);
   grate.rotation.x = -Math.PI / 2;
