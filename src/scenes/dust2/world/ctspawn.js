@@ -1,6 +1,6 @@
-// 警家木构拱廊：风化灰木拱门、望板顶、棚内沙地、FRAGILE 箱堆。
-// 警家是 A 侧的第一层(-1.0)：东出院门只到台壁脚下，上 A 包点必须走南侧的 Cross 坡 -> Goose ->
-// A 后巷 -> A 大。望板顶与箱堆都只做掩体和了望，不构成任何通往 A 平台的高度。
+// 警家木构拱廊：风化灰木拱门、望板顶、棚内沙地。
+// 东拱门外就是 A 后巷，同一标高（-1.0），中间没有坡、墙或隧道。
+// 望板顶只做檐口，不登记可站面。
 import * as THREE from 'three';
 import { CT_Y } from '../layout.js';
 
@@ -16,7 +16,6 @@ export function buildCtSpawn(ctx) {
   hallInterior(ctx);
   barredWindows(ctx);
   hangingLamps(ctx);
-  yardCrates(ctx);
   interiorDressing(ctx);
 }
 
@@ -33,7 +32,7 @@ function eastFacade(ctx) {
   box(0.55, 2.9, 0.7, kit.weathered, FACE_X + 0.15, y0 + 1.45, HALL_Z1 + 0.28);
 
   box(0.62, headerTop - headerBot, openW + 1.5, kit.weathered, FACE_X, (headerBot + headerTop) / 2, zMid);
-  // 望板顶只作檐口：不登记 platform，警家没有任何可站的台壁可通往第二层的 A 包点
+  // 望板顶只作檐口：不登记 platform，警家跳不上第二层的 A 包点
   box(0.78, 0.24, openW + 1.7, kit.weathered, FACE_X + 0.04, headerTop + 0.08, zMid);
   box(0.4, 0.12, openW + 1.85, kit.mass, FACE_X + 0.12, headerTop + 0.22, zMid);
 
@@ -137,35 +136,16 @@ function hangingLamps(ctx) {
   }
 }
 
-function yardCrates(ctx) {
-  const { kit, box, platform, group } = ctx;
-  // 东院的三层白箱堆：底面平铺在 -1.0 的警家地面上，
-  // 最高面 2.68，距台壁顶 2.7 > 跳高 1.54，所以它只是掩体与了望台，不是上 A 的台阶。
-  function put(size, x, z, lift = 0) {
-    const y = CT_Y + lift;
-    box(size, size, size, kit.fragile, x, y + size / 2, z);
-    platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + size, y);
-  }
-  put(1.3, 22.4, 5.3);
-  put(1.2, 23.8, 5.1);
-  put(1.42, 22.7, 6.6);
-  put(1.18, 24.2, 6.5);
-  put(1.22, 23.2, 5.6, 1.3);
-  put(1.15, 24.1, 6.2, 1.42);
-  put(1.08, 23.6, 5.9, 2.6);
-
-  const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.85), kit.grate);
-  grate.rotation.x = -Math.PI / 2;
-  grate.position.set(21.7, CT_Y + 0.03, 14.7);
-  group.add(grate);
-}
-
 function interiorDressing(ctx) {
-  const { kit, box, solid, crate } = ctx;
+  const { kit, box, solid, crate, group } = ctx;
   const y0 = CT_Y;
   crate(1.18, 13.6, 13.4, y0);
   crate(1.08, 14.75, 13.75, y0);
   crate(0.98, 13.75, 14.5, y0);
   box(0.12, 1.45, 2.2, kit.wood, 12.2, y0 + 0.8, 8.15);
   solid(12.08, 12.42, 7.15, 9.15);
+  const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.85), kit.grate);
+  grate.rotation.x = -Math.PI / 2;
+  grate.position.set(21.7, y0 + 0.03, 14.7);
+  group.add(grate);
 }

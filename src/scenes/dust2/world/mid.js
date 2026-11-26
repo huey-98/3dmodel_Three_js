@@ -27,12 +27,12 @@ function midDoorsFrame(ctx) {
 function catwalkEdge(ctx) {
   const { kit, box } = ctx;
   const y = A_SMALL_Y;
-  box(0.18, 0.22, 10.4, kit.mass, 10.08, y + 0.1, 44.6);
+  box(0.18, 0.22, 16.4, kit.mass, 10.08, y + 0.1, 47.6);
   box(0.18, 0.22, 1.6, kit.mass, 10.08, y + 0.1, 32.2);
-  for (const z of [31.6, 39.4, 43.2, 47.2]) {
+  for (const z of [31.6, 39.4, 43.2, 47.2, 51.2, 55.2]) {
     box(0.16, y - MID_Y + 0.15, 0.16, kit.timber, 10.12, (MID_Y + y) / 2, z);
   }
-  box(0.14, 0.85, 10.2, kit.weathered, 10.06, y + 0.48, 44.7);
+  box(0.14, 0.85, 16.2, kit.weathered, 10.06, y + 0.48, 47.7);
 }
 
 function xbox(ctx) {

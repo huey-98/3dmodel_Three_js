@@ -72,5 +72,4 @@ export function buildDoors(ctx) {
   box(0.4, 2.2, 5.2, kit.mass, -14.1, B_Y + 3.2, 8.5);
   archGate(-35, 24, 5.7, 4.6, 0.7, 'z', kit.cave, B2_Y);
   archGate(-36, 56, 8, 4.4, 0.7, 'z', kit.cave, GARDEN_Y);
-  archGate(48, 23, 10, 4.6, 0.7, 'z', kit.sand, LONG_Y);
 }

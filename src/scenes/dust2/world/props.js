@@ -1,13 +1,13 @@
 // 道具层：CS2 点位掩体。箱堆/车/集装箱/沙袋/脚手架/灯火/旗帜/包点喷图。
 import * as THREE from 'three';
-import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, B1_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y, GOOSE_Y } from '../layout.js';
+import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, B1_Y, MID_Y, ROAD_Y, GARDEN_Y, LONG_Y } from '../layout.js';
 
 const PALMS = [
   [6, 80, T_Y], [-34, 70, GARDEN_Y],
-  [32, 9.2, A_PLAT_Y], [37.5, 8.6, A_PLAT_Y], [42.2, 9.5, A_PLAT_Y], [29.4, 8.4, A_PLAT_Y],
+  [24.6, 18.4, A_PLAT_Y], [46, 11, A_PLAT_Y], [36, 6.2, A_PLAT_Y], [50.5, 12.4, A_PLAT_Y],
 ];
 const BARRELS = [
-  [-30, 8, B_Y], [48, 36, LONG_Y], [38, 18, A_PLAT_Y], [12, 10, CT_Y],
+  [-30, 8, B_Y], [48, 36, LONG_Y], [12, 10, CT_Y],
   [-36, 44, B2_Y], [-24, 30.6, B1_Y], [-25.2, 31.2, B1_Y],
 ];
 const LAMPS = [
@@ -17,7 +17,7 @@ const LAMPS = [
   { x: -4, y: 3.9, z: 28, g: MID_Y },
   { x: 18, y: 2.4, z: 18, g: CT_Y },
   { x: -28, y: 5.4, z: 10, g: B_Y },
-  { x: 40, y: 5.4, z: 10, g: A_PLAT_Y },
+  { x: 40, y: A_PLAT_Y + 2.4, z: 10, g: A_PLAT_Y },
   { x: 51, y: 4.4, z: 40, g: LONG_Y },
   { x: -30, y: 3.4, z: 62, g: GARDEN_Y },
 ];
@@ -27,7 +27,7 @@ export function buildProps(ctx) {
 
   const letterGeo = new THREE.PlaneGeometry(7, 7);
   const decalA = new THREE.Mesh(letterGeo, kit.letter);
-  decalA.rotation.x = -Math.PI / 2; decalA.position.set(36, A_PLAT_Y + 0.03, 14); group.add(decalA);
+  decalA.rotation.x = -Math.PI / 2; decalA.position.set(48, A_PLAT_Y + 0.03, 12); group.add(decalA);
   const decalB = new THREE.Mesh(letterGeo, kit.letterB);
   decalB.rotation.x = -Math.PI / 2; decalB.position.set(-24, B_Y + 0.03, 14); group.add(decalB);
 
@@ -49,7 +49,6 @@ export function buildProps(ctx) {
   platform(-13.6, -11.0, 7.8, 9.2, CT_Y + 1.78, CT_Y);
 
   aSiteCrates(ctx);
-  gooseCrates(ctx);
   addCar(ctx, 48, 34, LONG_Y, 0.15);
   crate(1.5, 45.2, 66, PIT_Y);
   addContainer(ctx, 34, 72, ROAD_Y, 0.1);
@@ -89,22 +88,11 @@ function aSiteCrates(ctx) {
     box(size, size, size, kit.aCrate, x, y + lift + size / 2, z);
     platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + lift + size, y + lift);
   }
-  put(1.55, 40.4, 18.2);
-  put(1.55, 42.1, 18.4);
-  put(1.2, 41.2, 16.8);
-  put(1.15, 40.6, 18.2, 1.55);
-  put(1.35, 38.6, 17.6);
-}
-
-function gooseCrates(ctx) {
-  const { kit, box, platform } = ctx;
-  const y = GOOSE_Y;
-  box(1.3, 1.3, 1.3, kit.crate, 30.2, y + 0.65, 21.2);
-  platform(29.55, 30.85, 20.55, 21.85, y + 1.3, y);
-  box(1.1, 1.1, 1.1, kit.crate, 31.5, y + 0.55, 21.0);
-  platform(30.95, 32.05, 20.45, 21.55, y + 1.1, y);
-  box(1.1, 1.1, 1.1, kit.crate, 30.4, y + 1.85, 21.15);
-  platform(29.85, 30.95, 20.6, 21.7, y + 2.4, y + 1.3);
+  put(1.55, 46.2, 12.4);
+  put(1.55, 47.8, 13.1);
+  put(1.2, 46.8, 13.6);
+  put(1.15, 46.4, 12.5, 1.55);
+  put(1.35, 48.6, 11.6);
 }
 
 function sandbagStack(ctx, x, z, y) {

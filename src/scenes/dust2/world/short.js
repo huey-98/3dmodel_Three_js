@@ -4,6 +4,7 @@ import { A_SMALL_Y, A_PLAT_Y } from '../layout.js';
 
 export function buildShort(ctx) {
   cornerTower(ctx);
+  passageWestBuilding(ctx);
   stairCheeks(ctx);
   lowerTunnelsArcade(ctx);
   awningHouse(ctx);
@@ -45,6 +46,21 @@ function cornerTower(ctx) {
 
   box(0.22, 5.6, 8.4, kit.ochre, 22.06, A_PLAT_Y + 2.9, 20.2);
   box(0.28, 0.22, 8.5, kit.ochre, 22.1, A_PLAT_Y + 5.8, 20.2);
+}
+
+// 通道西侧的实楼：A 大的反方向走不过去。顶面不接到猫道高度，A 小道仍能绕到楼梯南口。
+function passageWestBuilding(ctx) {
+  const { kit, box, solid } = ctx;
+  const x0 = 15.2;
+  const x1 = 21.85;
+  const z0 = 16.2;
+  const z1 = 24.6;
+  const y0 = -1;
+  const y1 = 11.2;
+  box(x1 - x0, y1 - y0, z1 - z0, kit.ochre, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  box(x1 - x0 + 0.16, 0.28, z1 - z0 + 0.12, kit.mass, (x0 + x1) / 2, y1 + 0.1, (z0 + z1) / 2);
+  solid(x0, x1, z0, z1);
+  solid(16.5, 21.85, 24.2, 32.6, 3.3, 12);
 }
 
 function stairCheeks(ctx) {

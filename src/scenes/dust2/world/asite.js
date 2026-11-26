@@ -1,14 +1,14 @@
-// A 包点立面：药房、宫殿、Goose 通道、A 后巷东口、A 大路沿。对照 CS2 从 A 大北望包点。
-// 药房整体在 z[35,42]：它北面 z[26,35] 是让出来的东西向露天通道（A 后巷），东口全宽开进 A 大。
+// A 包点立面：药房、宫殿、A 平台沿口、A 后坡旁的大箱、A 后巷南墙、A 大路沿。
+// 向南看：西侧高架通道连着 A 小楼梯和 A 平台，往东跳下去是与警家同层的 A 后巷。
 import * as THREE from 'three';
-import { A_PLAT_Y, LONG_Y, GOOSE_Y } from '../layout.js';
+import { A_PLAT_Y, LONG_Y, CT_Y } from '../layout.js';
 
 export function buildASite(ctx) {
   pharmacyFacade(ctx);
   laneFacade(ctx);
   palaceBuilding(ctx);
-  gooseTunnel(ctx);
-  retainingAndDoor(ctx);
+  platformEdge(ctx);
+  bigBoxes(ctx);
   longStreetDressing(ctx);
 }
 
@@ -72,16 +72,13 @@ function pharmacyFacade(ctx) {
   box(1.6, 1.8, 1.6, kit.sand, 39, y0 + 8.2, 38.6);
 }
 
-// A 后巷：z[26,35] 的东西向露天通道。这里砌它的南立面、东口券梁与东段掩体。
+// A 后巷南墙：药房北立面。后巷与警家同在 -1.0，东侧接到后坡低端。
 function laneFacade(ctx) {
-  const { kit, box, volume, solid, group, crate } = ctx;
-  const y0 = LONG_Y;
+  const { kit, box, group, crate } = ctx;
+  const y0 = CT_Y;
   const face = 35.0;
 
-  // 东口：北券腿是 x[36,42.4] z[22,26] 楼体，南券腿是药房 NW 角，头顶一道 3.0-3.8 的石过梁
-  volume(41.66, 42.4, y0 + 3.0, y0 + 3.8, 25.9, 35.3, kit.sand);
-  solid(41.66, 42.4, 25.9, 35.3, y0 + 3.0, y0 + 3.8);
-  box(0.9, 0.16, 9.0, kit.mass, 41.65, y0 + 0.08, 30.5);
+  box(0.9, 0.16, 6.2, kit.mass, 41.7, y0 + 0.08, 31.2);
 
   // 南立面：MASS x[26,41.6] z[35,42]（顶 6.8）背面贴抹灰墙、连排窗与后门
   // 面板外挑 0.06，避免与 MASS 的 z=35 面共面闪烁
@@ -109,16 +106,11 @@ function laneFacade(ctx) {
     group.add(light);
   }
 
-  // 北墙（通道以北的楼体南面 z=26）压一条石檐与落水管
-  box(6.4, 0.34, 0.5, kit.mass, 39.1, y0 + 3.6, 26.16);
-  box(0.22, 3.2, 0.22, kit.iron, 41.2, y0 + 1.7, 26.36);
-  box(0.24, 0.3, 9.0, kit.mass, 33.8, y0 + 0.15, 26.16);
-
-  // 东段掩体：从 A 大口进来不至于被一路射到 Goose
-  crate(1.28, 38.3, 30.3, y0);
-  crate(1.18, 39.5, 30.9, y0);
-  crate(1.12, 38.6, 31.5, y0);
-  crate(1.0, 38.9, 30.8, y0 + 1.28);
+  // 掩体贴药房北墙，让开后坡低端到后巷中段的走道
+  crate(1.28, 39.4, 32.6, y0);
+  crate(1.18, 40.6, 33.1, y0);
+  crate(1.12, 39.7, 33.6, y0);
+  crate(1.0, 40.0, 33.0, y0 + 1.28);
 
   const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.7), kit.grate);
   grate.rotation.x = -Math.PI / 2;
@@ -159,35 +151,28 @@ function palaceBuilding(ctx) {
   box(0.4, 2.2, 0.4, kit.plaster, 36, y0 + 8.8, 5.4);
 }
 
-function gooseTunnel(ctx) {
-  const { kit, box, volume, solid, group } = ctx;
-  volume(26.1, 35.9, 2.55, 2.72, 16.1, 21.9, kit.mass);
-  box(0.45, 2.0, 6.0, kit.mass, 35.85, GOOSE_Y + 1.0, 19);
-  solid(35.6, 36.1, 16, 22, GOOSE_Y, GOOSE_Y + 2.0);
-  box(9.6, 0.22, 0.45, kit.mass, 31, GOOSE_Y + 0.12, 21.85);
-  // 原来这里填了一块 recess 实体，等于把隧道堵成黑盒子；警家->后巷要走这里，衬成真的通道
-  volume(26.2, 35.8, GOOSE_Y, GOOSE_Y + 1.7, 16.15, 16.6, kit.stone);
-  for (const lx of [28.6, 33.4]) {
-    box(0.12, 0.45, 0.12, kit.iron, lx, GOOSE_Y + 1.45, 16.72);
-    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.28, 0.24), kit.lampGlow);
-    lamp.position.set(lx, GOOSE_Y + 1.15, 16.86);
-    group.add(lamp);
-    const light = new THREE.PointLight(0xffb060, 9, 8, 1.8);
-    light.position.set(lx, GOOSE_Y + 1.2, 17.4);
-    group.add(light);
-  }
-  box(0.55, 2.5, 0.55, kit.beam, 28.0, GOOSE_Y + 1.25, 22.05);
-  box(0.55, 2.5, 0.55, kit.beam, 34.0, GOOSE_Y + 1.25, 22.05);
-  box(6.6, 0.32, 0.55, kit.beam, 31, GOOSE_Y + 2.45, 22.05);
-  const rec = ctx.archPane(6.2, 2.5, kit.recess);
-  rec.position.set(31, GOOSE_Y, 22.12);
-  rec.castShadow = true;
-  group.add(rec);
+// 平台北沿矮墙。东沿朝 A 大敞开，从这里跳进后巷。
+function platformEdge(ctx) {
+  const { kit, box, platform } = ctx;
+  const y = A_PLAT_Y;
+  box(8, 0.28, 0.22, kit.plaster, 26, y + 0.14, 16.12);
+  platform(22, 30, 16.0, 16.24, y + 0.28, y);
 }
 
-function retainingAndDoor(ctx) {
-  const { kit, box } = ctx;
-  box(6.2, 0.28, 0.7, kit.plaster, 39, A_PLAT_Y + 0.12, 21.85);
+// A 大箱：后坡南边的混凝土台上两只蓝桶，顶面可站。
+function bigBoxes(ctx) {
+  const { kit, box, platform, group } = ctx;
+  const pad = CT_Y + 0.9;
+  box(3.6, 0.9, 2.6, kit.cobble, 34.6, CT_Y + 0.45, 27.2);
+  platform(32.8, 36.4, 25.9, 28.5, pad, CT_Y);
+  for (const [x, z] of [[33.7, 26.9], [35.4, 27.5]]) {
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.66, 1.28, 14), kit.blue);
+    barrel.position.set(x, pad + 0.64, z);
+    barrel.castShadow = true;
+    barrel.receiveShadow = true;
+    group.add(barrel);
+    platform(x - 0.62, x + 0.62, z - 0.62, z + 0.62, pad + 1.28, pad);
+  }
 }
 
 function longStreetDressing(ctx) {

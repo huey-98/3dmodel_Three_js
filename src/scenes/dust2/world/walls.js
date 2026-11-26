@@ -38,8 +38,8 @@ function facadeDetails(ctx) {
   }
   blindWindow('x', 22, 46, 47.6, 4.6, 1.5, 2.0, -1);
   blindWindow('x', 30.02, 52.2, 53.8, 4.6, 1.5, 2.0, 1);
-  blindWindow('z', 56, 20.9, 22.5, 4.6, 1.5, 2.0, 1);
-  blindWindow('z', 56, 26.1, 27.7, 4.6, 1.5, 2.0, 1);
+  blindWindow('z', 62, 20.9, 22.5, 4.6, 1.5, 2.0, 1);
+  blindWindow('z', 62, 26.1, 27.7, 4.6, 1.5, 2.0, 1);
   box(0.6, 0.7, 16.2, kit.sand, -14.3, B_Y + 5.6, 13);
   for (const c of CRENELS) {
     for (let p = c.lo; p < c.hi; p += c.step) {
