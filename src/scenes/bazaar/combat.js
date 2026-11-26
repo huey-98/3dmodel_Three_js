@@ -112,9 +112,18 @@ export function createCombat({ scene, camera, domElement, world, player, setting
       path: entry.at.path || [],
       speed: tuning.speed,
       interval: tuning.interval,
+      reaction: tuning.reaction,
     });
     enemies.push(record);
     return record;
+  }
+
+  // 敌人淡出后从场景摘掉并释放几何体：干员每个实例都新建几何，材质在模块内共享。
+  function discardEnemy(e) {
+    e.group.removeFromParent();
+    e.group.traverse((obj) => {
+      if (obj.isMesh && obj.geometry) obj.geometry.dispose();
+    });
   }
 
   function beginWave(n) {
@@ -123,7 +132,7 @@ export function createCombat({ scene, camera, domElement, world, player, setting
     planStart = 0;
     queue = 0;
     tuning = waveTuning(n);
-    for (const e of enemies) e.group.removeFromParent();
+    for (const e of enemies) discardEnemy(e);
     enemies = [];
     showBanner(`第 ${n} 波`, `敌人 ${plan.length} 名`, 1.8);
     phase = 'countdown';
@@ -212,7 +221,7 @@ export function createCombat({ scene, camera, domElement, world, player, setting
 
       // 墙面要递归进 world.group 的子网格；命中盒本身是网格，递归与否都一样。
       const pick = (list) => raycaster.intersectObjects(list, true)
-        .filter((hit) => hit.object.visible && hit.distance > 0.3);
+        .filter((hit) => hit.object.visible && hit.distance > 0.05);
 
       const wallHits = pick([world.group]);
       const enemyMeshes = [];
@@ -267,7 +276,11 @@ export function createCombat({ scene, camera, domElement, world, player, setting
       }
       if (phase === 'dead') {
         timer -= dt;
-        if (timer <= 0) restartWave();
+        if (timer <= 0) {
+          restartWave();
+          return;
+        }
+        setText(overSub, `第 ${wave} 波，击杀 ${kills}　${Math.ceil(timer)} 秒后重开`);
         paintHud();
         combatFx.tickEffects(dt);
         return;
@@ -302,7 +315,11 @@ export function createCombat({ scene, camera, domElement, world, player, setting
         },
       };
       for (const e of enemies) e.update(dt, enemyApi);
-      enemies = enemies.filter((e) => e.alive || e.group.visible);
+      enemies = enemies.filter((e) => {
+        if (e.alive || e.group.visible) return true;
+        discardEnemy(e);
+        return false;
+      });
       combatFx.tickEffects(dt);
       if (hurtTimer > 0) hurtTimer = Math.max(0, hurtTimer - dt);
       if (hitMarker > 0) hitMarker = Math.max(0, hitMarker - dt);
@@ -317,20 +334,17 @@ export function createCombat({ scene, camera, domElement, world, player, setting
       if (hurtArrow.style.opacity !== hurtAlpha) hurtArrow.style.opacity = hurtAlpha;
       if (hurtTimer > 0) {
         camera.getWorldDirection(tmp);
-        const angle = Math.atan2(hurtDir.x, hurtDir.z) - Math.atan2(tmp.x, tmp.z);
+        const angle = Math.atan2(tmp.x, tmp.z) - Math.atan2(hurtDir.x, hurtDir.z);
         hurtArrow.style.transform = `rotate(${angle + Math.PI}rad)`;
       }
       paintHud();
-      if (phase === 'dead') {
-        setText(overSub, `第 ${wave} 波，击杀 ${kills}　${Math.ceil(Math.max(0, timer))} 秒后重开`);
-      }
     },
     start() {
       beginWave(1);
       over.style.display = 'none';
     },
     dispose() {
-      for (const e of enemies) e.group.removeFromParent();
+      for (const e of enemies) discardEnemy(e);
       enemies = [];
       combatFx.dispose();
       top.remove();

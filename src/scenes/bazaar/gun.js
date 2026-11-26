@@ -4,7 +4,7 @@ import {
   RIFLE_MUZZLE_Z, RIFLE_ROLL, PISTOL_MUZZLE_Z,
 } from './gun/constants.js';
 import {
-  aim, muzzle, hitPoint, hitNormal, gunMuzzle, flightDir, raycaster,
+  aim, hitPoint, hitNormal, gunMuzzle, flightDir, raycaster,
   _origin, _aim, _dir, _muzzleLocal, aimQuat,
 } from './gun/resources.js';
 import { KNIFE_POSES, sampleKnife } from './gun/knifeMotion.js';
@@ -167,17 +167,17 @@ export function createCarbine({
   function aimShot(reach) {
     camera.updateMatrixWorld();
     camera.getWorldDirection(aim);
-    muzzle.copy(camera.position).addScaledVector(aim, 0.35);
     placeViewmodel();
     const mark = weapon === 'pistol' ? pistolMuzzle : rifleMuzzle;
     mark.getWorldPosition(_muzzleLocal);
     gunMuzzle.copy(_muzzleLocal).applyMatrix4(camera.matrixWorld);
 
-    // 战斗模块接管命中判定：先打敌人命中盒，再比墙面谁更近。自由跑图没有战斗模块，退回只打场景。
+    // 命中射线从相机发出，枪口只做视觉：枪口在相机前 0.35 米，贴墙时会落进墙体，
+    // 而且距枪口 0.3 米内的近身命中会被战斗模块的过滤丢掉。
     if (onShot) {
       const result = onShot({
         weapon,
-        origin: muzzle.clone(),
+        origin: camera.position.clone(),
         direction: aim.clone(),
         reach,
         mark,
@@ -191,17 +191,17 @@ export function createCarbine({
       }
     }
 
-    raycaster.set(weapon === 'knife' ? camera.position : muzzle, aim);
+    raycaster.set(camera.position, aim);
     raycaster.far = reach;
     const hits = raycaster.intersectObject(target, true);
-    const hit = hits.find((item) => item.object.visible && item.face && item.distance > 0.2 && item.distance <= reach);
+    const hit = hits.find((item) => item.object.visible && item.face && item.distance > 0.05 && item.distance <= reach);
     if (hit) {
       hitPoint.copy(hit.point);
       hitNormal.copy(hit.face.normal).transformDirection(hit.object.matrixWorld).normalize();
       if (hitNormal.dot(aim) > 0) hitNormal.negate();
       lastImpact = { point: hitPoint, normal: hitNormal, enemy: false, killed: false };
     } else {
-      hitPoint.copy(muzzle).addScaledVector(aim, reach);
+      hitPoint.copy(camera.position).addScaledVector(aim, reach);
       lastImpact = null;
     }
     return hit;

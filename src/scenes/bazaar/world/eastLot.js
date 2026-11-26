@@ -37,7 +37,6 @@ export function buildEastLot(ctx) {
   const alcX1 = 49.5;
   const alcZ1 = lotZ1 + 0.8 + 5.3;
   barrier(blue.x1 - 0.08, alcX0, lotZ1, lotZ1 + 0.8);
-  barrier(alcX1 + 12, lotX1, lotZ1, lotZ1 + 0.8);
   barrier(alcX0 - 0.8, alcX1 + 0.8, alcZ1, alcZ1 + 0.8);
   barrier(alcX0 - 0.8, alcX0, lotZ1, alcZ1 + 0.8);
 

@@ -50,8 +50,13 @@ export function createWorldHelpers(ctx) {
     return box(x1 - x0, y1 - y0, z1 - z0, mat, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
   }
 
-  function solid(x0, x1, z0, z1) {
-    solids.push({ minX: Math.min(x0, x1), maxX: Math.max(x0, x1), minZ: Math.min(z0, z1), maxZ: Math.max(z0, z1) });
+  // 实心挡体：默认全高；给 bottom/top 时只在对应高度段挡人（悬空墙、门洞过梁、桥下通道）。
+  function solid(x0, x1, z0, z1, bottom = -Infinity, top = Infinity) {
+    solids.push({
+      minX: Math.min(x0, x1), maxX: Math.max(x0, x1),
+      minZ: Math.min(z0, z1), maxZ: Math.max(z0, z1),
+      bottom, top,
+    });
   }
 
   // 可站平台：top 是踩面，bottom 是板底（默认板厚 SLAB）。

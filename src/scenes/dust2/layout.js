@@ -162,7 +162,7 @@ export const SPAWNS = {
   ct: { x: 16, y: CT_Y, z: 12, yaw: Math.PI / 2, label: '警家' },
   a: { x: 34, y: A_PLAT_Y, z: 14, yaw: 0, label: 'A 平台' },
   asmall: { x: 19.4, y: A_SMALL_Y, z: 39.2, yaw: Math.PI, label: 'A 小' },
-  long: { x: 48, y: LONG_Y, z: 36, yaw: Math.PI, label: 'A 大' },
+  long: { x: 48, y: LONG_Y, z: 40, yaw: Math.PI, label: 'A 大' },
   pit: { x: 48, y: PIT_Y, z: 64, yaw: Math.PI, label: 'A 坑' },
 };
 

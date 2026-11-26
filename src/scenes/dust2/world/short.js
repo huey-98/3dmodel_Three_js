@@ -48,12 +48,14 @@ function cornerTower(ctx) {
 }
 
 function stairCheeks(ctx) {
-  const { kit, box, platform } = ctx;
+  const { kit, box, platform, solid } = ctx;
   const y0 = A_SMALL_Y;
   box(2.15, 2.05, 2.8, kit.weathered, 25.15, y0 + 1.02, 31.35);
   box(2.35, 0.24, 3.0, kit.weathered, 25.15, y0 + 2.12, 31.3);
   box(0.72, 1.55, 6.8, kit.weathered, 25.72, y0 + 1.72, 27.7);
   box(0.88, 0.2, 6.9, kit.weathered, 25.72, y0 + 2.55, 27.65);
+  // 东侧挡墙悬在踏步上方：只在这段高度挡人，Goose 地面可以从墙下走过。
+  solid(25.36, 26.08, 24.3, 31.1, y0 + 0.945, y0 + 2.495);
 
   platform(21.85, 22.28, 16.0, 24.2, A_PLAT_Y + 1.05, A_PLAT_Y);
   box(0.28, 1.05, 8.2, kit.ochre, 22.05, A_PLAT_Y + 0.52, 20.1);

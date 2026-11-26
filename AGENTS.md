@@ -25,6 +25,7 @@
 README.md          给人看的项目说明
 AGENTS.md          本文件：规范与文档检索
 doc/               按模块展开的实现说明
+plans/             尚未实施的修改计划（不放进 doc/）
 index.html         场景目录页
 src/shared/        跨场景代码
 src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹拆分模块，子文件夹不放 index.html）
@@ -39,7 +40,7 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 - 使用 JavaScript ESM（`package.json` 的 `"type": "module"`）。不引入 TypeScript、UI 框架或状态库。
 - 运行时依赖保持为 `three`。新增 npm 包前先确认现有 Three.js API 做不到。
 - import 写明 `.js` 后缀。共享代码用别名：`import { createWhaleMaid } from '@shared/whaleMaid.js'`。`@shared` 由 `vite.config.js` 和 `jsconfig.json` 一起指向 `src/shared`。
-- 场景只 import 自己的模块和 `@shared`。不要让 `villa`、`maid`、`bazaar` 互相引用。
+- 场景只 import 自己的模块和 `@shared`。不要让 `villa`、`maid`、`bazaar`、`dust2` 互相引用。
 
 ### 场景怎么加
 
@@ -72,10 +73,10 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 update(dt, moving, row)
 ```
 
-`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改实现，以及别墅和女仆展示页里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
+`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改实现，以及别墅、女仆展示页和炙热沙城里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
 
 ### 改完代码之后
 
 - 行为有变化时，更新上表里对应的 `doc/*.md`，让文档继续描述当前代码。
-- 只写已经实现的行为。计划中的功能不要写进 `doc/`。
+- 只写已经实现的行为。计划中的功能放在仓库根目录 `plans/`，不要写进 `doc/`。
 - 别墅开窗时先看 [doc/villa.md](doc/villa.md) 的「实现注意」：洞数据字段是 `along`，挖墙代码读的是 `at`，重叠高度上的整条墙网格会缺失。

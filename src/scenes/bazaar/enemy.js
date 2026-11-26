@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { createCtOperator, CHAR_SCALE } from './operator.js';
 import { groundAt, slideMove, lineOfSight, GRAVITY } from './physics.js';
 
-// 命中盒高度是干员局部高度乘 CHAR_SCALE，和玩家看到的身体对齐。
+// 命中盒和干员共用局部坐标系，随 group 的 CHAR_SCALE 一起缩放，和玩家看到的身体对齐。
 const EYE = 1.64 * CHAR_SCALE;
 const PLAYER_CHEST = 1.3;
 const SPOT_RANGE = 45;
@@ -20,9 +20,9 @@ const STATE = {
 };
 
 const parts = [
-  { name: 'head', scale: 4, y: 1.62, geo: () => new THREE.SphereGeometry(0.17, 10, 8) },
-  { name: 'body', scale: 1, y: 1.12, geo: () => new THREE.BoxGeometry(0.52, 0.66, 0.36) },
-  { name: 'legs', scale: 0.75, y: 0.44, geo: () => new THREE.BoxGeometry(0.44, 0.82, 0.32) },
+  { name: 'head', scale: 4, y: 1.64, geo: () => new THREE.SphereGeometry(0.17, 10, 8) },
+  { name: 'body', scale: 1, y: 1.24, geo: () => new THREE.BoxGeometry(0.52, 0.66, 0.36) },
+  { name: 'legs', scale: 0.75, y: 0.46, geo: () => new THREE.BoxGeometry(0.44, 0.82, 0.32) },
 ];
 
 // 命中盒透明但不关 object.visible：玩家射线的过滤条件会跳过不可见对象。
@@ -36,7 +36,9 @@ const strafe = new THREE.Vector3();
 const playerChest = new THREE.Vector3();
 const raycaster = new THREE.Raycaster();
 
-export function spawnEnemy({ world, scene, kind = 'walker', spawn, path, speed, interval }) {
+export function spawnEnemy({
+  world, scene, kind = 'walker', spawn, path, speed, interval, reaction: reactionTime = 0.3,
+}) {
   const body = createCtOperator({ palette: 'enemy' });
   const group = body.group;
   group.position.set(spawn.x, spawn.y ?? 0, spawn.z);
@@ -44,7 +46,6 @@ export function spawnEnemy({ world, scene, kind = 'walker', spawn, path, speed, 
 
   const hitBox = new THREE.Group();
   group.add(hitBox);
-  hitBox.scale.setScalar(1 / CHAR_SCALE);
   const boxes = [];
   for (const part of parts) {
     const mesh = new THREE.Mesh(part.geo(), hitMaterial);
@@ -59,7 +60,7 @@ export function spawnEnemy({ world, scene, kind = 'walker', spawn, path, speed, 
   let state = kind === 'stationary' ? STATE.ENGAGE : STATE.MOVE;
   let alive = true;
   let waypoint = 0;
-  let reaction = 0.3;
+  let reaction = reactionTime;
   let fireCd = interval * 0.6;
   let losTimer = 0;
   let seen = false;

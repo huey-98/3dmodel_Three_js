@@ -464,7 +464,7 @@ export function createCtOperator({ palette = 'ct' } = {}) {
     chest.position.y = bob;
     chest.rotation.y = s * 0.12;
     rifle.weapon.rotation.x = Math.sin(time * (moving ? 9 : 1.7)) * (moving ? 0.02 * swing : 0.008);
-    rifle.weapon.rotation.x -= aimPitch;
+    rifle.weapon.rotation.x += aimPitch;
     rifle.weapon.position.x = -kick * 0.035;
     kick = Math.max(0, kick - dt * 6);
   }

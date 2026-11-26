@@ -65,10 +65,16 @@ const SPAWN_FREE = { x: 0.8 * MAP_SCALE, z: 7.2 * MAP_SCALE, yaw: Math.PI };
 const SPAWN_GAME = { x: 0, z: 5.5 * MAP_SCALE, yaw: 0 };
 const params = new URLSearchParams(location.search);
 if (params.get('spawn') === 'ct') {
-  const sx = Number(params.get('sx'));
-  const sz = Number(params.get('sz'));
-  if (Number.isFinite(sx)) SPAWN_CT.x = sx * MAP_SCALE;
-  if (Number.isFinite(sz)) SPAWN_CT.z = sz * MAP_SCALE;
+  const sx = params.get('sx');
+  const sz = params.get('sz');
+  if (sx !== null && sx !== '') {
+    const v = Number(sx);
+    if (Number.isFinite(v)) SPAWN_CT.x = v * MAP_SCALE;
+  }
+  if (sz !== null && sz !== '') {
+    const v = Number(sz);
+    if (Number.isFinite(v)) SPAWN_CT.z = v * MAP_SCALE;
+  }
 }
 
 const person = createCtOperator();
@@ -121,6 +127,7 @@ const player = {
   },
   respawn() {
     placePlayer(SPAWN_GAME);
+    placeCamera();
     jumpVel = 0;
     grounded = true;
   },

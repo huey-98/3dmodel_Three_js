@@ -100,9 +100,9 @@ function midStreetDressing(ctx) {
   const { kit, box, group } = ctx;
   const y0 = MID_N_Y;
   for (const [z, h] of [[42, 2.2], [48, 2.4], [38.5, 1.9]]) {
-    box(0.22, h + 0.7, 1.5, kit.mass, -10.22, y0 + h / 2 + 0.2, z);
-    box(0.16, h, 1.2, kit.recess, -10.38, y0 + h / 2 + 0.15, z);
-    box(1.4, 0.12, 1.7, kit.mass, -10.5, y0 + 0.7, z);
+    box(0.22, h + 0.7, 1.5, kit.mass, -9.93, y0 + h / 2 + 0.2, z);
+    box(0.16, h, 1.2, kit.recess, -9.81, y0 + h / 2 + 0.15, z);
+    box(1.4, 0.12, 1.7, kit.mass, -9.98, y0 + 0.7, z);
   }
   box(0.2, 1.1, 18, kit.mass, -10.15, MID_S_Y + 0.4, 46);
 

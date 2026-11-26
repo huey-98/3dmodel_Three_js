@@ -11,23 +11,29 @@ export function buildASite(ctx) {
 }
 
 function pharmacyFacade(ctx) {
-  const { kit, box, volume, group, archPane, darkOpening } = ctx;
+  const { kit, box, volume, group, solid } = ctx;
   const face = 42.04;
   const y0 = LONG_Y;
   volume(36.02, 41.98, y0 + 6.4, y0 + 9.2, 26, 40, kit.weathered);
-  box(0.28, 8.6, 12.2, kit.weathered, face, y0 + 4.3, 33);
+  // 西立面在 z 32.45–33.95 留一道门洞：Goose 后巷经这里进 A 大（见 doc/dust2.md）。
+  const doorZ = 33.2;
+  const doorW = 1.5;
+  const doorTop = y0 + 2.7;
+  box(0.28, 8.6, 5.55, kit.weathered, face, y0 + 4.3, 29.675);
+  box(0.28, 8.6, 5.15, kit.weathered, face, y0 + 4.3, 36.525);
+  box(0.28, 8.6 - 2.7, doorW, kit.weathered, face, doorTop + (8.6 - 2.7) / 2, doorZ);
   box(0.2, 0.35, 12.4, kit.mass, face + 0.08, y0 + 8.6, 33);
   for (let z = 27; z < 39.2; z += 1.6) {
     box(0.22, 0.28, 0.9, kit.mass, face + 0.12, y0 + 8.9, z);
   }
 
-  const doorZ = 33.2;
-  darkOpening(face - 0.4, doorZ, 0.5, 1.9, 2.7, y0);
-  const rec = archPane(1.9, 2.8, kit.recess);
-  rec.position.set(face + 0.02, y0, doorZ);
-  rec.rotation.y = Math.PI / 2;
-  group.add(rec);
-  box(0.12, 2.5, 1.5, kit.door, face + 0.10, y0 + 1.25, doorZ);
+  solid(41.9, 42.18, 26.9, doorZ - doorW / 2);
+  solid(41.9, 42.18, doorZ + doorW / 2, 39.1);
+  solid(41.9, 42.18, doorZ - doorW / 2, doorZ + doorW / 2, doorTop, y0 + 8.6);
+  // 门框：两根立柱压在洞口两侧，上方一根过梁，纯装饰。
+  box(0.34, 2.9, 0.22, kit.mass, face + 0.05, y0 + 1.45, doorZ - doorW / 2 - 0.11);
+  box(0.34, 2.9, 0.22, kit.mass, face + 0.05, y0 + 1.45, doorZ + doorW / 2 + 0.11);
+  box(0.34, 0.24, doorW + 0.44, kit.mass, face + 0.05, doorTop + 0.12, doorZ);
   box(1.4, 0.18, 2.2, kit.mass, 41.2, y0 + 0.1, doorZ);
 
   box(0.18, 1.1, 1.3, kit.iron, face + 0.1, y0 + 3.55, 42.4);
@@ -57,10 +63,11 @@ function pharmacyFacade(ctx) {
   box(0.08, 1.4, 1.0, kit.dark, face + 0.22, y0 + 6.8, 30);
   box(0.08, 1.4, 1.0, kit.dark, face + 0.22, y0 + 6.8, 36.5);
 
-  box(0.3, 6.4, 4.2, kit.sand, 42.1, y0 + 3.2, 34);
+  box(0.3, 6.4, 4.2, kit.sand, 42.1, y0 + 3.2, 36.9);
   box(0.5, 0.4, 4.4, kit.mass, 42.15, y0 + 6.5, 34);
   box(1.6, 1.8, 1.6, kit.sand, 39, y0 + 8.2, 33.2);
   box(6.2, 7.2, 0.28, kit.weathered, 39, y0 + 3.6, 32.04);
+  solid(35.9, 42.1, 31.9, 32.18);
   box(6.2, 0.3, 0.4, kit.mass, 39, y0 + 7.3, 32.1);
 }
 
@@ -101,7 +108,7 @@ function gooseTunnel(ctx) {
   const { kit, box, volume, solid, darkOpening } = ctx;
   volume(26.1, 35.9, 2.55, 2.72, 16.1, 21.9, kit.mass);
   box(0.45, 2.0, 6.0, kit.mass, 35.85, GOOSE_Y + 1.0, 19);
-  solid(35.6, 36.1, 16, 22);
+  solid(35.6, 36.1, 16, 22, GOOSE_Y, GOOSE_Y + 2.0);
   box(9.6, 0.22, 0.45, kit.mass, 31, GOOSE_Y + 0.12, 21.85);
   darkOpening(31, 19, 8.6, 5.2, 1.9, GOOSE_Y);
   box(0.55, 2.5, 0.55, kit.beam, 28.0, GOOSE_Y + 1.25, 22.05);

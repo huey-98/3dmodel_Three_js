@@ -7,7 +7,7 @@ import { createPlaySettings } from '@shared/playSettings.js';
 import { createPerfStats } from '@shared/perfStats.js';
 import { createDust2World } from './world.js';
 import { SPAWNS } from './layout.js';
-import { GRAVITY, JUMP_SPEED, PERSON_R, WALK_SPEED, RUN_SPEED, EYE_HEIGHT } from './constants.js';
+import { GRAVITY, JUMP_SPEED, PERSON_R, WALK_SPEED, RUN_SPEED, EYE_HEIGHT, STEP_UP } from './constants.js';
 import { groundAt, blockedAt, zoneAt, roomAt, maxRayInside } from './physics.js';
 
 
@@ -186,7 +186,8 @@ function animate(now) {
       jumpVel = 0;
       grounded = true;
     }
-  } else if (feetY - floorY > 0.12) {
+  // 下楼按台阶余量吸附：阈值要覆盖一整级踏步（0.14–0.32 米），否则每级都会短暂离地。
+  } else if (feetY - floorY > STEP_UP + 0.06) {
     grounded = false;
     jumpVel = 0;
   } else {

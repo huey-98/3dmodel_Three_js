@@ -1,9 +1,10 @@
 // 炙热沙城的碰撞与地面高度。多层结构的关键是“脚底高度感知”：
 // groundAt 只认不高于脚底 + 台阶余量的地面，站在楼板上不会被更高的楼板抬走；
-// blockedAt 里平台只在“高于脚底 + 余量、且底面低于膝盖”时挡人，
+// blockedAt 里 solid 默认全高，带 bottom/top 的只在对应高度段挡人；
+// platform 只在“高于脚底 + 余量、且底面低于膝盖”时挡人，
 // 这样架空猫道、楼上地板、洞顶都不会拦住楼下通道，而实心板（deep）侧壁全程挡人。
 
-import { STEP_UP } from './constants.js';
+import { STEP_UP, EYE_HEIGHT } from './constants.js';
 import { ZONES } from './layout.js';
 
 export function boxOverlaps(x, z, box, r) {
@@ -24,6 +25,8 @@ export function groundAt(world, x, z, r, feet) {
 
 export function blockedAt(world, x, z, r, feet) {
   for (const solid of world.solids) {
+    if (solid.top <= feet + STEP_UP) continue;        // 顶面在脚下：从上面跨过
+    if (solid.bottom >= feet + EYE_HEIGHT) continue;  // 底面高过头顶：从下面穿过
     if (boxOverlaps(x, z, solid, r)) return true;
   }
   for (const plat of world.platforms) {

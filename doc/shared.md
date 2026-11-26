@@ -1,10 +1,10 @@
 # 共享模块
 
-`src/shared` 里这些文件都不依赖具体场景。别墅用鲸尾女仆和小木船；女仆展示页只用鲸尾女仆。荒漠迷城的玩家不在这里，而是场景内的 CT 干员，见 [bazaar.md](./bazaar.md)。
+`src/shared` 里这些文件都不依赖具体场景。别墅用鲸尾女仆和小木船；女仆展示页只用鲸尾女仆；炙热沙城用鲸尾女仆。荒漠迷城的玩家不在这里，而是场景内的 CT 干员，见 [bazaar.md](./bazaar.md)。
 
 ## 共用贴图助手 `canvasTex.js`
 
-`canvasTex(w, h, draw)` 创建 w×h 的 `CanvasTexture`：回调拿到 (ctx, w, h)，生成后设 `SRGBColorSpace`、`anisotropy = 8`。荒漠迷城的 `operator.js` 与 `whaleMaid/textures.js` 用它；各场景自己的方形贴图助手（materials、villaMaterials、gun、combat）尺度不同，仍是独立实现。
+`canvasTex(w, h, draw)` 创建 w×h 的 `CanvasTexture`：回调拿到 (ctx, w, h)，生成后设 `SRGBColorSpace`、`anisotropy = 8`。荒漠迷城的 `operator.js`、炙热沙城的 `materials.js` 与 `world/backdrop.js`，以及 `whaleMaid/textures.js` 用它；各场景自己的方形贴图助手（materials、villaMaterials、gun、combat）尺度不同，仍是独立实现。
 
 ## 鲸尾女仆 `whaleMaid.js`
 
@@ -43,7 +43,7 @@
 
 ## 第一人称 `firstPerson.js`
 
-`createFirstPersonView({ camera, domElement, controls, subject, getLookScale, getFov })` 给别墅和荒漠迷城用。女仆展示页不创建它。`getLookScale` 缺省时按 1。`getFov` 缺省时不改相机视野；传入后，进入第一人称就改成这个角度，滑杆变化时跟着更新，退出时恢复进入前的视野。
+`createFirstPersonView({ camera, domElement, controls, subject, getLookScale, getFov })` 给别墅、荒漠迷城和炙热沙城用。女仆展示页不创建它。`getLookScale` 缺省时按 1。`getFov` 缺省时不改相机视野；传入后，进入第一人称就改成这个角度，滑杆变化时跟着更新，退出时恢复进入前的视野。
 
 返回 `{ isActive, apply, facingYaw, addYaw, setReturnOffset, setCrosshairSpread }`。模块自己监听 `KeyV`（忽略按住连发，以及 Ctrl / Alt / Meta）。
 
@@ -71,7 +71,7 @@
 
 ## 性能面板 `perfStats.js`
 
-`createPerfStats({ renderer, name = '' })` 三个场景都创建，`name` 分别是 `villa`、`maid`、`bazaar-free` / `bazaar-game`。URL 不带 `?stats` 时不创建任何 DOM，返回的两个方法都是空的，主循环不用写分支。
+`createPerfStats({ renderer, name = '' })` 四个场景都创建，`name` 分别是 `villa`、`maid`、`bazaar-free` / `bazaar-game`、`dust2`。URL 不带 `?stats` 时不创建任何 DOM，返回的两个方法都是空的，主循环不用写分支。
 
 返回 `{ beginFrame, endFrame }`，在主循环里包住一帧：`beginFrame()` 重置 `renderer.info` 并记下 JS 起点，`endFrame(now)` 记录本帧 JS 耗时和与上一帧的间隔。开启时 `renderer.info.autoReset` 置为 `false`，一帧里的多次 `render` 都累加进同一帧。
 
