@@ -247,9 +247,8 @@ export function buildEastLot(ctx) {
   add(rowTank);
 
   // 警家台阶：第一级在北墙外皮一线，宽缓实心台阶向北延伸 7 级
-  // （每级升 0.1 米、踏面约 0.83 米，升到约 0.7 米），顶端用矮石墙压顶
-  // 加黑铁栏杆收口；西侧矮墙栏杆逐级抬升，东侧贴东边界墙。北段台阶和
-  // 界外高台已去掉，台阶到顶即止。
+  // （每级升 0.1 米、踏面约 0.83 米，升到约 0.7 米）；西侧矮墙栏杆逐级抬升，
+  // 东侧贴东边界墙。顶端接到沿街房子北侧同高的空地，收口矮墙改到空地北沿。
   const stairX0 = blueB.x1 + 0.1;
   const stairX1 = lotX1 - 0.8;
   const stairTop = 0.7;
@@ -302,16 +301,6 @@ export function buildEastLot(ctx) {
   const ebTank = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.9, 12), kit.tank);
   ebTank.position.set(eb.x1 - 0.8, eb.h + 0.45, ebCz - 0.9);
   add(ebTank);
-  // 顶端收口：最高一级北沿一道矮石墙压顶加黑铁栏杆，挡住向北走出台阶。
-  volume(stairX0, stairX1, stairTop, stairTop + parH, stairEndZ, stairEndZ + 0.15, kit.stone);
-  solid(stairX0, stairX1, stairEndZ, stairEndZ + 0.15);
-  const capCz = stairEndZ + 0.075;
-  for (const off of [0.22, railH - 0.05]) {
-    box(stairX1 - stairX0, 0.05, 0.04, kit.metalDark, (stairX0 + stairX1) / 2, stairTop + parH + off, capCz);
-  }
-  for (let x = stairX0 + 0.2; x <= stairX1 - 0.1; x += 0.34) {
-    box(0.03, railH - 0.1, 0.03, kit.metalDark, x, stairTop + parH + railH / 2 - 0.05, capCz);
-  }
 
   // 白楼 wf 和蓝楼 blueB 原来只是 0.8 米厚的临街立面：以这两个立面为南面，
   // 向北补出楼体，深度正好填到台阶顶端那条线（stairEndZ），东面留出台阶和它的栏杆，
@@ -335,6 +324,56 @@ export function buildEastLot(ctx) {
     rearTank.position.set(cx - 0.9, b.h + 0.45, (rearZ0 + rearZ1) / 2);
     add(rearTank);
   }
+
+  // 沿街房子北侧空地：与台阶同高（0.7），西起沙黄楼西沿，东接到台阶顶。
+  // 南北进深按原北墙外皮（-16.2）到楼北墙的 5 倍向北加长。
+  const padX0 = rowA.x0;
+  const padX1 = stairX1;
+  const padZ1 = stairEndZ;
+  const padZ0 = padZ1 - (padZ1 - (-16.2)) * 5;
+  volume(padX0, padX1, 0, stairTop, padZ0, padZ1, kit.stone);
+  platform(padX0, padX1, padZ0, padZ1, stairTop);
+  const padFloorTex = kit.cobble.map.clone();
+  padFloorTex.needsUpdate = true;
+  padFloorTex.repeat.set((padX1 - padX0) / 0.45, (padZ1 - padZ0) / 0.45);
+  const padFloor = new THREE.Mesh(
+    new THREE.PlaneGeometry(padX1 - padX0, padZ1 - padZ0),
+    new THREE.MeshStandardMaterial({
+      map: padFloorTex, roughness: 0.96,
+      polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
+  );
+  padFloor.rotation.x = -Math.PI / 2;
+  padFloor.position.set((padX0 + padX1) / 2, stairTop + 0.01, (padZ0 + padZ1) / 2);
+  padFloor.userData.noShadow = true;
+  add(padFloor);
+
+  function railCap(x0, x1, z0, z1) {
+    volume(x0, x1, stairTop, stairTop + parH, z0, z1, kit.stone);
+    solid(x0, x1, z0, z1);
+    const cx = (x0 + x1) / 2;
+    const cz = (z0 + z1) / 2;
+    const alongX = (x1 - x0) >= (z1 - z0);
+    if (alongX) {
+      for (const off of [0.22, railH - 0.05]) {
+        box(x1 - x0, 0.05, 0.04, kit.metalDark, cx, stairTop + parH + off, cz);
+      }
+      for (let x = x0 + 0.2; x <= x1 - 0.1; x += 0.34) {
+        box(0.03, railH - 0.1, 0.03, kit.metalDark, x, stairTop + parH + railH / 2 - 0.05, cz);
+      }
+    } else {
+      for (const off of [0.22, railH - 0.05]) {
+        box(0.04, 0.05, z1 - z0, kit.metalDark, cx, stairTop + parH + off, cz);
+      }
+      for (let z = z0 + 0.2; z <= z1 - 0.1; z += 0.34) {
+        box(0.03, railH - 0.1, 0.03, kit.metalDark, cx, stairTop + parH + railH / 2 - 0.05, z);
+      }
+    }
+  }
+  railCap(padX0, padX1, padZ0, padZ0 + 0.15);
+  railCap(padX1 - 0.15, padX1, padZ0, padZ1);
+  // 加长后西侧北段不再有场地东边界墙，用同式矮墙栏杆封边，南端接到原墙。
+  railCap(padX0, padX0 + 0.15, padZ0, -16);
 
   // 通道外空地上的一堆积沙。
   const lotPile = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), kit.sandPile);

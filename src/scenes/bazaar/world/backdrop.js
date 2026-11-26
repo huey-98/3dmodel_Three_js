@@ -36,7 +36,7 @@ export function buildBackdrop(ctx) {
     [6, 11, 7, 5], [14, 13, 6, 7], [22, 8, 7, 5], [30, 12, 6, 6],
   ];
   farSpecs.forEach(([x, h, w, d], i) => {
-    const mesh = box(w, h, d, kit.far[i % kit.far.length], x, h / 2 - 0.2, -36);
+    const mesh = box(w, h, d, kit.far[i % kit.far.length], x, h / 2 - 0.2, -48);
     mesh.userData.noShadow = true;
     mesh.userData.noReceive = true;
   });

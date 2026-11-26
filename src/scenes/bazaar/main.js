@@ -40,12 +40,12 @@ sun.position.set(-20 * MAP_SCALE, 32, 18 * MAP_SCALE);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -28 * MAP_SCALE;
-// 东侧空地伸到 X≈79，阴影相机向右、向上和远平面随扩，远端才有影子。
-sun.shadow.camera.right = 38 * MAP_SCALE;
-sun.shadow.camera.top = 32 * MAP_SCALE;
-sun.shadow.camera.bottom = -28 * MAP_SCALE;
+// 东侧空地伸到 X≈79，沿街房子北侧高台伸到 Z≈-53，阴影相机随扩。
+sun.shadow.camera.right = 48 * MAP_SCALE;
+sun.shadow.camera.top = 42 * MAP_SCALE;
+sun.shadow.camera.bottom = -36 * MAP_SCALE;
 sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 80 * MAP_SCALE;
+sun.shadow.camera.far = 110 * MAP_SCALE;
 sun.shadow.bias = -0.00025;
 sun.shadow.normalBias = 0.035;
 sun.shadow.camera.updateProjectionMatrix();
