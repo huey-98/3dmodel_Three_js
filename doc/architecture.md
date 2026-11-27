@@ -13,6 +13,7 @@ jsconfig.json              编辑器路径映射，与别名一致
 src/shared/
   canvasTex.js             共用的 w×h CanvasTexture 助手（SRGB、各向异性 8）
   whaleMaid.js             鲸尾女仆编排入口；子模块在 whaleMaid/（base 基础件、parts 部件、textures 贴图）
+  csT.js                   CS T 方公共角色；含待机/走路动画和手枪挂点
   boat.js                  小木船
   firstPerson.js           第一人称切换、鼠标转向和准星
   playSettings.js          移动速度、鼠标灵敏度、第一人称视野和音效开关

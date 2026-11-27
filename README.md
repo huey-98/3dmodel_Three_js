@@ -35,7 +35,7 @@ npm run preview
 
 ```
 index.html           场景目录
-src/shared/          小人、鲸尾女仆、小木船
+src/shared/          小人、鲸尾女仆、CS T 方、小木船
 src/scenes/villa/    别墅
 src/scenes/maid/     女仆展示
 src/scenes/bazaar/   荒漠迷城

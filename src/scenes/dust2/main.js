@@ -1,7 +1,7 @@
-// 炙热沙城（Dust2）场景入口：第三人称鲸尾女仆跑图 + V 切第一人称。
+// 炙热沙城（Dust2）场景入口：第三人称 CS T 方跑图 + V 切第一人称。
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createWhaleMaid } from '@shared/whaleMaid.js';
+import { createCsT } from '@shared/csT.js';
 import { createFirstPersonView } from '@shared/firstPerson.js';
 import { createPlaySettings } from '@shared/playSettings.js';
 import { createPerfStats } from '@shared/perfStats.js';
@@ -51,10 +51,10 @@ scene.add(fill);
 const world = createDust2World();
 scene.add(world.group);
 
-// ---------- 人物（鲸尾女仆） ----------
+// ---------- 人物（CS T 方） ----------
 const spawnKey = new URLSearchParams(location.search).get('spawn') || 't';
 let spawn = SPAWNS[spawnKey] || SPAWNS.t;
-const person = createWhaleMaid();
+const person = createCsT();
 person.group.position.set(spawn.x, spawn.y, spawn.z);
 person.group.rotation.y = spawn.yaw;
 scene.add(person.group);

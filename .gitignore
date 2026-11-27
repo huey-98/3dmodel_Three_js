@@ -4,3 +4,4 @@ dist/
 .trae-html-share-packages/
 
 .tmp_ref/
+.claude/

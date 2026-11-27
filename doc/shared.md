@@ -1,10 +1,23 @@
 # 共享模块
 
-`src/shared` 里这些文件都不依赖具体场景。别墅用鲸尾女仆和小木船；女仆展示页只用鲸尾女仆；炙热沙城用鲸尾女仆。荒漠迷城的玩家不在这里，而是场景内的 CT 干员，见 [bazaar.md](./bazaar.md)。
+`src/shared` 里这些文件都不依赖具体场景。别墅和女仆展示页用鲸尾女仆；炙热沙城用共享的 CS T 方；荒漠迷城继续使用自己的 CT 干员。
 
 ## 共用贴图助手 `canvasTex.js`
 
-`canvasTex(w, h, draw)` 创建 w×h 的 `CanvasTexture`：回调拿到 (ctx, w, h)，生成后设 `SRGBColorSpace`、`anisotropy = 8`。荒漠迷城的 `operator.js`、炙热沙城的 `materials.js` 与 `world/backdrop.js`，以及 `whaleMaid/textures.js` 用它；各场景自己的方形贴图助手（materials、villaMaterials、gun、combat）尺度不同，仍是独立实现。
+`canvasTex(w, h, draw)` 创建 w×h 的 `CanvasTexture`：回调拿到 (ctx, w, h)，生成后设 `SRGBColorSpace`、`anisotropy = 8`。共享的 `csT.js`、荒漠迷城的 `operator.js`、炙热沙城的 `materials.js` 与 `world/backdrop.js`，以及 `whaleMaid/textures.js` 用它；各场景自己的方形贴图助手（materials、villaMaterials、gun、combat）尺度不同，仍是独立实现。
+
+## CS T 方 `csT.js`
+
+`createCsT()` 创建参考 `.screenshots/cs_T/` 的程序化 T 方：橄榄绿头套、露眼开口、脖子和衣领、红黑格子衬衫、战术背心、弹匣袋、迷彩工装裤、黑手套和军靴。双臂贴身垂直向下，不带手枪。格子、迷彩和头套纹理由 `CanvasTexture` 运行时生成，不加载外部模型。
+
+角色面朝局部 +Z，原点在脚底。公共接口为：
+
+```text
+createCsT() -> { group, update, rig, chest, legL, legR, arms }
+update(dt, moving = false)
+```
+
+`group` 可直接加入任意场景；`update` 提供待机呼吸和走路摆腿，角色保持双臂下垂。`createTerrorist` 是同一个工厂的语义化别名。武器或战斗动作应由具体地图另行挂载，避免角色模块和地图玩法耦合。
 
 ## 鲸尾女仆 `whaleMaid.js`
 

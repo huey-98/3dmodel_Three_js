@@ -6,4 +6,4 @@ export const STEP_UP = 0.35;
 export const PERSON_R = 0.34;
 export const WALK_SPEED = 3.8;
 export const RUN_SPEED = 7.2;
-export const EYE_HEIGHT = 1.55;
+export const EYE_HEIGHT = 1.65;
