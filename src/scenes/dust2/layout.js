@@ -142,7 +142,7 @@ export const MASS = [
 ];
 
 export const CEILS = [
-  { x0: -33, x1: -27, z0: 28, z1: 52, bottom: B2_Y + 3.4, kind: 'cave', room: true },
+  { x0: -33, x1: -27, z0: 28, z1: 52, bottom: B2_Y + 4.6, kind: 'cave', room: true },
   { x0: 0, x1: 5, z0: 54, z1: 63, bottom: 2.7, kind: 'cave', room: true },
   // B1 入口通道顶与 B1 顶板：把中门到 B1 的下行段封成室内，视线和灯一路照进底层
   { x0: -11.1, x1: -4.66, z0: 27.98, z1: 36.02, bottom: MID_N_Y + 3.8, kind: 'cave', room: true },
@@ -150,7 +150,7 @@ export const CEILS = [
 ];
 
 export const ROOMS = [
-  { x0: -33, x1: -27, z0: 28, z1: 52, y0: GARDEN_Y, y1: B2_Y + 3.4 },
+  { x0: -33, x1: -27, z0: 28, z1: 52, y0: GARDEN_Y, y1: B2_Y + 4.6 },
   { x0: 0, x1: 5, z0: 54, z1: 63, y0: ROAD_Y, y1: 2.7 },
   { x0: 10, x1: 21.4, z0: 4, z1: 16.4, y0: CT_Y, y1: CT_Y + 4.05 },
   { x0: -11.1, x1: -4.6, z0: 27.9, z1: 36.1, y0: B1_Y, y1: MID_N_Y + 3.8 },   // B1 入口通道
