@@ -13,9 +13,11 @@ export function buildASite(ctx) {
   const { pad, blk } = ctx;
   const padY = pad.y;                       // 高台台面 0.7
   const wallTop = padY + 9.0;               // 体块墙顶 9.7，低于沿街两栋（11.2 / 12.8）
-  const cz = (blk.z0 + blk.z1) / 2;
+  const blkCz = (blk.z0 + blk.z1) / 2;
   // 台面起跳 1.541，加 STEP_UP 0.35 的余量，顶面超过 2.59 就绝对上不去；取 2.40 以内留准头。
   const arch = { x: 48.4, w: 4.8, h: 6.0 }; // 拱心只偏台阶轴心（50.6）2.2，上来正对着看的是它
+  // 包点中心：红方框与红圈都以它为准。方框东南角最接近台阶口，那一只角不放东西。
+  const site = { cx: 47.6, cz: -18.0, frame: 8.6, ring: 4.6 };
 
   // ---------- 北端收口建筑：实心体块 + 南墙大拱券龛 ----------
   const hz0 = arch.x - arch.w / 2;
@@ -44,7 +46,7 @@ export function buildASite(ctx) {
   for (let x = blk.x0 + 0.4; x < blk.x1; x += 1.2) {
     box(0.12, 0.18, 0.34, kit.beam, x, wallTop - 0.28, blk.z1 + 0.1);
   }
-  box(0.5, 0.14, blk.z1 - blk.z0 + 0.3, kit.trim, blk.x0 - 0.15, wallTop - 0.05, cz);
+  box(0.5, 0.14, blk.z1 - blk.z0 + 0.3, kit.trim, blk.x0 - 0.15, wallTop - 0.05, blkCz);
   for (let z = blk.z0 + 0.4; z < blk.z1; z += 2.4) {
     box(0.34, 0.18, 0.12, kit.beam, blk.x0 - 0.1, wallTop - 0.28, z);
   }
@@ -75,32 +77,52 @@ export function buildASite(ctx) {
     platform(cx - pw / 2, cx + pw / 2, czp - pd / 2, czp + pd / 2, padY + 0.18);
   }
 
-  // 红圈 A 的四角：西北、东北、西南三堆，台阶口右手一只单箱。
-  // 台阶落地缓冲（X 48.5–52.6 之 Z -14.5–-11.35）与通往西侧走道的横带（Z -12.8–-11.35）都留空。
-  pile(38.2, -20.4, 1.6, 1.55, 1.05, 1.15, 1.15, 0.6);
-  pile(51.5, -19.0, 1.55, 1.5, 1.05, 1.2, 1.2, 0.6, 0.1);
-  pile(38.9, -16.6, 1.5, 1.5, 1.05, 1.1, 1.1, 0.55, 0.12);
-  crate(51.2, -15.6, 1.4, 1.35, 1.35, 0xc99555, padY, true);
-  crate(41.5, -14.4, 1.15, 1.05, 1.15, 0xc08a4c, padY, true);
-  crate(46.9, -13.4, 1.25, 1.05, 1.2, 0xc99555, padY, true);
-  pallet(48.6, -21.4, 1.4, 0.9);
-  pallet(40.6, -18.8, 1.3, 0.9);
+  // 方框的西南角：沿 Z 并排的两只大箱再叠一层，整堆顶面 3.0，比一次起跳够得着的高，
+  // 要借紧挨着东侧那只两级矮堆（2.35）跳上来；顶上横搭两块木板。
+  const bsX = 44.6;
+  const bsZ = -14.9;
+  for (const dz of [-0.725, 0.725]) {
+    box(1.1, 1.15, 1.45, kit.crate(0xc99555), bsX, padY + 0.575, bsZ + dz);
+    box(1.1, 1.15, 1.45, kit.crate(0xbc8a4e), bsX, padY + 1.725, bsZ + dz);
+  }
+  platform(bsX - 0.55, bsX + 0.55, bsZ - 1.45, bsZ + 1.45, padY + 2.3);
+  for (const [dz, yaw] of [[-0.6, 0.04], [0.55, -0.05]]) {
+    box(1.0, 0.06, 1.3, kit.wood, bsX, padY + 2.33, bsZ + dz).rotation.y = yaw;
+  }
+  pile(46.2, -14.2, 1.1, 1.45, 1.15, 0.95, 1.25, 0.5, 0.1);
 
-  // 大 A 箱：顶面 2.75 超出可跳上限，所以只给 solid 不给 platform —— 挡人挡枪但爬不上去。
-  crate(42.6, -21.6, 2.8, 2.05, 2.4, 0xc99555, padY, false);
-  // 正面（朝南，朝台阶来向）印与地面同一款红圈 A，参考图里箱子与地面是同一个标记。
-  const aBoxFace = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), kit.markA);
-  aBoxFace.position.set(42.6, padY + 1.02, -20.38);
+  // 东北角：两只并排加一只压顶，顶 2.3，东侧那只 1.7 当台阶；上面横搭两块木板。
+  pile(49.7, -20.9, 1.0, 1.4, 1.0, 0.95, 1.3, 0.6, 0.08);
+  crate(50.7, -20.9, 1.0, 1.0, 1.4, 0xc08a4c, padY, true);
+  for (const [dz, yaw] of [[-0.32, 0.05], [0.3, -0.04]]) {
+    box(2.0, 0.06, 0.32, kit.wood, 50.1, padY + 1.63, -20.9 + dz).rotation.y = yaw;
+  }
+
+  // 西北角（靠墙、拱门以西）：印红圈 A 的大木箱，约 2.25 × 2.0 × 2.4 米接近正方，
+  // 只给 solid 不给平台 —— 挡人挡枪，而且 solid 与高度无关，从哪儿都上不去，和参考图一致。
+  crate(44.3, -21.5, 1.5, 2.4, 2.0, 0xd9c9a8, padY, false);
+  // 正面（朝南，朝台阶来向）印与地面同一款红圈 A。竖直面只有横向被放大，
+  // 所以画 1.05 × 1.6 才能在世界上是个正圆，并且不越出 2.25 × 2.4 的箱面。
+  const aBoxFace = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.6), kit.markA);
+  aBoxFace.position.set(44.3, padY + 1.2, -20.48);
   aBoxFace.userData.noShadow = true;
   aBoxFace.userData.noReceive = true;
   add(aBoxFace);
+  pile(44.0, -19.0, 0.85, 1.1, 1.0, 0.8, 1.0, 0.6, 0.12);
+  pallet(48.4, -22.0, 1.4, 0.9);
 
-  // ---------- 地面红圈 A ----------
-  // padFloor 平面已经在 padY + 0.01，贴花要再抬一层才不跟它抢深度。
-  // 圆心与拱心同一条 X（48.0），台阶上来正对的是它，往北看红圈与拱券上下成一线。
-  const aMark = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.6), kit.markA);
+  // ---------- 地面红圈与包点方框 ----------
+  // padFloor 平面已经在 padY + 0.01，贴花要再抬一层才不跟它抢深度；
+  // 水平面两个轴都跟着放大，所以方框和红圈在世界上仍是正方形与正圆。
+  const frame = new THREE.Mesh(new THREE.PlaneGeometry(site.frame, site.frame), kit.siteFrame);
+  frame.rotation.x = -Math.PI / 2;
+  frame.position.set(site.cx, padY + 0.035, site.cz);
+  frame.userData.noShadow = true;
+  add(frame);
+
+  const aMark = new THREE.Mesh(new THREE.PlaneGeometry(site.ring, site.ring), kit.markA);
   aMark.rotation.x = -Math.PI / 2;
-  aMark.position.set(48.0, padY + 0.04, -17.0);
+  aMark.position.set(site.cx, padY + 0.04, site.cz);
   aMark.userData.noShadow = true;
   add(aMark);
 }

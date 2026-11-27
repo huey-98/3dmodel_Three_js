@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeTex, makeRectTex, drawStucco, drawCobble, drawTile, drawGraffiti, drawStone, drawAMark, drawSign, drawPanel, drawWood, drawTarp, drawCloth, drawCrate, drawBark, drawLeaf, drawMarkA, drawMarkB, drawArchWindow, drawArrow, mapped } from './textures.js';
+import { makeTex, makeRectTex, drawStucco, drawCobble, drawTile, drawGraffiti, drawStone, drawAMark, drawSign, drawPanel, drawWood, drawTarp, drawCloth, drawCrate, drawBark, drawLeaf, drawMarkA, drawMarkB, drawArchWindow, drawSiteFrame, drawArrow, mapped } from './textures.js';
 
 export function createBazaarKit() {
   const stuccoSand = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#d6c07a', '#b89a58', '#ead89a'));
@@ -26,6 +26,7 @@ export function createBazaarKit() {
   const markB = makeRectTex(512, 512, drawMarkB);
   const markA = makeRectTex(512, 512, drawMarkA);
   const archWinTex = makeRectTex(256, 320, drawArchWindow);
+  const siteFrameTex = makeRectTex(512, 512, drawSiteFrame);
   const arrow = makeRectTex(256, 128, drawArrow);
 
   const wood = (color, roughness) => new THREE.MeshStandardMaterial({
@@ -93,6 +94,13 @@ export function createBazaarKit() {
       transparent: true,
       alphaTest: 0.15,
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
+    // 包点边界的红色虚线方框，与 markA 同一层套路（贴地必须 polygonOffset）。
+    siteFrame: mapped(siteFrameTex, {
+      roughness: 0.7,
+      transparent: true,
+      alphaTest: 0.25,
+      polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
     }),
     // A 包点大拱券的白色格子窗：贴在拱龛底墙前面，券外四个角透明。
     archWin: mapped(archWinTex, {

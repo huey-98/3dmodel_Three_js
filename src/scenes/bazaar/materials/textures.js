@@ -547,6 +547,44 @@ export function drawArchWindow(ctx, w, h) {
   ctx.restore();
 }
 
+// A 包点边界：地上一个红色虚线方框，中间空着给红圈 A。四角各补一段实心角标。
+export function drawSiteFrame(ctx, w, h) {
+  const rnd = mulberry32(67);
+  ctx.clearRect(0, 0, w, h);
+  const o = w * 0.045;
+  ctx.strokeStyle = '#c8201a';
+  ctx.lineWidth = Math.max(4, w * 0.013);
+  ctx.setLineDash([w * 0.055, w * 0.03]);
+  ctx.strokeRect(o, o, w - 2 * o, h - 2 * o);
+  ctx.setLineDash([]);
+  const t = w * 0.055;
+  for (const [sx, sy] of [[o, o], [w - o, o], [o, h - o], [w - o, h - o]]) {
+    const dx = sx < w / 2 ? 1 : -1;
+    const dy = sy < h / 2 ? 1 : -1;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy + dy * t);
+    ctx.lineTo(sx, sy);
+    ctx.lineTo(sx + dx * t, sy);
+    ctx.stroke();
+  }
+  // 沿线刷的喷溅，让方框像是现场画的。
+  ctx.fillStyle = '#c8201a';
+  for (let i = 0; i < 70; i++) {
+    ctx.globalAlpha = 0.05 + rnd() * 0.16;
+    const side = i % 4;
+    const u = o + rnd() * (w - 2 * o);
+    const j = (rnd() - 0.5) * w * 0.03;
+    const p = side === 0 ? [u, o + j]
+      : side === 1 ? [u, h - o + j]
+        : side === 2 ? [o + j, u]
+          : [w - o + j, u];
+    ctx.beginPath();
+    ctx.arc(p[0], p[1], 1 + rnd() * 3.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
 export function mapped(map, opts = {}) {
   return new THREE.MeshStandardMaterial({
     map,
