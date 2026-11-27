@@ -13,4 +13,3 @@
 | [maid.md](./maid.md) | 女仆展示页：灯光、地面阴影和轨道相机 |
 | [bazaar.md](./bazaar.md) | 荒漠迷城：场地布局、材质、碰撞、棚内镜头、CT 干员和武器 |
 | [dust2.md](./dust2.md) | 炙热沙城：CS2 走位、层高、金属门、脚底感知物理、出生点 |
-| [plans/mid-narrow-b2-height/](../plans/mid-narrow-b2-height/plan.md) | 待实施（仓库根目录 `plans/`）：中路收窄一半（B 组东移/A 侧西移）、B2 净高加到 4.6 |
