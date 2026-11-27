@@ -2,7 +2,7 @@
 // 东拱门外就是 A 后巷，同一标高（-1.0），中间没有坡、墙或隧道。
 // 望板顶只做檐口，不登记可站面。
 import * as THREE from 'three';
-import { CT_Y } from '../layout.js';
+import { A_PLAT_Y, CT_Y } from '../layout.js';
 
 const FACE_X = 21.05;
 const HALL_X0 = 10.4;
@@ -15,9 +15,46 @@ export function buildCtSpawn(ctx) {
   eastFacade(ctx);
   closedSides(ctx);
   hallInterior(ctx);
+  completeShedShell(ctx);
   barredWindows(ctx);
   hangingLamps(ctx);
   interiorDressing(ctx);
+}
+
+// 警家原先只有一层很薄的望板，俯视时屋顶边缘与东侧立面之间会露出空洞。
+// 加一整片略外挑的屋面和封口墙，让棚屋从 A 平台看也是完整建筑；不登记平台，
+// 因此它仍只是屋顶，不会成为可跳上的捷径。
+function completeShedShell(ctx) {
+  const { kit, box, block } = ctx;
+  const y0 = CT_Y;
+  const roofX0 = HALL_X0 - 0.35;
+  const roofX1 = FACE_X + 0.35;
+  const roofZ0 = HALL_Z0 - 0.42;
+  const roofZ1 = HALL_Z1 + 0.42;
+
+  box(roofX1 - roofX0, 0.28, roofZ1 - roofZ0, kit.sand,
+    (roofX0 + roofX1) / 2, CEIL_Y + 0.24, (roofZ0 + roofZ1) / 2);
+  box(roofX1 - roofX0 + 0.28, 0.18, roofZ1 - roofZ0 + 0.28, kit.mass,
+    (roofX0 + roofX1) / 2, CEIL_Y + 0.42, (roofZ0 + roofZ1) / 2);
+
+  // 棚屋原顶棚从 z=6.1 才开始，北墙面在 z=4 附近；把这段缺口补成同高度屋面。
+  // 这是一整块水平顶棚，不是立面板，灯仍然悬在原有棚屋内部。
+  const northWallZ = 3.98;
+  box(roofX1 - roofX0, 0.28, roofZ0 - northWallZ + 0.12, kit.sand,
+    (roofX0 + roofX1) / 2, CEIL_Y + 0.24, (northWallZ + roofZ0) / 2);
+
+  // 东侧拱廊已经封死，这块整面墙补齐拱楣以下到屋檐之间的视觉空隙。
+  box(0.34, CEIL_Y - y0 + 0.28, HALL_Z1 - HALL_Z0 + 0.5, kit.weathered,
+    FACE_X + 0.03, (y0 + CEIL_Y + 0.28) / 2, (HALL_Z0 + HALL_Z1) / 2);
+
+  // 从沙城外圈看过来，棚屋原本露出一条屋檐下的空腔；封成连续的上沿墙面，
+  // 灯具保留在棚内，外观不再像未封顶的盒子。
+  box(roofX1 - roofX0, 1.32, 0.38, kit.sand,
+    (roofX0 + roofX1) / 2, CEIL_Y - 0.62, roofZ0 + 0.05);
+
+  // 右侧凹口接到北侧宫殿脚下：实心填充顶面与 A 平台齐平，
+  // 材料沿用 A 平台的石板，避免出现颜色和高度断层。
+  block(FACE_X - 0.08, 26.02, northWallZ, 8.0, A_PLAT_Y, kit.cobble, y0);
 }
 
 function eastFacade(ctx) {
