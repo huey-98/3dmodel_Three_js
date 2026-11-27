@@ -52,6 +52,8 @@ export const FLOORS = [
   { x0: -9, x1: 10, z0: 4, z1: 26, top: CT_Y, kind: 'sand', deep: true },
   { x0: 10, x1: 21, z0: 4, z1: 16, top: CT_Y, kind: 'sand', deep: true },
   { x0: 10, x1: 15, z0: 16, z1: 24, top: CT_Y, kind: 'cobble', deep: true },
+  // 打穿实楼底的东西通道地面（x 正好接上广场条与后巷条，不留共面重叠）
+  { x0: 15, x1: 22, z0: 19, z1: 24, top: CT_Y, kind: 'cobble', deep: true },
   // 警家东拱门外的露天广场，往南在通道东缘（x>30）接上后巷，全程没有顶
   { x0: 21, x1: 26, z0: 6, z1: 16, top: CT_Y, kind: 'cobble', deep: true },
   { x0: 26, x1: 37.2, z0: 8, z1: 16, top: CT_Y, kind: 'cobble', deep: true },
@@ -129,6 +131,9 @@ export const MASS = [
   { x0: -11, x1: -5, z0: 56, z1: 66 },
   { x0: -18, x1: 0, z0: 60, z1: 68 },
   { x0: 26, x1: 41.6, z0: 35, z1: 42 },
+  // 红框那块填实：桥面以东、通道以北（原来的落点广场与警家广场东半）整块堆成实心楼体，
+  // 西缘让开桥面 6 cm 防共面。顶面按自动定高 ≈11，谁都过不去。
+  { x0: 26.56, x1: 37, z0: 10, z1: 19 },
   { x0: 22, x1: 30.02, z0: 50, z1: 56 }, // 猫道南延后贴在 x=22 东侧；东缘收 2cm，避开 A 门西门柱
   { x0: 18, x1: 30.02, z0: 56, z1: 62 }, // 小道楼梯东墙，随楼梯南移
   { x0: 22, x1: 26, z0: 46, z1: 50 },
@@ -169,11 +174,11 @@ export const SPAWNS = {
   b1: { x: -17, y: B1_Y, z: 34, yaw: 0, label: 'B1' },
   mid: { x: 0, y: MID_N_Y, z: 28, yaw: Math.PI, label: '中路' },
   midfar: { x: 16, y: ROAD_Y, z: 66, yaw: Math.PI, label: '暗道' },
-  ct: { x: 16, y: CT_Y, z: 12, yaw: Math.PI / 2, label: '警家' },
+  ct: { x: 16, y: CT_Y, z: 12, yaw: 0, label: '警家' },
   a: { x: 26, y: A_PLAT_Y, z: 20, yaw: 0, label: 'A 平台' },
   asmall: { x: 19.4, y: A_SMALL_Y, z: 43, yaw: Math.PI, label: 'A 小' },
   long: { x: 48, y: LONG_Y, z: 40, yaw: Math.PI, label: 'A 大' },
-  lane: { x: 31.0, y: CT_Y, z: 17.5, yaw: Math.PI, label: 'A 后巷' },
+  lane: { x: 31.0, y: CT_Y, z: 21.5, yaw: -Math.PI / 2, label: 'A 通道' },
   pit: { x: 48, y: PIT_Y, z: 64, yaw: Math.PI, label: 'A 坑' },
 };
 
@@ -192,7 +197,8 @@ export const ZONES = [
   { name: '沙地', x0: -9, x1: 10, z0: 4, z1: 26, y0: -1.8, y1: 0.4 },
   { name: '警家', x0: 10, x1: 21.2, z0: 4, z1: 16, y0: -1.8, y1: 2.4 },
   // 与警家同一层、露天相接的楼北巷。新楼（asite.backBlock）压掉 z>26 那一片后只剩北侧一条。
-  { name: 'A 后巷', x0: 18, x1: 42, z0: 6, z1: 26, y0: -1.8, y1: 2.6 },
+  { name: 'A 后巷', x0: 18, x1: 42, z0: 23.6, z1: 26, y0: -1.8, y1: 2.6 },
+  { name: 'A 通道', x0: 10, x1: 37, z0: 18.5, z1: 23.6, y0: -1.8, y1: 2.6 },
   { name: 'A 后坡', x0: 37.2, x1: 42.6, z0: 15.5, z1: 24.2, y0: -1.2, y1: 5.4 },
   { name: 'A 小楼梯', x0: 22, x1: 26, z0: 22, z1: 31, y0: 1.0, y1: 5.2 },
   { name: 'A 小道', x0: 5, x1: 26, z0: 26, z1: 56, y0: 0.8, y1: 2.2 },

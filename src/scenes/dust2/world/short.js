@@ -51,21 +51,49 @@ function cornerTower(ctx) {
   box(0.28, 0.22, 8.5, kit.ochre, 22.1, A_PLAT_Y + 5.8, 20.2);
 }
 
-// 通道西侧的实楼：A 大的反方向走不过去。顶面不接到猫道高度，A 小道仍能绕到楼梯南口。
+// 通道西侧的实楼：底下打穿成一条东西向通道（z[19,24]，顶棚 4.4），楼身照旧压在上面。
+// 除了这条道，A 大反方向仍然走不过去。顶面不接到猫道高度，A 小道仍能绕到楼梯南口。
 function passageWestBuilding(ctx) {
-  const { kit, box, solid } = ctx;
+  const { kit, box, volume, solid, group, archSpandrel } = ctx;
   const x0 = 15.2;
   const x1 = 21.85;
   const z0 = 16.2;
   const z1 = 24.6;
   const y0 = -1;
   const y1 = 11.2;
-  box(x1 - x0, y1 - y0, z1 - z0, kit.ochre, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-  box(x1 - x0 + 0.16, 0.28, z1 - z0 + 0.12, kit.mass, (x0 + x1) / 2, y1 + 0.1, (z0 + z1) / 2);
-  solid(x0, x1, z0, z1);
-  // 原来这里还有一条 solid(16.5,21.85, 24.2,32.6, 3.3,12)：转角塔旧 footprint 的上半截挡块，
-  // 靠全高的底座 MASS 一起挡人。塔西移、底座并进猫道填实后它独自卡在楼梯口，故删掉，
-  // 塔身碰撞改由 cornerTower 自己登记。
+  const tZ0 = 19.0, tZ1 = 24.0, tTop = 4.4;
+  const cx = (x0 + x1) / 2, tc = (tZ0 + tZ1) / 2;
+
+  box(x1 - x0, y1 - y0, tZ0 - z0, kit.ochre, cx, (y0 + y1) / 2, (z0 + tZ0) / 2);      // 通道以北
+  box(x1 - x0, y1 - y0, z1 - tZ1, kit.ochre, cx, (y0 + y1) / 2, (tZ1 + z1) / 2);      // 通道以南窄条
+  box(x1 - x0, y1 - tTop, tZ1 - tZ0, kit.ochre, cx, (tTop + y1) / 2, tc);             // 跨在通道上的楼身
+  box(x1 - x0 + 0.16, 0.28, z1 - z0 + 0.12, kit.mass, cx, y1 + 0.1, (z0 + z1) / 2);   // 檐口
+
+  // 碰撞：两侧楼体全高；通道上方只从顶棚往上是实体，所以人能在道里走
+  solid(x0, x1, z0, tZ0);
+  solid(x0, x1, tZ1, z1);
+  solid(x0, x1, tZ0, tZ1, tTop, Infinity);
+
+  volume(x0, x1, tTop - 0.22, tTop, tZ0, tZ1, kit.stone);        // 通道顶棚
+  volume(x0, x1, y0, y0 + 0.06, tZ0, tZ1, kit.cobble);           // 通道地面石板
+
+  // 两端洞口：石拱拱肩 + 门楣，中间留空好走
+  for (const [face, rot] of [[x0 - 0.06, -Math.PI / 2], [x1 + 0.06, Math.PI / 2]]) {
+    const sp = archSpandrel(tZ1 - tZ0, 3.5, 0.36, kit.weathered);
+    sp.position.set(face, y0, tc);
+    sp.rotation.y = rot;
+    group.add(sp);
+    box(0.36, 0.5, tZ1 - tZ0 + 0.7, kit.mass, face, tTop - 0.1, tc);
+  }
+  for (const lx of [16.6, 20.4]) {
+    box(0.12, 0.5, 0.12, kit.iron, lx, y0 + 3.2, tZ0 + 0.26);
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.26), kit.lampGlow);
+    lamp.position.set(lx, y0 + 2.85, tZ0 + 0.4);
+    group.add(lamp);
+    const light = new THREE.PointLight(0xffb060, 12, 9, 1.8);
+    light.position.set(lx, y0 + 2.7, tc);
+    group.add(light);
+  }
 }
 
 function stairCheeks(ctx) {

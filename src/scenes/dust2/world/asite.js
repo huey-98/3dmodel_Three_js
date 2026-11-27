@@ -136,7 +136,8 @@ function backBlock(ctx) {
 function platformPiers(ctx) {
   const { kit, box, volume, solid } = ctx;
   const deckBot = A_PLAT_Y - 1.0;
-  for (const pz of [17.8, 20.5, 23.2]) {
+  for (const pz of [17.2, 19.3, 23.6]) {
+    // 通道走 z[19,24]，墩子放在洞口两侧与桥面以北，中间留出 3.4 m 的路
     const px = 24.2;
     volume(px - 0.45, px + 0.45, VOID_Y, deckBot, pz - 0.45, pz + 0.45, kit.weathered);
     box(1.2, 0.3, 1.2, kit.mass, px, deckBot - 0.15, pz);
@@ -187,6 +188,8 @@ function platformEdge(ctx) {
   const y = A_PLAT_Y;
   box(4.6, 0.28, 0.22, kit.plaster, 24.2, y + 0.14, 16.12);
   platform(21.9, 26.5, 16.0, 16.24, y + 0.28, y);
+  box(4.6, 0.28, 0.22, kit.plaster, 24.2, y + 0.14, 24.16);
+  platform(21.9, 26.5, 24.04, 24.28, y + 0.28, y);
 }
 
 function longStreetDressing(ctx) {

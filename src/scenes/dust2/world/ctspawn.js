@@ -13,6 +13,7 @@ const CEIL_Y = CT_Y + 3.55;
 
 export function buildCtSpawn(ctx) {
   eastFacade(ctx);
+  closedSides(ctx);
   hallInterior(ctx);
   barredWindows(ctx);
   hangingLamps(ctx);
@@ -101,9 +102,30 @@ function hallInterior(ctx) {
     box(0.44, 0.2, spanZ + 0.15, kit.timber, x, CEIL_Y - 0.16, cz);
   }
 
-  box(5.1, 3.05, 0.22, kit.weathered, 12.9, y0 + 1.48, z1 + 0.1);
-  solid(10.45, 15.35, z1 - 0.02, z1 + 0.3);
+  // 南墙：中间开一个口（x[12.2,14.6]），出去就是打穿实楼底的那条东西通道
+  box(1.75, 3.05, 0.22, kit.weathered, 11.32, y0 + 1.48, z1 + 0.1);
+  box(0.75, 3.05, 0.22, kit.weathered, 15.0, y0 + 1.48, z1 + 0.1);
+  solid(10.45, 12.2, z1 - 0.02, z1 + 0.3);
+  solid(14.6, 15.35, z1 - 0.02, z1 + 0.3);
+  box(2.6, 0.3, 0.4, kit.mass, 13.4, y0 + 3.2, z1 + 0.1);
+  box(0.22, 3.5, 0.34, kit.timber, 12.2, y0 + 1.75, z1 + 0.1);
+  box(0.22, 3.5, 0.34, kit.timber, 14.6, y0 + 1.75, z1 + 0.1);
   box(0.2, 2.5, 2.4, kit.recess, x0 + 0.16, y0 + 1.2, z1 - 1.65);
+}
+
+// 警家东西两侧封死：东边那品木拱廊只留作立面（拱洞里砌上板壁），
+// 西边原来直连沙地的口子一道板墙封掉。警家只剩南侧那个新开的口。
+function closedSides(ctx) {
+  const { kit, box, solid } = ctx;
+  const y0 = CT_Y;
+  const zc = (HALL_Z0 + HALL_Z1) / 2;
+  box(0.34, POST_H + 0.9, HALL_Z1 - HALL_Z0 + 0.3, kit.weathered, FACE_X, y0 + (POST_H + 0.9) / 2, zc);
+  for (let z = HALL_Z0 + 0.6; z < HALL_Z1 - 0.4; z += 1.05) {
+    box(0.1, POST_H + 0.5, 0.16, kit.timber, FACE_X - 0.22, y0 + (POST_H + 0.5) / 2, z);
+  }
+  solid(FACE_X - 0.2, FACE_X + 0.2, HALL_Z0 + 0.2, HALL_Z1 - 0.2);
+  box(0.34, POST_H + 0.9, 11.8, kit.weathered, 10.18, y0 + (POST_H + 0.9) / 2, 10.2);
+  solid(10.0, 10.38, 4.3, 16.1);
 }
 
 function barredWindows(ctx) {
@@ -139,9 +161,10 @@ function hangingLamps(ctx) {
 function interiorDressing(ctx) {
   const { kit, box, solid, crate, group } = ctx;
   const y0 = CT_Y;
-  crate(1.18, 13.6, 13.4, y0);
-  crate(1.08, 14.75, 13.75, y0);
-  crate(0.98, 13.75, 14.5, y0);
+  // 箱堆挪到棚子东北角，别堵在南开口前面
+  crate(1.18, 18.7, 8.2, y0);
+  crate(1.08, 19.7, 8.8, y0);
+  crate(0.98, 19.0, 9.4, y0);
   box(0.12, 1.45, 2.2, kit.wood, 12.2, y0 + 0.8, 8.15);
   solid(12.08, 12.42, 7.15, 9.15);
   const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.85), kit.grate);
