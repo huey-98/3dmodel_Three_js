@@ -331,9 +331,9 @@ export function buildEastLot(ctx) {
   const padX1 = stairX1;
   const padZ1 = stairEndZ;
   const padZ0 = padZ1 - (padZ1 - (-16.2)) * 5;
-  // 高台北端给 A 包点（见 world/aSite.js）预留的建筑体块：吃掉北侧空档，
-  // 南立面 z = -23 那面就是带大拱券的墙，从警家台阶上来正对着看的是它。
-  const blk = { x0: 33, x1: padX1, z0: padZ0, z1: -23 };
+  // 高台北端给 A 包点（见 world/aSite.js）预留的建筑体块：北边齐高台北沿，南面往北退到
+  // z = -27.9 那面就是带大拱券的夯土墙，与包点红色方框的北线之间留出约 6 米空地。
+  const blk = { x0: 33, x1: padX1, z0: padZ0, z1: -27.9 };
   volume(padX0, padX1, 0, stairTop, padZ0, padZ1, kit.stone);
   platform(padX0, padX1, padZ0, padZ1, stairTop);
   const padFloorTex = kit.cobble.map.clone();

@@ -547,6 +547,49 @@ export function drawArchWindow(ctx, w, h) {
   ctx.restore();
 }
 
+// 土坯夯土墙：分层夯筑缝 + 斑驳风化 + 自上而下的雨痕加颗粒，色温比灰泥沙黄更土更橙。
+export function drawAdobe(ctx, s) {
+  const rnd = mulberry32(23);
+  ctx.fillStyle = '#d8b981';
+  ctx.fillRect(0, 0, s, s);
+  const courses = 6;
+  for (let i = 0; i < courses; i++) {
+    const y = (i + 0.55) * s / courses;
+    ctx.globalAlpha = 0.18 + rnd() * 0.1;
+    ctx.fillStyle = i % 2 ? '#c3a268' : '#e3c994';
+    ctx.fillRect(0, y - s / courses * 0.42, s, s / courses * 0.84);
+    ctx.globalAlpha = 0.4;
+    ctx.strokeStyle = '#a8874f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let x = 0; x <= s; x += 16) ctx.lineTo(x, y + Math.sin(x * 0.05 + i) * 2.5);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 30; i++) {
+    ctx.globalAlpha = 0.14 + rnd() * 0.2;
+    ctx.fillStyle = rnd() > 0.5 ? '#b8975e' : '#eeddb0';
+    ctx.beginPath();
+    ctx.ellipse(rnd() * s, rnd() * s, 10 + rnd() * 46, 7 + rnd() * 26, rnd() * 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 0.16;
+  ctx.strokeStyle = '#9d7f4c';
+  for (let i = 0; i < 12; i++) {
+    const x = rnd() * s;
+    ctx.lineWidth = 2 + rnd() * 7;
+    ctx.beginPath();
+    ctx.moveTo(x, rnd() * s * 0.3);
+    ctx.lineTo(x + (rnd() - 0.5) * 8, s);
+    ctx.stroke();
+  }
+  for (let i = 0; i < 300; i++) {
+    ctx.globalAlpha = 0.05;
+    ctx.fillStyle = rnd() > 0.5 ? '#000' : '#fff';
+    ctx.fillRect(rnd() * s, rnd() * s, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+}
+
 // A 包点边界：地上一个红色虚线方框，中间空着给红圈 A。四角各补一段实心角标。
 export function drawSiteFrame(ctx, w, h) {
   const rnd = mulberry32(67);

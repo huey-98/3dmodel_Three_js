@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeTex, makeRectTex, drawStucco, drawCobble, drawTile, drawGraffiti, drawStone, drawAMark, drawSign, drawPanel, drawWood, drawTarp, drawCloth, drawCrate, drawBark, drawLeaf, drawMarkA, drawMarkB, drawArchWindow, drawSiteFrame, drawArrow, mapped } from './textures.js';
+import { makeTex, makeRectTex, drawStucco, drawAdobe, drawCobble, drawTile, drawGraffiti, drawStone, drawAMark, drawSign, drawPanel, drawWood, drawTarp, drawCloth, drawCrate, drawBark, drawLeaf, drawMarkA, drawMarkB, drawArchWindow, drawSiteFrame, drawArrow, mapped } from './textures.js';
 
 export function createBazaarKit() {
   const stuccoSand = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#d6c07a', '#b89a58', '#ead89a'));
@@ -7,6 +7,7 @@ export function createBazaarKit() {
   const stuccoWhite = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#e7e1d6', '#bdb6aa', '#f7f4ee', '#cfc6b8'));
   const stuccoBlue = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#7ea4c6', '#688eae', '#c5d4e2', '#e3d2b4'));
   const stuccoShop = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#9aa694', '#8f9b89', '#a6b2a0'));
+  const adobeMap = makeTex(512, drawAdobe);
   const tileMap = makeTex(512, drawTile);
   const stoneMap = makeTex(512, drawStone);
   const graffitiMap = makeRectTex(256, 192, drawGraffiti);
@@ -38,6 +39,8 @@ export function createBazaarKit() {
 
   const kit = {
     sand: mapped(stuccoSand, { roughness: 0.93 }),
+    // A 包点北墙那整面夯土（土坯）墙体。
+    adobe: mapped(adobeMap, { roughness: 0.95 }),
     pink: mapped(stuccoPink, { roughness: 0.92 }),
     white: mapped(stuccoWhite, { roughness: 0.93 }),
     blue: mapped(stuccoBlue, { roughness: 0.9 }),
