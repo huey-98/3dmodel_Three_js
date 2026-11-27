@@ -55,8 +55,9 @@ export const FLOORS = [
   // 警家东拱门外的露天广场，往南在通道东缘（x>30）接上后巷，全程没有顶
   { x0: 21, x1: 26, z0: 6, z1: 16, top: CT_Y, kind: 'cobble', deep: true },
   { x0: 26, x1: 37.2, z0: 8, z1: 16, top: CT_Y, kind: 'cobble', deep: true },
-  // 后巷收到楼北：x 从 26 起，把楼梯东缘与 A 大西墙之间原来会掉出去的坑补平
-  { x0: 26, x1: 37.2, z0: 16, z1: 35, top: CT_Y, kind: 'cobble', deep: true },
+  // 后巷收到楼北，且 x 从 22 起：补平楼梯东沿与 A 大西墙之间原来会掉出去的坑，
+  // 顺便给悬空高架底下那段铺上地面，桥下能从警家广场一路走到楼北脸。
+  { x0: 22, x1: 37.2, z0: 16, z1: 35, top: CT_Y, kind: 'cobble', deep: true },
   // 后坡低端以南，接到药房北墙
   { x0: 37.2, x1: 42, z0: 24, z1: 35, top: CT_Y, kind: 'cobble', deep: true },
   { x0: -5, x1: 5, z0: 26, z1: 30, top: MID_N_Y, kind: 'road', deep: true },
@@ -70,8 +71,9 @@ export const FLOORS = [
   // 东侧包点，南缘接 A 斜坡；西段收到后坡北端，不伸进广场
   { x0: 42, x1: 54, z0: 8, z1: 16, top: A_PLAT_Y, kind: 'cobble', deep: true },
   { x0: 37.2, x1: 42, z0: 8, z1: 15.7, top: A_PLAT_Y, kind: 'cobble', deep: true },
-  // 小楼梯 ↔ A 平台。只占西侧；东缘 x=30 以外没有第二层，往 A 大跳下去是后巷
-  { x0: 22, x1: 30, z0: 16, z1: 24.2, top: A_PLAT_Y, kind: 'cobble', deep: true },
+  // 小楼梯 ↔ A 平台。西侧这段改成悬空高架：桥面只有 1 m 厚（4.0→5.0），桥下是通的。
+  // 东缘 x=30 以外没有第二层，往 A 大跳下去是后巷。
+  { x0: 22, x1: 30, z0: 16, z1: 24.2, top: A_PLAT_Y, kind: 'cobble', deep: false, bottom: A_PLAT_Y - 1.0 },
   { x0: 42, x1: 54, z0: 24, z1: 50, top: LONG_Y, kind: 'asphalt', deep: true },
   { x0: 42, x1: 54, z0: 58, z1: 70, top: PIT_Y, kind: 'cave', deep: true },
 ];

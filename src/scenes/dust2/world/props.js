@@ -4,7 +4,8 @@ import { A_PLAT_Y, B_Y, T_Y, CT_Y, PIT_Y, B2_Y, B1_Y, MID_Y, ROAD_Y, GARDEN_Y, L
 
 const PALMS = [
   [6, 80, T_Y], [-34, 70, GARDEN_Y],
-  [24.6, 18.4, A_PLAT_Y], [46, 11, A_PLAT_Y], [36, 6.2, A_PLAT_Y], [50.5, 12.4, A_PLAT_Y],
+  // 桥上（24.6,18.4）与 A 包点箱堆旁（46,11）那两棵按要求去掉
+  [36, 6.2, A_PLAT_Y], [50.5, 12.4, A_PLAT_Y],
 ];
 const BARRELS = [
   [-25, 8, B_Y], [48, 36, LONG_Y], [12, 10, CT_Y],

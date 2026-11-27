@@ -1,14 +1,14 @@
-// A 包点立面：药房、宫殿、A 平台沿口、楼北巷的新楼与巷内掩体、A 后坡旁的大箱、A 大路沿。
-// 向南看：西侧高架通道连着 A 小楼梯和 A 平台，往东跳下去是与警家同层的 A 后巷（只剩楼北一条）。
+// A 包点立面：药房、宫殿、悬空高架的桥墩、楼北巷的新楼与楼北脸的壁灯、A 大路沿。
+// 向南看：A 小楼梯上来是 1 m 厚的悬空桥面（x[22,30] z[16,24.2]），桥下通到楼北巷。
 import * as THREE from 'three';
-import { A_PLAT_Y, LONG_Y, CT_Y } from '../layout.js';
+import { A_PLAT_Y, LONG_Y, CT_Y, VOID_Y } from '../layout.js';
 
 export function buildASite(ctx) {
   pharmacyFacade(ctx);
   backBlock(ctx);
   palaceBuilding(ctx);
   platformEdge(ctx);
-  bigBoxes(ctx);
+  platformPiers(ctx);
   longStreetDressing(ctx);
 }
 
@@ -76,7 +76,7 @@ function pharmacyFacade(ctx) {
 // 后巷因此收到楼北一条巷子（z 16..26）：警家↔后巷直连、从通道东沿跳下来的落点、
 // 以及后坡脚下那条东西向的窄带都还留着。南面贴药房北脸，东面贴 A 大西墙，都留 6 cm 防共面。
 function backBlock(ctx) {
-  const { kit, box, block, crate, group } = ctx;
+  const { kit, box, block, group } = ctx;
   const x0 = 26.0, x1 = 41.94, z0 = 26.0, z1 = 34.94;
   const top = 12.0;
   const y0 = CT_Y;
@@ -118,7 +118,7 @@ function backBlock(ctx) {
     }
   }
 
-  // 巷子里的灯火、掩体与篦子（原来贴药房北墙的那批挪到楼北脸）
+  // 楼北脸的壁灯两盏，巷子里夜里不至于全黑
   for (const lx of [30.5, 37.5]) {
     box(0.12, 0.5, 0.12, kit.iron, lx, y0 + 2.7, z0 - 0.36);
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.3, 0.26), kit.lampGlow);
@@ -128,16 +128,21 @@ function backBlock(ctx) {
     light.position.set(lx, y0 + 2.3, z0 - 0.8);
     group.add(light);
   }
+}
 
-  crate(1.28, 31.0, 24.6, y0);
-  crate(1.18, 32.2, 25.0, y0);
-  crate(1.12, 31.3, 25.4, y0);
-  crate(1.0, 31.6, 24.8, y0 + 1.28);
-
-  const grate = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.7), kit.grate);
-  grate.rotation.x = -Math.PI / 2;
-  grate.position.set(39.8, y0 + 0.03, 24.9);
-  group.add(grate);
+// 悬空高架：A 小楼梯顶上来那段通道（layout FLOORS 里 x[22,30] z[16,24.2]）只有 1 m 厚的桥面，
+// 底下靠四根方墩撑着，墩身与桥底沿各压一道石条。桥下是 -1.0 的地面，从警家广场通到楼北脸。
+function platformPiers(ctx) {
+  const { kit, box, volume, solid } = ctx;
+  const deckBot = A_PLAT_Y - 1.0;
+  for (const [px, pz] of [[24.0, 18.4], [28.0, 18.4], [24.0, 22.0], [28.0, 22.0]]) {
+    volume(px - 0.45, px + 0.45, VOID_Y, deckBot, pz - 0.45, pz + 0.45, kit.weathered);
+    box(1.2, 0.3, 1.2, kit.mass, px, deckBot - 0.15, pz);
+    // 桥墩只挡到桥底：桥面上走过来走过去都不能被墩子拦住
+    solid(px - 0.45, px + 0.45, pz - 0.45, pz + 0.45, -Infinity, deckBot);
+  }
+  box(8.0, 0.34, 0.34, kit.mass, 26, deckBot + 0.17, 24.28);
+  box(0.34, 0.34, 8.2, kit.mass, 29.9, deckBot + 0.17, 20.1);
 }
 
 function palaceBuilding(ctx) {
@@ -179,22 +184,6 @@ function platformEdge(ctx) {
   const y = A_PLAT_Y;
   box(8, 0.28, 0.22, kit.plaster, 26, y + 0.14, 16.12);
   platform(22, 30, 16.0, 16.24, y + 0.28, y);
-}
-
-// 楼北巷里的水泥台 + 两只蓝桶：顶面可站，原来在水泥台压在旧后巷南墙前，新楼落地后挪到巷北口。
-function bigBoxes(ctx) {
-  const { kit, box, platform, group } = ctx;
-  const pad = CT_Y + 0.9;
-  box(3.6, 0.9, 2.6, kit.cobble, 34.0, CT_Y + 0.45, 18.6);
-  platform(32.2, 35.8, 17.3, 19.9, pad, CT_Y);
-  for (const [x, z] of [[33.1, 18.3], [34.8, 18.9]]) {
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.66, 1.28, 14), kit.blue);
-    barrel.position.set(x, pad + 0.64, z);
-    barrel.castShadow = true;
-    barrel.receiveShadow = true;
-    group.add(barrel);
-    platform(x - 0.62, x + 0.62, z - 0.62, z + 0.62, pad + 1.28, pad);
-  }
 }
 
 function longStreetDressing(ctx) {
