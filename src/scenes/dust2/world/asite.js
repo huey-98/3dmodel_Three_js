@@ -186,10 +186,10 @@ function palaceBuilding(ctx) {
 function platformEdge(ctx) {
   const { kit, box, platform } = ctx;
   const y = A_PLAT_Y;
-  box(4.6, 0.28, 0.22, kit.plaster, 24.2, y + 0.14, 16.12);
-  platform(21.9, 26.5, 16.0, 16.24, y + 0.28, y);
-  box(4.6, 0.28, 0.22, kit.plaster, 24.2, y + 0.14, 24.16);
-  platform(21.9, 26.5, 24.04, 24.28, y + 0.28, y);
+  // 栏杆只立在真正悬空的东沿（x=26.5 下面是通道与 z[16,19] 那条巷子）；
+  // 北沿接 +5 台地、南沿接 A 小楼梯顶，都是实地，不再围。
+  box(0.22, 0.28, 8.2, kit.plaster, 26.38, y + 0.14, 20.1);
+  platform(26.26, 26.5, 16.0, 24.2, y + 0.28, y);
 }
 
 function longStreetDressing(ctx) {
