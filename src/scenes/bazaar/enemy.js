@@ -264,7 +264,8 @@ export function spawnEnemy({
       }
     }
 
-    const floor = groundAt(world, p.x, p.z, BODY_R);
+    // 传当前脚底高度：头顶的悬空跳台不该把敌人抬到台面上去。
+    const floor = groundAt(world, p.x, p.z, BODY_R, p.y);
     if (p.y > floor + 0.02) {
       vy -= GRAVITY * dt;
       p.y = Math.max(floor, p.y + vy * dt);

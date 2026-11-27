@@ -3,28 +3,35 @@
 export const GRAVITY = 24;
 export const JUMP_SPEED = 8.6;
 export const STEP_UP = 0.35;
+// 平台板底低于膝高才算挡人的实体；落地实体默认 bottom = 0，所以这个判定对它们恒不生效。
+export const KNEE = 0.55;
 
 export function boxOverlaps(x, z, box, r) {
   return x > box.minX - r && x < box.maxX + r
     && z > box.minZ - r && z < box.maxZ + r;
 }
 
-// 站在哪个平台之上，取最高的顶面。没有平台时地面为 0。
-export function groundAt(world, x, z, r) {
+// 站在哪个平台之上，取够得着的最高顶面。没有平台时地面为 0。
+// feet 是当前脚底高度：顶面比脚高出超过 STEP_UP 一点点的（悬空跳台、头顶平台）不算落脚处，
+// 否则站在平台下方会被直接抬到顶面上。省略 feet 就是「取最高顶面」，给落点吸附用。
+export function groundAt(world, x, z, r, feet = Infinity) {
   let y = 0;
   for (const plat of world.platforms) {
+    if (plat.top > feet + STEP_UP + 0.06) continue;
     if (boxOverlaps(x, z, plat, r) && plat.top > y) y = plat.top;
   }
   return y;
 }
 
 // feet 是当前脚底高度：够高就能跨上平台，低于顶面约 STEP_UP 时当墙挡。
+// 板底高于膝高的平台是头顶的东西，不挡水平移动，人可以从下面走过去。
 export function blockedAt(world, x, z, r, feet) {
   for (const solid of world.solids) {
     if (boxOverlaps(x, z, solid, r)) return true;
   }
   for (const plat of world.platforms) {
     if (feet >= plat.top - STEP_UP) continue;
+    if (plat.bottom > feet + KNEE) continue;
     if (boxOverlaps(x, z, plat, r)) return true;
   }
   return false;

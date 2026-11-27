@@ -59,13 +59,16 @@ export function createWorldHelpers(ctx) {
     });
   }
 
-  function platform(x0, x1, z0, z1, top) {
+  // top 是踩面，bottom 是板底（默认 0 = 落地实体）。悬空的跳台要传 bottom，
+  // physics.blockedAt 才能只挡到膝高、让人从下面走过去。
+  function platform(x0, x1, z0, z1, top, bottom = 0) {
     platforms.push({
       minX: Math.min(x0, x1),
       maxX: Math.max(x0, x1),
       minZ: Math.min(z0, z1),
       maxZ: Math.max(z0, z1),
       top,
+      bottom,
     });
   }
 

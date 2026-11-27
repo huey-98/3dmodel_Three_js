@@ -267,7 +267,8 @@ function animate(now) {
   }
   person.update(dt, moving);
 
-  const floorY = groundAt(world, p.x, p.z, PERSON_R);
+  // 带 feetY 求地面：悬空跳台（板底高于膝）不算脚下落脚处，人可以从台面下走过。
+  const floorY = groundAt(world, p.x, p.z, PERSON_R, feetY);
   if (jumpRequested) {
     if (grounded) {
       jumpVel = JUMP_SPEED;
