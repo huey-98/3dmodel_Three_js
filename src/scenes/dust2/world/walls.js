@@ -19,7 +19,7 @@ export function buildWalls(ctx) {
 
 const CRENELS = [
   { axis: 'x', at: 84.3, lo: -10, hi: 12, top: 9.25, step: 3 },
-  { axis: 'z', at: -14.3, lo: 20, hi: 22, top: 8.3, step: 3 },
+  { axis: 'z', at: -9.3, lo: 20, hi: 22, top: 8.3, step: 3 },
 ];
 
 function facadeDetails(ctx) {
@@ -40,7 +40,7 @@ function facadeDetails(ctx) {
   blindWindow('x', 30.02, 52.2, 53.8, 4.6, 1.5, 2.0, 1);
   blindWindow('z', 62, 20.9, 22.5, 4.6, 1.5, 2.0, 1);
   blindWindow('z', 62, 26.1, 27.7, 4.6, 1.5, 2.0, 1);
-  box(0.6, 0.7, 16.2, kit.sand, -14.3, B_Y + 5.6, 13);
+  box(0.6, 0.7, 16.2, kit.sand, -9.3, B_Y + 5.6, 13);
   for (const c of CRENELS) {
     for (let p = c.lo; p < c.hi; p += c.step) {
       const q = Math.min(p + c.step * 0.55, c.hi);

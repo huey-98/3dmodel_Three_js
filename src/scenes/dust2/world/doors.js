@@ -68,8 +68,8 @@ export function buildDoors(ctx) {
   const { kit, archGate, box } = ctx;
   halfClosedDoor(ctx, 'x', 26, -4, 4, 1, MID_N_Y, kit.metalDoor);
   doubleDoor(ctx, 'x', 50, 30, 38, -1, LONG_Y, kit.metalDoor);
-  halfClosedDoor(ctx, 'z', -14, 12, 20, 1, B_Y, kit.metalDoor);
-  box(0.4, 2.2, 5.2, kit.mass, -14.1, B_Y + 3.2, 8.5);
-  archGate(-35, 24, 5.7, 4.6, 0.7, 'z', kit.cave, B2_Y);
-  archGate(-36, 56, 8, 4.4, 0.7, 'z', kit.cave, GARDEN_Y);
+  halfClosedDoor(ctx, 'z', -9, 12, 20, 1, B_Y, kit.metalDoor);
+  box(0.4, 2.2, 5.2, kit.mass, -9.1, B_Y + 3.2, 8.5);
+  archGate(-30, 24, 5.7, 4.6, 0.7, 'z', kit.cave, B2_Y);
+  archGate(-31, 56, 8, 4.4, 0.7, 'z', kit.cave, GARDEN_Y);
 }

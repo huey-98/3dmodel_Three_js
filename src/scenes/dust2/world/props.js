@@ -7,16 +7,16 @@ const PALMS = [
   [24.6, 18.4, A_PLAT_Y], [46, 11, A_PLAT_Y], [36, 6.2, A_PLAT_Y], [50.5, 12.4, A_PLAT_Y],
 ];
 const BARRELS = [
-  [-30, 8, B_Y], [48, 36, LONG_Y], [12, 10, CT_Y],
-  [-36, 44, B2_Y], [-24, 30.6, B1_Y], [-25.2, 31.2, B1_Y],
+  [-25, 8, B_Y], [48, 36, LONG_Y], [12, 10, CT_Y],
+  [-31, 44, B2_Y], [-19, 30.6, B1_Y], [-20.2, 31.2, B1_Y],
 ];
 const LAMPS = [
-  { x: -35, y: 5.0, z: 38 },
-  { x: -21, y: 2.55, z: 33 },          // B1 顶板下吊灯（顶板底 2.8）
-  { x: -25.5, y: 2.55, z: 37.5 },
+  { x: -30, y: 5.0, z: 38 },
+  { x: -16, y: 2.55, z: 33 },          // B1 顶板下吊灯（顶板底 2.8）
+  { x: -20.5, y: 2.55, z: 37.5 },
   { x: -4, y: 3.9, z: 28, g: MID_Y },
   { x: 18, y: 2.4, z: 18, g: CT_Y },
-  { x: -28, y: 5.4, z: 10, g: B_Y },
+  { x: -23, y: 5.4, z: 10, g: B_Y },
   { x: 40, y: A_PLAT_Y + 2.4, z: 10, g: A_PLAT_Y },
   { x: 51, y: 4.4, z: 40, g: LONG_Y },
   { x: -30, y: 3.4, z: 62, g: GARDEN_Y },
@@ -29,24 +29,24 @@ export function buildProps(ctx) {
   const decalA = new THREE.Mesh(letterGeo, kit.letter);
   decalA.rotation.x = -Math.PI / 2; decalA.position.set(48, A_PLAT_Y + 0.03, 12); group.add(decalA);
   const decalB = new THREE.Mesh(letterGeo, kit.letterB);
-  decalB.rotation.x = -Math.PI / 2; decalB.position.set(-24, B_Y + 0.03, 14); group.add(decalB);
+  decalB.rotation.x = -Math.PI / 2; decalB.position.set(-19, B_Y + 0.03, 14); group.add(decalB);
 
-  crate(1.4, -28, 18, B_Y);
-  crate(1.6, -26, 16, B_Y);
-  crate(1.2, -22, 8, B_Y);
-  crate(1.2, -30, 7, B_Y);
-  addCar(ctx, -20, 10, B_Y, 0.5);
-  woodFence(ctx, -18, 18, B_Y, 6);
+  crate(1.4, -23, 18, B_Y);
+  crate(1.6, -21, 16, B_Y);
+  crate(1.2, -17, 8, B_Y);
+  crate(1.2, -25, 7, B_Y);
+  addCar(ctx, -15, 10, B_Y, 0.5);
+  woodFence(ctx, -13, 18, B_Y, 6);
 
   // B1 底层掩体：从中门沿通道望进去有东西读深度，靠旋转楼梯一侧留出通路
-  crate(1.4, -19.4, 38.6, B1_Y);
-  crate(1.1, -20.9, 38.9, B1_Y);
-  box(0.3, 2.2, 0.3, kit.beam, -26.6, B1_Y + 1.1, 29.2);
+  crate(1.4, -14.4, 38.6, B1_Y);
+  crate(1.1, -15.9, 38.9, B1_Y);
+  box(0.3, 2.2, 0.3, kit.beam, -21.6, B1_Y + 1.1, 29.2);
 
-  box(0.3, 2.6, 0.3, kit.beam, -13.4, CT_Y + 1.3, 8.2);
-  box(0.3, 2.6, 0.3, kit.beam, -11.2, CT_Y + 1.3, 8.2);
-  box(2.6, 0.16, 1.4, kit.wood, -12.3, CT_Y + 1.7, 8.5);
-  platform(-13.6, -11.0, 7.8, 9.2, CT_Y + 1.78, CT_Y);
+  box(0.3, 2.6, 0.3, kit.beam, -8.4, CT_Y + 1.3, 8.2);
+  box(0.3, 2.6, 0.3, kit.beam, -6.2, CT_Y + 1.3, 8.2);
+  box(2.6, 0.16, 1.4, kit.wood, -7.3, CT_Y + 1.7, 8.5);
+  platform(-8.6, -6.0, 7.8, 9.2, CT_Y + 1.78, CT_Y);
 
   aSiteCrates(ctx);
   addCar(ctx, 48, 34, LONG_Y, 0.15);
@@ -77,8 +77,9 @@ export function buildProps(ctx) {
   addFlag(ctx, 0, 82, T_Y, 0xb0352a);
   addFlag(ctx, 12, 22, CT_Y, 0x3a6ea8);
 
-  box(0.18, 6.4, 0.18, kit.mass, 7.2, MID_Y + 3.2, 48);
-  box(0.5, 0.12, 1.6, kit.mass, 7.2, MID_Y + 6.5, 48);
+  // 中路电线杆：街宽收到 10 m 后东缘在 x=5（猫道西沿），杆子挪到街内免得顶穿猫道
+  box(0.18, 6.4, 0.18, kit.mass, 2.4, MID_Y + 3.2, 48);
+  box(0.5, 0.12, 1.6, kit.mass, 2.4, MID_Y + 6.5, 48);
 }
 
 function aSiteCrates(ctx) {
