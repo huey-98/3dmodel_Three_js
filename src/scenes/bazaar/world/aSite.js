@@ -18,7 +18,10 @@ export function buildASite(ctx) {
   const blkCz = (blk.z0 + blk.z1) / 2;
   // 台面起跳 1.541，加 STEP_UP 0.35 的余量，顶面超过 2.59 就一次跳不上去。
   const face = blk.z1;                       // 主墙南面
-  const arch = { x: 42.4, w: 4.8, h: 6.0 }; // 墙上唯一的开口，挪到西侧给木平台让位
+  // 所有依附在墙面的构件（格构、梯子、条石压边）都必须整体探出墙面这么多：背面与墙面
+  // 落在同一个平面上就会 z-fighting，墙面上看到一片闪烁。
+  const skin = 0.12;
+  const arch = { x: 38.2, w: 2.4, h: 6.0 }; // 墙上唯一的开口：宽度砍半，挪到紧挨西侧白楼
   // 悬挑平台的进深 2.93（原来 4.4，按需求缩短三分之一）；转角那截比台面再多挑 1 米。
   const deckDepth = 2.93;
   const deck = { x0: 45.6, x1: 50.2, z0: face, z1: face + deckDepth, top: 2.75, t: 0.14 };
@@ -49,12 +52,13 @@ export function buildASite(ctx) {
   solid(nub.x0, nub.x1, nub.z0, nub.z1);
 
   // 条石压边：墙两端与转角的竖向石墩，加一道通高水平石带（灰白，跟土黄墙反差）。
-  volume(blk.x0, blk.x0 + 0.5, padY, wallTop, face, face + 0.1, kit.stone);
-  volume(blk.x1 - 0.5, blk.x1, padY, wallTop, face, face + 0.1, kit.stone);
-  volume(nub.x0 - 0.1, nub.x0 + 0.3, padY, nubTop, nub.z1, nub.z1 + 0.1, kit.stone);
-  volume(blk.x0, hz0, 10.4, 10.7, face, face + 0.1, kit.stone);
-  volume(hz1, blk.x1, 10.4, 10.7, face, face + 0.1, kit.stone);
-  volume(nub.x0, nub.x1, 10.8, 11.1, nub.z1, nub.z1 + 0.1, kit.stone);
+  // 一律从墙里面 0.02 画到外面 skin，别让石头的背面和墙面共面。
+  volume(blk.x0, blk.x0 + 0.5, padY, wallTop, face - 0.02, face + skin, kit.stone);
+  volume(blk.x1 - 0.5, blk.x1, padY, wallTop, face - 0.02, face + skin, kit.stone);
+  volume(nub.x0 - 0.1, nub.x0 + 0.3, padY, nubTop, nub.z1 - 0.02, nub.z1 + skin, kit.stone);
+  volume(blk.x0, hz0, 10.4, 10.7, face - 0.02, face + skin, kit.stone);
+  volume(hz1, blk.x1, 10.4, 10.7, face - 0.02, face + skin, kit.stone);
+  volume(nub.x0, nub.x1, 10.8, 11.1, nub.z1 - 0.02, nub.z1 + skin, kit.stone);
   // skirt() 固定画 y 0 到 0.46，在高台上会整块埋进台身，所以基座自己写石砌台沿。
   volume(blk.x0 - 0.03, blk.x1 + 0.03, padY, padY + 0.5, face - 0.03, face + 0.03, kit.stone);
   volume(blk.x0 - 0.03, blk.x0 + 0.03, padY, padY + 0.5, blk.z0, blk.z1, kit.stone);
@@ -88,19 +92,21 @@ export function buildASite(ctx) {
   // ---------- 墙面木构架（脚手架式格构 + 两把梯子）----------
   // 只是依附在墙面上的框架，没有围护也不给碰撞：主墙 solid 已经挡住，人是撞不到木架的。
   const fr = { x0: deck.x0 + 0.2, x1: deck.x1 - 0.2, y0: deck.top + 0.6, y1: 9.7 };
+  const frZ = face + skin + 0.08;             // 杆件中心：背面落在墙里面一点，正面离墙 skin
   for (let x = fr.x0; x <= fr.x1 + 0.01; x += 1.2) {
-    box(0.18, fr.y1 - fr.y0, 0.16, kit.beam, x, (fr.y0 + fr.y1) / 2, face + 0.08);
+    box(0.18, fr.y1 - fr.y0, 0.16, kit.beam, x, (fr.y0 + fr.y1) / 2, frZ);
   }
   for (const y of [fr.y0, 5.0, 6.65, 8.3, fr.y1]) {
-    box(fr.x1 - fr.x0 + 0.18, 0.16, 0.16, kit.wood, (fr.x0 + fr.x1) / 2, y, face + 0.08);
+    box(fr.x1 - fr.x0 + 0.18, 0.16, 0.16, kit.wood, (fr.x0 + fr.x1) / 2, y, frZ);
   }
   // 两把木梯：两侧立杆加五道踏步，靠在格构上，纯粹是通往"后方宫殿二层"的样子。
+  const ladZ = face + skin + 0.26;            // 再往外一层，别跟横方的正面共面
   for (const lx of [fr.x0 + 1.2, fr.x1 - 0.6]) {
     for (const s of [-0.3, 0.3]) {
-      box(0.07, 3.4, 0.07, kit.wood, lx + s, deck.top + 1.7, face + 0.2);
+      box(0.07, 3.4, 0.07, kit.wood, lx + s, deck.top + 1.7, ladZ);
     }
     for (let k = 0; k < 5; k++) {
-      box(0.66, 0.05, 0.06, kit.wood, lx, deck.top + 0.5 + k * 0.72, face + 0.2);
+      box(0.66, 0.05, 0.06, kit.wood, lx, deck.top + 0.5 + k * 0.72, ladZ);
     }
   }
 
@@ -108,8 +114,9 @@ export function buildASite(ctx) {
   // 台面 2.75、板底 2.61，下面留 1.9 米净空：靠 physics 的 KNEE 判定，人能从台面下走过，
   // 也能从平台下那堆箱顶（2.2）跳上来。整块台面只注册一个平台，带 bottom。
   const joistY = deck.top - deck.t - 0.1;
+  const joistD = deck.z1 - face - 0.06;       // 北端留出 0.06，端头不跟墙面共面
   for (const jx of [deck.x0 + 0.8, 48.0, deck.x1 - 0.8]) {
-    box(0.16, 0.2, deck.z1 - deck.z0, kit.beam, jx, joistY, (deck.z0 + deck.z1) / 2);
+    box(0.16, 0.2, joistD, kit.beam, jx, joistY, face + 0.06 + joistD / 2);
   }
   const rows = 5;
   for (let i = 0; i < rows; i++) {
@@ -152,8 +159,11 @@ export function buildASite(ctx) {
   // 两层三列共 6 只，整堆只注册一个顶面 2.2：比台面低 0.55 以上，不会被误当成台面上去。
   platform(cs.x - 0.94, cs.x + 0.94, cs.z - cs.d / 2, cs.z + cs.d / 2, padY + 2 * cs.h);
 
-  // 平台左端衔接一只矮木箱掩体（纯 solid，挡人挡枪）。
+  // 平台左端衔接一只矮木箱掩体（纯 solid，挡人挡枪，顶 2.6 上不去）。
   crate(44.6, face + 1.3, 1.4, 1.9, 1.6, 0xc99555, padY, false);
+  // 掩体南边再补一只小箱当踏脚：顶 1.75，站上去朝北一跳就能上 2.75 的台面，
+  // 给平台下那堆箱子之外多一条上去的路，且它整个在台面以南，站上去不会顶头。
+  crate(44.6, face + 3.5, 1.3, 1.05, 0.9, 0xc08a4c, padY, true);
 
   // ---------- 西侧立面：一排白楼当包点的西墙 ----------
   // 东面 x = 36 那面朝包点，北端接进北侧体块、南端顶到东通道北侧那栋沿街白楼 rowB 的北墙，
@@ -228,17 +238,6 @@ export function buildASite(ctx) {
     box(2.0, 0.06, 0.32, kit.wood, 51.1, padY + 1.63, -19.4 + dz).rotation.y = yaw;
   }
 
-  // 西北角（靠墙、拱门以西）：印红圈 A 的大木箱，约 2.25 × 2.0 × 2.4 米接近正方，
-  // 只给 solid 不给平台 —— solid 与高度无关，挡人挡枪而且从哪儿都上不去，和参考图一致。
-  const aBox = { x: 39.4, z: face + 1.2 };
-  crate(aBox.x, aBox.z, 1.5, 2.4, 2.0, 0xd9c9a8, padY, false);
-  // 正面（朝南，朝台阶来向）印与地面同一款红圈 A。竖直面只有横向被放大，
-  // 所以画 1.05 × 1.6 才能在世界上是个正圆，并且不越出 2.25 × 2.4 的箱面。
-  const aBoxFace = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.6), kit.markA);
-  aBoxFace.position.set(aBox.x, padY + 1.2, aBox.z + 1.02);
-  aBoxFace.userData.noShadow = true;
-  aBoxFace.userData.noReceive = true;
-  add(aBoxFace);
   pile(44.0, -19.0, 0.85, 1.1, 1.0, 0.8, 1.0, 0.6, 0.12);
   // 平台下的杂物：一只托盘，站在上面 0.88，台面在头顶 2.61 不算落脚处。
   pallet(46.8, face + 1.5, 1.4, 0.9);
