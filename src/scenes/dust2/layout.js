@@ -8,6 +8,7 @@
 // A 侧分两层，向南看：西侧是 A 小楼梯连到 A 平台的高架通道(+5，x[22,30] z[16,24.2])，
 // 东侧（A 大方向）没有高地板，跳下去就是 A 后巷。通道西侧是实楼，走不过去。
 // 警家东拱门外是同一层(-1.0)的露天广场，往南绕过通道东缘进后巷，中间没有墙、坡、桥或隧道。
+// A 包点与药房之间（x[26,42] z[26,35]）填了一栋 12 米高的楼，后巷只剩楼北一条巷子 z[16,26]。
 // A 后坡靠 A 斜坡，从东包点南缘降到后巷，可走回第二层。
 export const T_Y = 3.25;
 export const GARDEN_Y = 0.0;
@@ -54,7 +55,8 @@ export const FLOORS = [
   // 警家东拱门外的露天广场，往南在通道东缘（x>30）接上后巷，全程没有顶
   { x0: 21, x1: 26, z0: 6, z1: 16, top: CT_Y, kind: 'cobble', deep: true },
   { x0: 26, x1: 37.2, z0: 8, z1: 16, top: CT_Y, kind: 'cobble', deep: true },
-  { x0: 30, x1: 37.2, z0: 16, z1: 35, top: CT_Y, kind: 'cobble', deep: true },
+  // 后巷收到楼北：x 从 26 起，把楼梯东缘与 A 大西墙之间原来会掉出去的坑补平
+  { x0: 26, x1: 37.2, z0: 16, z1: 35, top: CT_Y, kind: 'cobble', deep: true },
   // 后坡低端以南，接到药房北墙
   { x0: 37.2, x1: 42, z0: 24, z1: 35, top: CT_Y, kind: 'cobble', deep: true },
   { x0: -5, x1: 5, z0: 26, z1: 30, top: MID_N_Y, kind: 'road', deep: true },
@@ -169,7 +171,7 @@ export const SPAWNS = {
   a: { x: 26, y: A_PLAT_Y, z: 20, yaw: 0, label: 'A 平台' },
   asmall: { x: 19.4, y: A_SMALL_Y, z: 43, yaw: Math.PI, label: 'A 小' },
   long: { x: 48, y: LONG_Y, z: 40, yaw: Math.PI, label: 'A 大' },
-  lane: { x: 32.5, y: CT_Y, z: 22, yaw: Math.PI, label: 'A 后巷' },
+  lane: { x: 31.0, y: CT_Y, z: 17.5, yaw: Math.PI, label: 'A 后巷' },
   pit: { x: 48, y: PIT_Y, z: 64, yaw: Math.PI, label: 'A 坑' },
 };
 
@@ -187,8 +189,8 @@ export const ZONES = [
   { name: 'B 窗', x0: -11, x1: -5, z0: 6, z1: 11, y0: -1.4, y1: 3.4 },
   { name: '沙地', x0: -9, x1: 10, z0: 4, z1: 26, y0: -1.8, y1: 0.4 },
   { name: '警家', x0: 10, x1: 21.2, z0: 4, z1: 16, y0: -1.8, y1: 2.4 },
-  // 与警家同一层、露天相接。高度收到 2.6，站上平台 / 后坡不会被这块抢走名字
-  { name: 'A 后巷', x0: 18, x1: 42, z0: 6, z1: 35, y0: -1.8, y1: 2.6 },
+  // 与警家同一层、露天相接的楼北巷。新楼（asite.backBlock）压掉 z>26 那一片后只剩北侧一条。
+  { name: 'A 后巷', x0: 18, x1: 42, z0: 6, z1: 26, y0: -1.8, y1: 2.6 },
   { name: 'A 后坡', x0: 37.2, x1: 42.6, z0: 15.5, z1: 24.2, y0: -1.2, y1: 5.4 },
   { name: 'A 小楼梯', x0: 22, x1: 26, z0: 22, z1: 31, y0: 1.0, y1: 5.2 },
   { name: 'A 小道', x0: 5, x1: 26, z0: 26, z1: 56, y0: 0.8, y1: 2.2 },
