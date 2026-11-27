@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { createCtOperator, CHAR_SCALE } from './operator.js';
+import { createCsT, CHAR_SCALE } from '@shared/csT.js';
 import { groundAt, slideMove, lineOfSight, GRAVITY } from './physics.js';
 
 // 命中盒和干员共用局部坐标系，随 group 的 CHAR_SCALE 一起缩放，和玩家看到的身体对齐。
-const EYE = 1.64 * CHAR_SCALE;
+const EYE = 1.7 * CHAR_SCALE;
 const PLAYER_CHEST = 1.3;
 const SPOT_RANGE = 45;
 const FOV_DOT = Math.cos(THREE.MathUtils.degToRad(52));
@@ -20,8 +20,8 @@ const STATE = {
 };
 
 const parts = [
-  { name: 'head', scale: 4, y: 1.64, geo: () => new THREE.SphereGeometry(0.17, 10, 8) },
-  { name: 'body', scale: 1, y: 1.24, geo: () => new THREE.BoxGeometry(0.52, 0.66, 0.36) },
+  { name: 'head', scale: 4, y: 1.7, geo: () => new THREE.SphereGeometry(0.18, 10, 8) },
+  { name: 'body', scale: 1, y: 1.25, geo: () => new THREE.BoxGeometry(0.54, 0.68, 0.38) },
   { name: 'legs', scale: 0.75, y: 0.46, geo: () => new THREE.BoxGeometry(0.44, 0.82, 0.32) },
 ];
 
@@ -39,7 +39,7 @@ const raycaster = new THREE.Raycaster();
 export function spawnEnemy({
   world, scene, kind = 'walker', spawn, path, speed, interval, reaction: reactionTime = 0.3,
 }) {
-  const body = createCtOperator({ palette: 'enemy' });
+  const body = createCsT({ armed: true });
   const group = body.group;
   group.position.set(spawn.x, spawn.y ?? 0, spawn.z);
   scene.add(group);
@@ -122,6 +122,8 @@ export function spawnEnemy({
   // 一次点射：一条真实弹道。打不中就是被掩体挡住了。
   function shoot(player, api) {
     group.rotation.y = Math.atan2(player.x - group.position.x, player.z - group.position.z);
+    body.setAimPitch(-aimPitchAt(player));
+    body.recoil();
     body.muzzleWorld(muzzlePoint);
     playerChest.set(player.x, player.y + PLAYER_CHEST, player.z);
     const range = muzzlePoint.distanceTo(playerChest);
@@ -143,8 +145,6 @@ export function spawnEnemy({
     const closest = muzzlePoint.clone().addScaledVector(shotDir, along);
     const hitPlayer = !wall && closest.distanceTo(playerChest) < 0.42;
 
-    body.recoil();
-    body.setAimPitch(-aimPitchAt(player));
     api.fire({
       muzzle: muzzlePoint,
       dir: shotDir,

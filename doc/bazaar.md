@@ -20,7 +20,7 @@ WASD、方向键、Shift、空格、V、鼠标和滚轮与[架构文档](./archi
 | 文件 | 职责 |
 | --- | --- |
 | `main.js` | 场景、干员、跟随镜头、移动、模式分支和棚内相机裁剪 |
-| `operator.js` | CT 干员和敌人的几何、持枪姿势、走路与瞄准俯仰 |
+| `operator.js` | CT 干员的几何、持枪姿势、走路与瞄准俯仰 |
 | `gun.js` / `gun/` | 第一人称的步枪、手枪、匕首、换弹、墙面痕迹和血量护甲。`gun.js` 留状态机与开火判定；`gun/` 放武器常量、共享几何贴图与 scratch 向量、手部与匕首建造、HUD DOM 与简图、提示音、特效、近景枪模 |
 | `combat.js` / `combat/` | 波次防守：刷怪、敌人 AI 驱动、HUD、受击与命中特效。`combat.js` 留状态机与命中判定；`combat/` 放出生点与波次数据、敌人特效、敌人枪声、波次 HUD DOM |
 | `enemy.js` | 单个敌人实例：命中盒、索敌、移动、点射、受击死亡 |
@@ -115,7 +115,7 @@ WASD、方向键、Shift、空格、V、鼠标和滚轮与[架构文档](./archi
 
 ### 敌人
 
-`spawnEnemy({ world, scene, kind, spawn, path, speed, interval, reaction })` 生成一名敌人，`kind` 是 `walker`（沿 `path` 推进）或 `stationary`（阳台上的固定射手）。敌人用 `createCtOperator({ palette: 'enemy' })` 造型：土黄制服、深色背心、深色头盔和护目镜。材质按调色板名缓存，同屏多名敌人共用一套材质。
+`spawnEnemy({ world, scene, kind, spawn, path, speed, interval, reaction })` 生成一名敌人，`kind` 是 `walker`（沿 `path` 推进）或 `stationary`（阳台上的固定射手）。敌人用共享模块 `createCsT({ armed: true })` 造型：橄榄绿头套、格子衬衫、战术背心、迷彩裤、双手持低垂手枪。敌人的射击逻辑通过 T 方的 `muzzleWorld()` 从真实枪口发出弹道和曳光，并用 `setAimPitch()` / `recoil()` 驱动抬枪与后坐。Dust2 仍调用默认的无枪版本。
 
 命中盒是三个不可见的网格：头（半径 0.17，伤害 ×4）、身体（伤害 ×1）、腿（伤害 ×0.75），和干员共用局部坐标系、随 0.9 的整体缩放一起缩小，与玩家看到的外形对齐。它们用 `visible: false` 的材质而不是 `object.visible = false`，否则玩家的射线会跳过它们。三个部位共用 100 血：身体一枪 33 点，腿约 25 点，头 132 点一枪毙命。步兵被击中（含刀刺）会立即警觉，不再受视野锥限制并转入 `engage`。死亡后身体侧倒下沉，3 秒后消失。
 

@@ -3,6 +3,7 @@ import { canvasTex } from './canvasTex.js';
 
 // CS T 方的公共角色模块。面朝局部 +Z，原点在脚底，单位为米。
 // 该模块只负责角色外观和基础待机/走路动画，不依赖具体地图。
+// createCsT() 默认无武器；需要战斗姿态的场景传入 { armed: true }。
 
 export const CHAR_SCALE = 1;
 
@@ -111,6 +112,53 @@ function balaclavaTexture() {
   });
 }
 
+function alignBone(pivot, direction, hint) {
+  const y = direction.clone().normalize().negate();
+  const x = new THREE.Vector3().crossVectors(y, hint);
+  if (x.lengthSq() < 1e-8) x.set(1, 0, 0);
+  x.normalize();
+  const z = new THREE.Vector3().crossVectors(x, y).normalize();
+  pivot.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+}
+
+function poseArm(shoulder, elbow, target, pole) {
+  const origin = shoulder.position.clone();
+  const toTarget = target.clone().sub(origin);
+  const reach = UPPER_ARM + FOREARM - 0.001;
+  const distance = THREE.MathUtils.clamp(
+    toTarget.length(),
+    Math.abs(UPPER_ARM - FOREARM) + 0.001,
+    reach,
+  );
+  const direction = toTarget.normalize();
+  const cosAngle = THREE.MathUtils.clamp(
+    (UPPER_ARM * UPPER_ARM + distance * distance - FOREARM * FOREARM) /
+      (2 * UPPER_ARM * distance),
+    -1,
+    1,
+  );
+  const bendAngle = Math.acos(cosAngle);
+  const poleDirection = pole.clone().sub(origin);
+  const side = new THREE.Vector3().crossVectors(direction, poleDirection);
+  if (side.lengthSq() < 1e-8) side.set(0, 0, 1);
+  side.normalize();
+  const bend = new THREE.Vector3().crossVectors(side, direction).normalize();
+  if (bend.dot(poleDirection) < 0) bend.negate();
+  const upperDirection = direction
+    .clone()
+    .multiplyScalar(Math.cos(bendAngle))
+    .addScaledVector(bend, Math.sin(bendAngle));
+  const elbowPosition = origin.clone().addScaledVector(upperDirection, UPPER_ARM);
+  const foreDirection = target.clone().sub(elbowPosition).normalize();
+  alignBone(shoulder, upperDirection, poleDirection);
+  const inverse = shoulder.quaternion.clone().invert();
+  alignBone(
+    elbow,
+    foreDirection.clone().applyQuaternion(inverse),
+    poleDirection.clone().normalize().applyQuaternion(inverse),
+  );
+}
+
 function buildLeg(rig, materials, side) {
   const hip = new THREE.Group();
   hip.position.set(side * 0.115, 0.89, 0);
@@ -192,9 +240,41 @@ function buildHead(chest, materials) {
   put(chest, new THREE.BoxGeometry(0.16, 0.025, 0.02), materials.balaclava, 0, 1.855, 0.02);
 }
 
-function buildArms(chest, materials) {
-  // 双臂自然垂直下垂，贴近身体两侧；不绑定武器，也不在走路时抬臂。
-  function arm(side) {
+function buildPistol(parent, materials) {
+  const weapon = new THREE.Group();
+  weapon.position.set(-0.12, 1.04, 0.28);
+  weapon.rotation.x = 0.28;
+  parent.add(weapon);
+  put(weapon, new THREE.BoxGeometry(0.085, 0.09, 0.27), materials.pistol, 0, 0.04, 0.12);
+  put(weapon, new THREE.BoxGeometry(0.07, 0.025, 0.25), materials.metal, 0, 0.095, 0.12);
+  put(weapon, new THREE.BoxGeometry(0.062, 0.19, 0.07), materials.pistol, 0, -0.095, 0.02, -0.22);
+  put(weapon, new THREE.BoxGeometry(0.07, 0.025, 0.07), materials.pistolDark, 0, -0.19, -0.005);
+  put(weapon, new THREE.BoxGeometry(0.02, 0.055, 0.08), materials.metal, 0, 0.065, 0.045);
+
+  const grip = new THREE.Object3D();
+  grip.position.set(0, -0.12, 0.04);
+  weapon.add(grip);
+  const support = new THREE.Object3D();
+  // 支撑手落在枪身后段，保证从左肩到枪身的距离自然可达。
+  support.position.set(0.14, 0.015, 0.05);
+  weapon.add(support);
+  const muzzle = new THREE.Object3D();
+  muzzle.position.set(0, 0.04, 0.3);
+  weapon.add(muzzle);
+  return { weapon, grip, support, muzzle };
+}
+
+function buildArms(chest, materials, pistol = null) {
+  const armed = Boolean(pistol);
+  let gripTarget;
+  let supportTarget;
+  if (armed) {
+    chest.updateMatrixWorld(true);
+    gripTarget = chest.worldToLocal(pistol.grip.getWorldPosition(new THREE.Vector3()));
+    supportTarget = chest.worldToLocal(pistol.support.getWorldPosition(new THREE.Vector3()));
+  }
+
+  function arm(side, target, pole) {
     const shoulder = new THREE.Group();
     shoulder.position.set(side * 0.28, 1.34, -0.005);
     chest.add(shoulder);
@@ -205,12 +285,17 @@ function buildArms(chest, materials) {
     shoulder.add(elbow);
     put(elbow, new THREE.BoxGeometry(0.12, 0.05, 0.13), materials.glove, 0, 0.015, 0);
     put(elbow, new THREE.BoxGeometry(0.115, FOREARM, 0.115), materials.skin, 0, -FOREARM / 2, 0);
+    if (armed) poseArm(shoulder, elbow, target, pole);
     put(elbow, new THREE.BoxGeometry(0.12, 0.08, 0.12), materials.glove, 0, -FOREARM + 0.02, 0);
     return { shoulder, elbow };
   }
 
-  const right = arm(-1);
-  const left = arm(1);
+  const right = armed
+    ? arm(-1, gripTarget, new THREE.Vector3(-0.9, 1.02, -0.16))
+    : arm(-1);
+  const left = armed
+    ? arm(1, supportTarget, new THREE.Vector3(0.9, 1.1, -0.18))
+    : arm(1);
   return { right, left };
 }
 
@@ -241,12 +326,14 @@ function createMaterials() {
     boot: mat(BOOT, { roughness: 0.78 }),
     bootSole: mat(BOOT_SOLE, { roughness: 0.9 }),
     metal: mat(METAL, { roughness: 0.35, metalness: 0.7 }),
+    pistol: mat(0x242825, { roughness: 0.4, metalness: 0.5 }),
+    pistolDark: mat(0x111412, { roughness: 0.5, metalness: 0.3 }),
   };
   materialSets.set('default', materials);
   return materials;
 }
 
-export function createCsT() {
+export function createCsT({ armed = false } = {}) {
   const group = new THREE.Group();
   group.scale.setScalar(CHAR_SCALE);
   const rig = new THREE.Group();
@@ -263,11 +350,14 @@ export function createCsT() {
   const legR = buildLeg(rig, materials, 1);
   buildTorso(body, materials);
   buildHead(chest, materials);
-  const arms = buildArms(body, materials);
+  const pistol = armed ? buildPistol(body, materials) : null;
+  const arms = buildArms(body, materials, pistol);
 
   let phase = 0;
   let swing = 0;
   let time = 0;
+  let aimPitch = 0;
+  let kick = 0;
 
   function update(dt, moving = false) {
     time += dt;
@@ -290,17 +380,45 @@ export function createCsT() {
       : (Math.sin(time * 1.6) * 0.5 + 0.5) * 0.006;
     chest.position.y = bob;
     chest.rotation.y = stride * 0.08;
+    if (pistol) {
+      pistol.weapon.rotation.x = 0.28 + aimPitch;
+      pistol.weapon.position.z = 0.28 - kick * 0.018;
+      kick = Math.max(0, kick - dt * 7);
+    }
+  }
+
+  function setAimPitch(value) {
+    aimPitch = THREE.MathUtils.clamp(value, -0.45, 0.5);
+  }
+
+  function recoil() {
+    kick = 1;
+  }
+
+  function muzzleWorld(out) {
+    if (pistol) {
+      pistol.muzzle.getWorldPosition(out);
+      return out;
+    }
+    group.updateMatrixWorld(true);
+    group.localToWorld(out.set(0, 1.3, 0.28));
+    return out;
   }
 
   return {
     group,
     update,
+    setAimPitch,
+    recoil,
+    muzzleWorld,
+    armed,
     rig,
     chest,
     body,
     legL,
     legR,
     arms,
+    pistol,
   };
 }
 

@@ -8,16 +8,16 @@
 
 ## CS T 方 `csT.js`
 
-`createCsT()` 创建参考 `.screenshots/cs_T/` 的程序化 T 方：橄榄绿头套、露眼开口、脖子和衣领、红黑格子衬衫、战术背心、弹匣袋、迷彩工装裤、黑手套和军靴。双臂贴身垂直向下，不带手枪。格子、迷彩和头套纹理由 `CanvasTexture` 运行时生成，不加载外部模型。
+`createCsT()` 创建参考 `.screenshots/cs_T/` 的程序化 T 方：橄榄绿头套、露眼开口、脖子和衣领、红黑格子衬衫、战术背心、弹匣袋、迷彩工装裤、黑手套和军靴。默认双臂贴身垂直向下、不带手枪；传入 `{ armed: true }` 时显示低垂手枪并切换成双手持枪姿势。格子、迷彩和头套纹理由 `CanvasTexture` 运行时生成，不加载外部模型。
 
 角色面朝局部 +Z，原点在脚底。公共接口为：
 
 ```text
-createCsT() -> { group, update, rig, chest, legL, legR, arms }
+createCsT({ armed = false }) -> { group, update, setAimPitch, recoil, muzzleWorld, ... }
 update(dt, moving = false)
 ```
 
-`group` 可直接加入任意场景；`update` 提供待机呼吸和走路摆腿，角色保持双臂下垂。`createTerrorist` 是同一个工厂的语义化别名。武器或战斗动作应由具体地图另行挂载，避免角色模块和地图玩法耦合。
+`group` 可直接加入任意场景；`update` 提供待机呼吸和走路摆腿。`armed: false` 保持双臂下垂，`armed: true` 提供 `setAimPitch`、`recoil`、`muzzleWorld` 三个战斗接口，供敌人 AI 控制抬枪、后坐和枪口弹道。`createTerrorist` 是同一个工厂的语义化别名。
 
 ## 鲸尾女仆 `whaleMaid.js`
 
