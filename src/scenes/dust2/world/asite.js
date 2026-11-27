@@ -1,5 +1,5 @@
 // A 包点立面：药房、宫殿、悬空高架的桥墩、楼北巷的新楼与楼北脸的壁灯、A 大路沿。
-// 向南看：A 小楼梯上来是 1 m 厚的悬空桥面（x[22,30] z[16,24.2]），桥下通到楼北巷。
+// 向南看：A 小楼梯上来是 1 m 厚的悬空桥面（x[21.9,26.5] z[16,24.2]，宽 4.6 m），桥下通到楼北巷。
 import * as THREE from 'three';
 import { A_PLAT_Y, LONG_Y, CT_Y, VOID_Y } from '../layout.js';
 
@@ -130,19 +130,22 @@ function backBlock(ctx) {
   }
 }
 
-// 悬空高架：A 小楼梯顶上来那段通道（layout FLOORS 里 x[22,30] z[16,24.2]）只有 1 m 厚的桥面，
-// 底下靠四根方墩撑着，墩身与桥底沿各压一道石条。桥下是 -1.0 的地面，从警家广场通到楼北脸。
+// 悬空高架：A 小楼梯顶上来那段桥面（layout FLOORS 里 x[21.9,26.5] z[16,24.2]）只有 1 m 厚，
+// 底下靠一排方墩撑着（桥面只有 4.6 m 宽，两排墩反而挤），墩身与桥底沿各压一道石条。
+// 桥下是 -1.0 的地面，从警家广场通到楼北脸；墩子左右各留约 1.85 m 的走道。
 function platformPiers(ctx) {
   const { kit, box, volume, solid } = ctx;
   const deckBot = A_PLAT_Y - 1.0;
-  for (const [px, pz] of [[24.0, 18.4], [28.0, 18.4], [24.0, 22.0], [28.0, 22.0]]) {
+  for (const pz of [17.8, 20.5, 23.2]) {
+    const px = 24.2;
     volume(px - 0.45, px + 0.45, VOID_Y, deckBot, pz - 0.45, pz + 0.45, kit.weathered);
     box(1.2, 0.3, 1.2, kit.mass, px, deckBot - 0.15, pz);
     // 桥墩只挡到桥底：桥面上走过来走过去都不能被墩子拦住
     solid(px - 0.45, px + 0.45, pz - 0.45, pz + 0.45, -Infinity, deckBot);
   }
-  box(8.0, 0.34, 0.34, kit.mass, 26, deckBot + 0.17, 24.28);
-  box(0.34, 0.34, 8.2, kit.mass, 29.9, deckBot + 0.17, 20.1);
+  box(4.6, 0.34, 0.34, kit.mass, 24.2, deckBot + 0.17, 24.28);
+  box(0.34, 0.34, 8.2, kit.mass, 26.4, deckBot + 0.17, 20.1);
+  box(0.34, 0.34, 8.2, kit.mass, 22.0, deckBot + 0.17, 20.1);
 }
 
 function palaceBuilding(ctx) {
@@ -178,12 +181,12 @@ function palaceBuilding(ctx) {
   box(0.4, 2.2, 0.4, kit.plaster, 36, y0 + 8.8, 5.4);
 }
 
-// 平台北沿矮墙。东沿朝 A 大敞开，从这里跳进后巷。
+// 桥面北沿矮墙（跟着桥宽收到 4.6 m）。东沿朝后巷敞开，从桥沿跳下去就是后巷。
 function platformEdge(ctx) {
   const { kit, box, platform } = ctx;
   const y = A_PLAT_Y;
-  box(8, 0.28, 0.22, kit.plaster, 26, y + 0.14, 16.12);
-  platform(22, 30, 16.0, 16.24, y + 0.28, y);
+  box(4.6, 0.28, 0.22, kit.plaster, 24.2, y + 0.14, 16.12);
+  platform(21.9, 26.5, 16.0, 16.24, y + 0.28, y);
 }
 
 function longStreetDressing(ctx) {

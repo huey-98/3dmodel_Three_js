@@ -49,7 +49,6 @@ export function buildProps(ctx) {
   box(2.6, 0.16, 1.4, kit.wood, -7.3, CT_Y + 1.7, 8.5);
   platform(-8.6, -6.0, 7.8, 9.2, CT_Y + 1.78, CT_Y);
 
-  aSiteCrates(ctx);
   addCar(ctx, 48, 34, LONG_Y, 0.15);
   crate(1.5, 45.2, 66, PIT_Y);
   addContainer(ctx, 34, 72, ROAD_Y, 0.1);
@@ -81,20 +80,6 @@ export function buildProps(ctx) {
   // 中路电线杆：街宽收到 10 m 后东缘在 x=5（猫道西沿），杆子挪到街内免得顶穿猫道
   box(0.18, 6.4, 0.18, kit.mass, 2.4, MID_Y + 3.2, 48);
   box(0.5, 0.12, 1.6, kit.mass, 2.4, MID_Y + 6.5, 48);
-}
-
-function aSiteCrates(ctx) {
-  const { kit, box, platform } = ctx;
-  const y = A_PLAT_Y;
-  function put(size, x, z, lift = 0) {
-    box(size, size, size, kit.aCrate, x, y + lift + size / 2, z);
-    platform(x - size / 2, x + size / 2, z - size / 2, z + size / 2, y + lift + size, y + lift);
-  }
-  put(1.55, 46.2, 12.4);
-  put(1.55, 47.8, 13.1);
-  put(1.2, 46.8, 13.6);
-  put(1.15, 46.4, 12.5, 1.55);
-  put(1.35, 48.6, 11.6);
 }
 
 function sandbagStack(ctx, x, z, y) {
