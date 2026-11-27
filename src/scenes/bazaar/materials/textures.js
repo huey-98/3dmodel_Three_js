@@ -453,6 +453,38 @@ export function drawMarkB(ctx, w, h) {
   ctx.fillText('B', cx, cy + h * 0.02);
 }
 
+export function drawMarkA(ctx, w, h) {
+  const rnd = mulberry32(61);
+  ctx.clearRect(0, 0, w, h);
+  const cx = w * 0.5;
+  const cy = h * 0.5;
+  // 外围喷溅：先铺一层散点，让圆圈像现场喷的而不是贴上去的。
+  ctx.fillStyle = '#d21f18';
+  for (let i = 0; i < 90; i++) {
+    ctx.globalAlpha = 0.05 + rnd() * 0.18;
+    ctx.beginPath();
+    ctx.arc(cx + (rnd() - 0.5) * w * 0.98, cy + (rnd() - 0.5) * h * 0.98, 1 + rnd() * 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#d21f18';
+  ctx.lineWidth = Math.max(8, w * 0.055);
+  ctx.beginPath();
+  ctx.arc(cx, cy, w * 0.42, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = '#d21f18';
+  ctx.font = `bold ${Math.floor(h * 0.52)}px "Arial Black", "Microsoft YaHei", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('A', cx, cy + h * 0.02);
+  // 下缘两挂漆痕。
+  ctx.globalAlpha = 0.5;
+  for (const dx of [-0.16, 0.09]) {
+    ctx.fillRect(cx + w * dx, cy + h * 0.2, w * 0.012, h * (0.05 + rnd() * 0.06));
+  }
+  ctx.globalAlpha = 1;
+}
+
 export function drawArrow(ctx, w, h) {
   ctx.fillStyle = '#1e8a3e';
   ctx.fillRect(0, 0, w, h);
@@ -470,6 +502,49 @@ export function drawArrow(ctx, w, h) {
   ctx.lineTo(w * 0.48, h * 0.82);
   ctx.closePath();
   ctx.fill();
+}
+
+// A 包点大拱券的白色格子窗：画布比例须与拱面一致（256×320 对 4.8×6.0），
+// 这样 arc 出来的是正半券。券外四个角留透明，靠 alphaTest 抠掉露出米黄墙面。
+export function drawArchWindow(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+  const r = w / 2;
+  const outline = () => {
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    ctx.lineTo(0, r);
+    ctx.arc(w / 2, r, r, Math.PI, Math.PI * 2);
+    ctx.lineTo(w, h);
+    ctx.closePath();
+  };
+  ctx.save();
+  outline();
+  ctx.clip();
+  ctx.fillStyle = '#1a1512';
+  ctx.fillRect(0, 0, w, h);
+  const grad = ctx.createLinearGradient(0, 0, w, h);
+  grad.addColorStop(0, 'rgba(120, 140, 150, 0.22)');
+  grad.addColorStop(0.55, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#efe6d4';
+  ctx.lineWidth = w * 0.035;
+  for (const fx of [0.2, 0.4, 0.6, 0.8]) {
+    ctx.beginPath();
+    ctx.moveTo(w * fx, 0);
+    ctx.lineTo(w * fx, h);
+    ctx.stroke();
+  }
+  for (let fy = r; fy < h; fy += h * 0.115) {
+    ctx.beginPath();
+    ctx.moveTo(0, fy);
+    ctx.lineTo(w, fy);
+    ctx.stroke();
+  }
+  ctx.lineWidth = w * 0.05;
+  outline();
+  ctx.stroke();
+  ctx.restore();
 }
 
 export function mapped(map, opts = {}) {

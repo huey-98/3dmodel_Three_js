@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { makeTex, makeRectTex, drawStucco, drawCobble, drawTile, drawGraffiti, drawStone, drawAMark, drawSign, drawPanel, drawWood, drawTarp, drawCloth, drawCrate, drawBark, drawLeaf, drawMarkB, drawArrow, mapped } from './textures.js';
+import { makeTex, makeRectTex, drawStucco, drawCobble, drawTile, drawGraffiti, drawStone, drawAMark, drawSign, drawPanel, drawWood, drawTarp, drawCloth, drawCrate, drawBark, drawLeaf, drawMarkA, drawMarkB, drawArchWindow, drawArrow, mapped } from './textures.js';
 
 export function createBazaarKit() {
   const stuccoSand = makeTex(512, (ctx, s) => drawStucco(ctx, s, '#d6c07a', '#b89a58', '#ead89a'));
@@ -24,6 +24,8 @@ export function createBazaarKit() {
   barkMap.repeat.set(2, 3);
   const leafMap = makeTex(256, drawLeaf, { repeat: false });
   const markB = makeRectTex(512, 512, drawMarkB);
+  const markA = makeRectTex(512, 512, drawMarkA);
+  const archWinTex = makeRectTex(256, 320, drawArchWindow);
   const arrow = makeRectTex(256, 128, drawArrow);
 
   const wood = (color, roughness) => new THREE.MeshStandardMaterial({
@@ -64,6 +66,15 @@ export function createBazaarKit() {
       polygonOffsetUnits: -4,
     }),
     arrow: mapped(arrow, { roughness: 0.5 }),
+    // A 包点地面喷漆，与 markB 同法（贴地平面必须带 polygonOffset 才不跟铺装抢深度）。
+    markA: mapped(markA, {
+      roughness: 0.62,
+      transparent: true,
+      alphaTest: 0.2,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
+    }),
     trim: new THREE.MeshStandardMaterial({ color: 0xefe4d2, roughness: 0.86 }),
     cream: new THREE.MeshStandardMaterial({ color: 0xffefb0, roughness: 0.86 }),
     creamFloor: new THREE.MeshStandardMaterial({
@@ -82,6 +93,10 @@ export function createBazaarKit() {
       transparent: true,
       alphaTest: 0.15,
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    }),
+    // A 包点大拱券的白色格子窗：贴在拱龛底墙前面，券外四个角透明。
+    archWin: mapped(archWinTex, {
+      roughness: 0.55, transparent: true, alphaTest: 0.3, side: THREE.DoubleSide,
     }),
     sign: mapped(signMap, { roughness: 0.6 }),
     ceilDark: new THREE.MeshStandardMaterial({ color: 0x5a5f5c, roughness: 0.95 }),

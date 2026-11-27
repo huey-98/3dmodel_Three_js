@@ -331,6 +331,9 @@ export function buildEastLot(ctx) {
   const padX1 = stairX1;
   const padZ1 = stairEndZ;
   const padZ0 = padZ1 - (padZ1 - (-16.2)) * 5;
+  // 高台北端给 A 包点（见 world/aSite.js）预留的建筑体块：吃掉北侧空档，
+  // 南立面 z = -23 那面就是带大拱券的墙，从警家台阶上来正对着看的是它。
+  const blk = { x0: 33, x1: padX1, z0: padZ0, z1: -23 };
   volume(padX0, padX1, 0, stairTop, padZ0, padZ1, kit.stone);
   platform(padX0, padX1, padZ0, padZ1, stairTop);
   const padFloorTex = kit.cobble.map.clone();
@@ -370,8 +373,9 @@ export function buildEastLot(ctx) {
       }
     }
   }
-  railCap(padX0, padX1, padZ0, padZ0 + 0.15);
-  railCap(padX1 - 0.15, padX1, padZ0, padZ1);
+  // 北沿与东沿的收口栏杆改到体块边线上，端头各埋进墙 0.06，免得石墙端面与墙面共面闪面。
+  railCap(padX0, blk.x0 + 0.06, padZ0, padZ0 + 0.15);
+  railCap(padX1 - 0.15, padX1, blk.z1 - 0.06, padZ1);
   // 加长后西侧北段不再有场地东边界墙，用同式矮墙栏杆封边，南端接到原墙。
   railCap(padX0, padX0 + 0.15, padZ0, -16);
 
@@ -412,4 +416,10 @@ export function buildEastLot(ctx) {
   bin.add(handle);
   group.add(bin);
   solid(canX - canR, canX + canR, canZ - canR, canZ + canR);
+
+  // 高台与建筑预留矩形交给 A 包点分节用（世界尺度由 world.js 收尾统一放大）。
+  return {
+    pad: { x0: padX0, x1: padX1, z0: padZ0, z1: padZ1, y: stairTop },
+    blk,
+  };
 }

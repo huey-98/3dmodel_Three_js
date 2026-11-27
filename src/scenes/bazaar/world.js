@@ -11,6 +11,7 @@ import { buildSouth } from './world/southBuilding.js';
 import { buildVan } from './world/van.js';
 import { buildBackdrop } from './world/backdrop.js';
 import { buildEastLot } from './world/eastLot.js';
+import { buildASite } from './world/aSite.js';
 
 export { MAP_SCALE };
 
@@ -37,7 +38,8 @@ export function createBazaar() {
   Object.assign(ctx, buildSouth(ctx));
   buildVan(ctx);
   buildBackdrop(ctx);
-  buildEastLot(ctx);
+  Object.assign(ctx, buildEastLot(ctx));
+  buildASite(ctx);
 
   group.scale.set(MAP_SCALE, 1, MAP_SCALE);
   for (const list of [solids, platforms, rooms]) {
