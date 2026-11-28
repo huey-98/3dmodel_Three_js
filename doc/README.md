@@ -6,10 +6,8 @@
 
 | 文档 | 作用 |
 | --- | --- |
-| [overview.md](./overview.md) | 项目概述、运行方式、四个场景的差异、坐标与朝向 |
+| [overview.md](./overview.md) | 项目概述、运行方式、两个场景的差异、坐标与朝向 |
 | [architecture.md](./architecture.md) | 目录、Vite 多页入口、渲染器、键位、碰撞和角色动画接口 |
-| [shared.md](./shared.md) | 共享角色、小木船、贴图助手、第一人称、游玩设置与性能面板 |
-| [villa.md](./villa.md) | 别墅场景：建筑尺寸、楼梯、室内、河桥、开门、划船和镜头 |
-| [maid.md](./maid.md) | 女仆展示页：灯光、地面阴影和轨道相机 |
+| [shared.md](./shared.md) | 共享角色、贴图助手、第一人称、游玩设置与性能面板 |
 | [bazaar.md](./bazaar.md) | 荒漠迷城：场地布局、材质、碰撞、棚内镜头、CT 干员和武器 |
 | [dust2.md](./dust2.md) | 炙热沙城：CS2 走位、层高、金属门、脚底感知物理、出生点 |

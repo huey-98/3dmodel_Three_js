@@ -8,11 +8,9 @@
 
 | 要做的事 | 打开 |
 | --- | --- |
-| 确认项目是什么、怎么运行、四个场景各做什么 | [doc/overview.md](doc/overview.md) |
+| 确认项目是什么、怎么运行、两个场景各做什么 | [doc/overview.md](doc/overview.md) |
 | 改目录结构、Vite 入口、渲染器、键位、碰撞或角色动画接口 | [doc/architecture.md](doc/architecture.md) |
-| 改共享角色（鲸尾女仆、CS T 方）、小木船、第一人称、游玩设置或性能面板 | [doc/shared.md](doc/shared.md) |
-| 改别墅的建筑、室内、河桥、行走、上楼、开门或划船 | [doc/villa.md](doc/villa.md) |
-| 改女仆展示页的灯光、镜头或站立动画 | [doc/maid.md](doc/maid.md) |
+| 改共享角色、贴图助手、第一人称、游玩设置或性能面板 | [doc/shared.md](doc/shared.md) |
 | 改荒漠迷城的街区、贴图、碰撞、棚内镜头、CT 干员或武器 | [doc/bazaar.md](doc/bazaar.md) |
 | 改炙热沙城的地图拓扑、门洞、可跳平台、出生点或点位 HUD | [doc/dust2.md](doc/dust2.md) |
 | 看文档目录 | [doc/README.md](doc/README.md) |
@@ -39,8 +37,8 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 
 - 使用 JavaScript ESM（`package.json` 的 `"type": "module"`）。不引入 TypeScript、UI 框架或状态库。
 - 运行时依赖保持为 `three`。新增 npm 包前先确认现有 Three.js API 做不到。
-- import 写明 `.js` 后缀。共享代码用别名：`import { createWhaleMaid } from '@shared/whaleMaid.js'`。`@shared` 由 `vite.config.js` 和 `jsconfig.json` 一起指向 `src/shared`。
-- 场景只 import 自己的模块和 `@shared`。不要让 `villa`、`maid`、`bazaar`、`dust2` 互相引用。
+- import 写明 `.js` 后缀。共享代码用别名：`import { createPerfStats } from '@shared/perfStats.js'`。`@shared` 由 `vite.config.js` 和 `jsconfig.json` 一起指向 `src/shared`。
+- 场景只 import 自己的模块和 `@shared`。`bazaar` 与 `dust2` 不互相引用。
 
 ### 场景怎么加
 
@@ -54,7 +52,7 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 - 几何体、角色和贴图在运行时用代码生成。用 `CanvasTexture`，并设置 `THREE.SRGBColorSpace`。不加载 glTF，不新增 `public/` 模型目录。
 - 渲染器与现有 `main.js` 对齐：抗锯齿、`pixelRatio` 上限 `min(devicePixelRatio, 2)`、`PCFShadowMap`、`ACESFilmicToneMapping`。
 - 帧间隔夹到最多 `0.05` 秒。`resize` 时更新相机宽高比和 `renderer.setSize`。
-- 单位按米。Y 轴向上。角色朝向用 `rotation.y = atan2(move.x, move.z)`，面朝世界 +Z。船头局部轴也是 +Z。
+- 单位按米，Y 轴向上。角色局部 +Z 是正面；按移动方向设置朝向时用 `rotation.y = atan2(move.x, move.z)`。
 
 ### 操作与碰撞
 
@@ -63,20 +61,13 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 - WASD 相对相机，方向键是世界方向且优先于 WASD。
 - Shift 加速，空格跳跃。方向键和空格要 `preventDefault`。窗口失焦时清空按键。
 - 水平碰撞是 AABB：`{ minX, maxX, minZ, maxZ }`。先试整步，再试只改 X、只改 Z。
-- 高度单独计算。荒漠迷城地面默认 0，白车、车旁跳板箱、西楼二楼阳台和小卖部窗台可站立；别墅的楼层、踏步和桥面见 [doc/villa.md](doc/villa.md)。
+- 高度单独计算。荒漠迷城的地面与可站平台见 [doc/bazaar.md](doc/bazaar.md)，Dust2 的楼板、楼梯和坡道见 [doc/dust2.md](doc/dust2.md)。
 
-### 角色与船
+### 角色
 
-`createWhaleMaid()` 提供：
-
-```text
-update(dt, moving, row)
-```
-
-`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时检查别墅和女仆展示页里的调用；炙热沙城使用 `createCsT()`。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
+`createCsT()` 的 `update(dt, moving = false)` 处理待机与行走动画。修改共享接口时同时检查 Dust2 的玩家角色与荒漠迷城的非玩家角色调用。荒漠迷城的玩家角色由本地 `createCtOperator()` 提供。
 
 ### 改完代码之后
 
 - 行为有变化时，更新上表里对应的 `doc/*.md`，让文档继续描述当前代码。
 - 只写已经实现的行为。计划中的功能放在仓库根目录 `plans/`，不要写进 `doc/`。
-- 别墅开窗时先看 [doc/villa.md](doc/villa.md) 的「实现注意」：洞数据字段是 `along`，挖墙代码读的是 `at`，重叠高度上的整条墙网格会缺失。

@@ -284,21 +284,10 @@ export function createFirstPersonView({ camera, domElement, controls, subject, g
     return Math.atan2(-Math.sin(yaw), -Math.cos(yaw));
   }
 
-  function addYaw(delta) {
-    yaw += delta;
-  }
-
-  // 第三人称下一次恢复时使用的相机位置，相对轨道目标
-  function setReturnOffset(px, py, pz, tx, ty, tz) {
-    savedOffset.set(px - tx, py - ty, pz - tz);
-  }
-
   return {
     isActive() { return active; },
     apply,
     facingYaw,
-    addYaw,
-    setReturnOffset,
     setCrosshairSpread(extra) {
       const next = Math.max(0, Math.min(40, Number(extra) || 0));
       if (next === spread) return;

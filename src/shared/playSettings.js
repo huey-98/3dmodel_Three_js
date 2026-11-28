@@ -1,4 +1,4 @@
-// 别墅和荒漠迷城共用的移动速度、鼠标灵敏度和第一人称视野。数值记在 localStorage。
+// 炙热沙城和荒漠迷城共用的移动速度、鼠标灵敏度和第一人称视野。数值记在 localStorage。
 const STORAGE_KEY = '3dmodel.playSettings';
 const MOVE_MIN = 0.5;
 const MOVE_MAX = 2.5;
