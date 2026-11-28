@@ -10,7 +10,7 @@
 | --- | --- |
 | 确认项目是什么、怎么运行、四个场景各做什么 | [doc/overview.md](doc/overview.md) |
 | 改目录结构、Vite 入口、渲染器、键位、碰撞或角色动画接口 | [doc/architecture.md](doc/architecture.md) |
-| 改简易小人、鲸尾女仆或小木船 | [doc/shared.md](doc/shared.md) |
+| 改共享角色（鲸尾女仆、CS T 方）、小木船、第一人称、游玩设置或性能面板 | [doc/shared.md](doc/shared.md) |
 | 改别墅的建筑、室内、河桥、行走、上楼、开门或划船 | [doc/villa.md](doc/villa.md) |
 | 改女仆展示页的灯光、镜头或站立动画 | [doc/maid.md](doc/maid.md) |
 | 改荒漠迷城的街区、贴图、碰撞、棚内镜头、CT 干员或武器 | [doc/bazaar.md](doc/bazaar.md) |
@@ -73,7 +73,7 @@ src/scenes/<name>/ 单个场景的页面和逻辑（内部可再分子文件夹�
 update(dt, moving, row)
 ```
 
-`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时改实现，以及别墅、女仆展示页和炙热沙城里的调用。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
+`createWhaleMaid()` 的 `moving` 和 `row` 默认是 `false` 和 `null`。`row` 为 `{ phase, active }` 时是划船坐姿。改这个签名时同时检查别墅和女仆展示页里的调用；炙热沙城使用 `createCsT()`。船的接口是 `createBoat()` 返回的 `{ group, setRowPhase, seatPosition }`。
 
 ### 改完代码之后
 

@@ -31,7 +31,7 @@ src/scenes/bazaar/
   main.js                  页面入口：模式分支、玩家、镜头、碰撞接线
   constants.js             地图水平尺度 MAP_SCALE
   world.js                 街区编排入口；分节构建在 world/ 下，布局变量经 ctx 传递
-  world/                   地面棚、西楼、北楼、小卖部、通道、南楼、货车、远景、东空地十个分节
+  world/                   地面棚、西楼、北楼、小卖部、通道、南楼、货车、远景、东空地、A 包点十个分节
   materials.js             材质包对外入口（re-export）；实现拆在 materials/（textures 贴图绘制、index 材质包）
   physics.js               AABB 碰撞、地面高度、视线检测
   gun.js                   第一人称武器状态机入口；子模块在 gun/ 下
@@ -77,9 +77,9 @@ src/scenes/dust2/
 
 ## 性能面板
 
-四个场景的地址后加 `?stats`（例如 `/src/scenes/villa/?stats`）时，左上角显示性能面板：最近 120 帧的帧率、平均 / P95 / 最大帧时间、JS 耗时的平均和 P95，以及 `renderer.info` 的绘制调用、三角面、几何体、贴图数量、像素比和绘制缓冲尺寸。面板约每 250 毫秒刷新一次 DOM；切后台造成的超过 300 毫秒的帧间隔不计入统计。标题里的场景名由 `createPerfStats({ name })` 传入，别墅、女仆展示页、炙热沙城分别是 `villa` / `maid` / `dust2`，荒漠迷城按模式分成 `bazaar-free` / `bazaar-game`。
+四个场景的地址后加 `?stats`（例如 `/src/scenes/villa/?stats`）时，左上角显示性能面板：最近 120 帧的帧率、平均 / P95 / 最大帧时间、JS 耗时的平均和 P95，以及 `renderer.info` 的绘制调用、三角面、几何体、贴图数量、像素比和绘制缓冲尺寸。面板约每 250 毫秒刷新一次 DOM；帧时间只统计大于 0 且小于 300 毫秒的帧间隔。标题里的场景名由 `createPerfStats({ name })` 传入，别墅、女仆展示页、炙热沙城分别是 `villa` / `maid` / `dust2`，荒漠迷城按模式分成 `bazaar-free` / `bazaar-game`。
 
-开启时 `renderer.info.autoReset` 置为 `false`，由面板每帧 `reset` 一次，所以一帧里的多次 `render`（荒漠迷城的武器近景、别墅的透射 pass）都累加进同一帧。面板还会把最后一次渲染的 `scene`、`camera` 和 `renderer` 挂到 `window.__perfScene`、`window.__perfCamera`、`window.__perfRenderer`，并提供 `window.__perf.snapshot()` 返回当前统计的数值对象，方便在控制台做 A/B 测量。没有这个参数时不创建任何 DOM，`beginFrame` / `endFrame` 是空方法。接口细节见 [shared.md](./shared.md)。2026-11-20 用这套面板采集的各场景基线和别墅 A/B 对比记在 [perf/baseline.md](../perf/baseline.md)。
+开启时 `renderer.info.autoReset` 置为 `false`，由面板每帧 `reset` 一次，所以一帧里的多次 `render`（荒漠迷城的武器近景、别墅的透射 pass）都累加进同一帧。面板还会把最后一次渲染的 `scene`、`camera` 和 `renderer` 挂到 `window.__perfScene`、`window.__perfCamera`、`window.__perfRenderer`，并提供 `window.__perf.snapshot()` 返回当前统计的数值对象，方便在控制台做 A/B 测量。没有这个参数时不创建任何 DOM，`beginFrame` / `endFrame` 是空方法。接口细节见 [shared.md](./shared.md)。2026-11-20 用这套面板采集的别墅、女仆展示、荒漠迷城基线和别墅 A/B 对比记在 [perf/baseline.md](../perf/baseline.md)。
 
 ## 输入约定
 
@@ -97,13 +97,13 @@ src/scenes/dust2/
 
 方向键和空格会 `preventDefault`，避免页面滚动。窗口失焦时清空按键集合。
 
-右上角「设置」由 [`createPlaySettings()`](./shared.md) 画出，别墅、荒漠迷城和炙热沙城各有一个。滑杆把步行、加速和别墅自动走进门的速度一起乘上 50%–250%，并把第一人称鼠标灵敏度调到默认的 25%–300%，第一人称视野调到 70°–110°（默认 90°）。面板里另有「音效」开关，默认关闭，打开后荒漠迷城的开火、挥刀、换弹提示音和敌人的枪声才会播放（切枪没有音效）；别墅没有音效，不显示这个开关。数值存在 `localStorage` 键 `3dmodel.playSettings`，两个场景共用。划船速度不跟着变。第三人称视野不跟着变。
+右上角「设置」由 [`createPlaySettings()`](./shared.md) 画出，别墅、荒漠迷城和炙热沙城各有一个。滑杆把步行、加速和别墅自动行走（进出门、走到登船点）的速度一起乘上 50%–250%，并把第一人称鼠标灵敏度调到默认的 25%–300%，第一人称视野调到 70°–110°（默认 90°）。面板里另有「音效」开关，只在荒漠迷城显示，默认关闭；别墅和炙热沙城不显示。设置存在 `localStorage` 键 `3dmodel.playSettings`，三个可走动场景共用。划船速度不跟着变。第三人称视野不跟着变。
 
-第三人称时，相机每帧把 `OrbitControls.target` 设到角色头顶附近，并把相机平移同样的位移，从而保持玩家当前的轨道偏移。荒漠迷城设置了 `enablePan = false`。别墅没有关闭平移；同一套跟随会在下一帧把目标拉回角色，平移留不住。
+第三人称时，相机每帧把 `OrbitControls.target` 设到角色头顶附近，并把相机平移同样的位移，从而保持玩家当前的轨道偏移。荒漠迷城设置了 `enablePan = false`；别墅和炙热沙城未关闭平移，但跟随逻辑会重新把目标设到角色附近。女仆展示页不跟随移动角色，允许右键拖拽平移观察中心。
 
-第一人称由 [`createFirstPersonView()`](./shared.md) 提供，别墅、荒漠迷城和炙热沙城各创建一个。按 V 进入时关掉轨道控制、隐藏角色网格，把相机放到眼睛高度，视野改成设置里的角度，并平视角色当前面朝的方向。鼠标优先使用指针锁定的位移；按 Esc 释放鼠标后，改为使用画布上的鼠标位移，点击画面会再次请求锁定。锁定或失焦切换时浏览器补发的天价位移会被丢掉或夹小，不会把视线甩走。俯仰限制在接近垂直之内。人在地面上时，身体转向水平视线。别墅在船上不改坐姿，视线的水平角随船头增量转动。屋内、棚内和荒漠迷城小卖部那套沿视线缩短距离的裁剪只在第三人称执行。退出时按进入时记下的偏移和视野恢复轨道镜头。别墅在第一人称里触发 G 的进出门镜头时，不立刻移动相机，只把该偏移记下来，回到第三人称后再用。荒漠迷城的第一人称另外可以用 1、2、3 切换步枪、手枪和匕首，左键使用，R 键给枪换弹，并显示血量、护甲和弹匣 / 备弹；这套操作不在共享模块里，别墅没有。准星在荒漠迷城会随移动、跳跃和开火张开。荒漠迷城从目录页进入时先选自由跑图或游戏模式（`?mode=game`）；游戏模式里 G 开始波次防守，见 [bazaar.md](./bazaar.md)。
+第一人称由 [`createFirstPersonView()`](./shared.md) 提供，别墅、荒漠迷城和炙热沙城各创建一个。按 V 进入时关掉轨道控制、隐藏角色网格，把相机放到眼睛高度，视野改成设置里的角度，并平视角色当前面朝的方向。鼠标优先使用指针锁定的位移；按 Esc 释放鼠标后，改为使用画布上的鼠标位移，点击画面会再次请求锁定。锁定或失焦切换时浏览器补发的天价位移会被丢掉或夹小，不会把视线甩走。俯仰限制在接近垂直之内。除别墅划船时外，角色身体跟随水平视线转向，跳跃时也一样。别墅在船上不改坐姿，视线的水平角随船头增量转动。各场景按房间盒裁剪相机的逻辑只在第三人称执行，覆盖区域以各场景的登记为准。退出时按进入时记下的偏移和视野恢复轨道镜头。别墅在第一人称里触发 G 的进出门镜头时，不立刻移动相机，只把该偏移记下来，回到第三人称后再用。荒漠迷城的第一人称另外可以用 1、2、3 切换步枪、手枪和匕首，左键使用，R 键给枪换弹，并显示血量、护甲和弹匣 / 备弹；这套操作不在共享模块里，别墅没有。准星在荒漠迷城会随移动、跳跃和开火张开。荒漠迷城从目录页进入时先选自由跑图或游戏模式（`?mode=game`）；游戏模式里 G 开始波次防守，见 [bazaar.md](./bazaar.md)。
 
-水平移动先试完整位移，被挡住再试只改 X、只改 Z，形成沿墙滑动。
+水平移动先试完整位移，被挡住再尝试按轴滑动。荒漠迷城先试 X，成功后本帧不再试 Z；炙热沙城试完 X 仍会以更新后的位置继续试 Z。
 
 ## 碰撞模型
 
@@ -113,7 +113,7 @@ src/scenes/dust2/
 
 ## 角色动画接口
 
-`createWhaleMaid()` 返回 `{ group, update }`（女仆还多返回几个部件，见下）。
+`createWhaleMaid()` 返回 `{ group, update, rig, hair, tail, legL, legR, armL, armR }`。
 
 ```text
 update(dt, moving, row)
@@ -123,5 +123,5 @@ update(dt, moving, row)
 
 - `moving` 为真时摆腿，幅度从 0 平滑到目标值。
 - `row` 为 `{ phase, active }` 时进入划船坐姿，腿前伸，手臂随 `sin(phase)` 摆动。
-- 女仆多返回 `rig`、`hair`、`tail` 和四肢枢轴；别墅主循环只用 `group` 和 `update`。调用点在别墅、女仆展示页和炙热沙城。
-- 荒漠迷城的玩家和敌人都是场景内的 `createCtOperator()`，返回 `{ group, update, setAimPitch, recoil, muzzleWorld }`，后三个方法只有敌人用。主循环只传入 `moving`。细节见 [bazaar.md](./bazaar.md)。
+- 别墅和女仆展示页调用 `createWhaleMaid()`；别墅还读取 `rig.position.y` 来计算第一人称眼位。
+- 荒漠迷城的玩家使用场景内的 `createCtOperator()`；游戏模式的非玩家角色和炙热沙城的玩家使用共享的 `createCsT()`。调用关系见 [shared.md](./shared.md)。

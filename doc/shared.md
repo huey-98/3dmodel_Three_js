@@ -1,6 +1,6 @@
 # 共享模块
 
-`src/shared` 里这些文件都不依赖具体场景。别墅和女仆展示页用鲸尾女仆；炙热沙城用共享的 CS T 方；荒漠迷城继续使用自己的 CT 干员。
+`src/shared` 里这些文件都不依赖具体场景。别墅和女仆展示页复用鲸尾女仆；炙热沙城的玩家角色和荒漠迷城游戏模式中的非玩家角色使用共享的 CS T 方；荒漠迷城的玩家仍使用场景内的 CT 干员。
 
 ## 共用贴图助手 `canvasTex.js`
 
@@ -21,7 +21,7 @@ update(dt, moving = false)
 
 ## 鲸尾女仆 `whaleMaid.js`
 
-`whaleMaid.js` 是编排入口，实现拆在 `whaleMaid/`：`base.js` 配色表 `C` 与 `mat` / `mesh` / `v` 基础件，`parts.js` 顶点着色 `colorAlong`、发束 `strand`、蝴蝶结 `makeBow`、尾鳍轮廓 `flukeGeo`，`textures.js` 脸、鲸鱼胸标、围裙、裙子四张 canvas 贴图。`createWhaleMaid()` 的签名与返回值不变。
+`whaleMaid.js` 是编排入口，实现拆在 `whaleMaid/`：`base.js` 配色表 `C` 与 `mat` / `mesh` / `v` 基础件，`parts.js` 顶点着色 `colorAlong`、发束 `strand`、蝴蝶结 `makeBow`、尾鳍轮廓 `flukeGeo`，`textures.js` 提供脸部绘制函数 `drawFace`，以及鲸鱼胸标、围裙、裙子的贴图工厂。脸部画布和 `CanvasTexture` 由 `whaleMaid.js` 创建，并在眨眼时原地重绘。
 
 `createWhaleMaid()` 按设定还原一名蓝发、海军蓝女仆装、身后带鲸尾的角色。几何体全部程序化，脸、围裙、裙子和胸前鲸鱼标记用 canvas 贴图。
 
@@ -46,7 +46,7 @@ update(dt, moving = false)
 
 `createBoat()` 返回 `{ group, setRowPhase, seatPosition }`。
 
-船体是 U 形截面沿 Z 挤出 3 米，倒角形成船首船尾。上面有内舱地板、两块座板、两侧压条。左右船桨挂在舷边枢轴上，桨架是短圆柱。
+船体由闭合梯形截面沿 Z 挤出 3 米并倒角，没有从船体几何中挖出内舱。上方另加地板、两块座板和两侧压条。左右船桨挂在舷边枢轴上，桨架是短圆柱。
 
 `setRowPhase(phase, active)`：划行时 `sin(phase)` 同时改桨的入水角（绕 Z）和后拉角（绕 Y）；`active` 为假时桨回到接近水平。
 
@@ -60,10 +60,10 @@ update(dt, moving = false)
 
 返回 `{ isActive, apply, facingYaw, addYaw, setReturnOffset, setCrosshairSpread }`。模块自己监听 `KeyV`（忽略按住连发，以及 Ctrl / Alt / Meta）。
 
-- 进入时记下相机相对 `controls.target` 的偏移，供退出时还原；偏移过短时改记成 `(3.5, 2.2, 5)`。水平角对齐 `subject` 局部 +Z 的世界朝向，俯仰为 0，不沿用轨道镜头的俯角。然后 `controls.enabled = false`，`subject.visible = false`，显示 `#crosshair`，并请求指针锁定。
-- `#crosshair` 是加到 `document.body` 的固定定位绿色十字，四条线和中心圆点都带深色描边，不接收指针事件。`setCrosshairSpread(px)` 把四条线再向外推，最大 40 像素，中心圆点不动。荒漠迷城用它表现移动、跳跃和开火；别墅不调用，十字保持合拢。
+- 进入时记下相机相对 `controls.target` 的偏移，供退出时还原；偏移过短时改记成 `(3.5, 2.2, 5)`。传入 `subject` 时，水平角对齐其局部 +Z 的世界朝向，俯仰归零；省略 `subject` 时，水平角和俯仰从保存的轨道偏移计算。然后 `controls.enabled = false`，`subject.visible = false`，显示 `#crosshair`，并请求指针锁定。
+- `#crosshair` 是加到 `document.body` 的固定定位绿色十字，四条线和中心圆点都带深色描边，不接收指针事件。`setCrosshairSpread(px)` 把四条线再向外推，最大 40 像素，中心圆点不动。荒漠迷城用它改变准星间距；别墅和炙热沙城不调用，十字保持合拢。
 - 指针锁定时用 `movementX/Y` 转向，基础灵敏度 `0.0026` 弧度/像素，再乘 `getLookScale()`。未锁定时只用落在 `domElement` 上的鼠标位移。俯仰限制为 `±(π/2 - 0.02)`。鼠标右移增加朝右的水平角，鼠标下移降低俯仰。
-- 指针跳变防护：浏览器在锁定状态切换（按 V 进入或退出、点击画面请求锁定、Esc 解开、窗口失焦、标签页切走）前后会补发一到两条 `movementX/Y` 或 `clientX` 巨大的 `mousemove`，直接消费会让视线一帧甩几十到上百度。模块对这类消息有三道处理：状态切换后开 90 毫秒宽限窗口，窗口内的整条丢弃；锁定态与未锁定态之间切换的那第一条只重建坐标基准，不参与转向；窗口外的单条位移夹到 110 像素上限（约 16°），未锁定回退路径里超出 110 像素的 `clientX` 跳变整条忽略。
+- 指针跳变防护：浏览器在锁定状态切换（按 V 进入或退出、点击画面请求锁定、Esc 解开、窗口失焦、标签页切走）前后会补发一到两条 `movementX/Y` 或 `clientX` 巨大的 `mousemove`，直接消费会让视线一帧甩几十到上百度。模块对这类消息有三道处理：状态切换后开 90 毫秒宽限窗口，窗口内的整条丢弃；锁定态与未锁定态之间切换的那第一条只重建坐标基准，不参与转向；窗口外的单条位移夹到 110 像素上限（约 16°），未锁定时，X 或 Y 任一轴的坐标跳变超过 110 像素，整条事件都忽略。
 - `apply(eyeWorld)` 把相机放到该世界坐标，并看向由水平角和俯仰组成的方向。未处于第一人称时直接返回 `false`。
 - `facingYaw()` 是水平视线对应的角色 `rotation.y`（角色局部 +Z 为面朝方向）。
 - `addYaw(delta)` 在此基础上再转一个水平角。别墅用它把船头的航向增量加进视线。
@@ -74,13 +74,13 @@ update(dt, moving = false)
 
 `createPlaySettings({ withSound })` 在页面右上角放入「设置」按钮，并把它和已有的「返回目录」排在同一行。点开后面板里有三条滑杆：
 
-- 移动速度：50%–250%，步进 5%，默认 100%。场景把步行、加速，以及别墅自动走进门的速度乘上这个比例。
+- 移动速度：50%–250%，步进 5%，默认 100%。场景把步行、加速，以及别墅自动行走（进出门、走到登船点）的速度乘上这个比例。
 - 鼠标灵敏度：25%–300%，步进 5%，默认 100%。第一人称用它作为 `getLookScale()`。
 - 视野：70°–110°，步进 1°，默认 90°。第一人称用它作为 `getFov()`。第三人称仍用各场景原来的视野。
 
-`withSound` 默认为真，此时面板里还有一个「音效」开关，用于荒漠迷城的开火、挥刀、换弹提示音和敌人的枪声（切枪没有音效）。别墅没有音效，传 `false` 不显示这个开关。
+`withSound` 默认为真，此时面板里还有一个「音效」开关，用于荒漠迷城的开火、挥刀、换弹提示音和敌人的枪声（切枪没有音效）。别墅和炙热沙城都传 `false`，不显示这个开关。三个可走动场景共用同一个存储键。
 
-返回 `{ moveScale, lookScale, fov, sound }`，都是读取当前数值的函数。改滑杆或开关时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov, sound }`）。读不到或数值超出范围时，比例回到 1，视野回到 90；`sound` 默认关闭，只有存过 `true` 才打开。面板打开时如果鼠标还被锁定，会先释放锁定。
+返回 `{ moveScale, lookScale, fov, sound }`，都是读取当前数值的函数。改滑杆或开关时写入 `localStorage` 的 `3dmodel.playSettings`（`{ moveScale, lookScale, fov, sound }`）。无法读取或解析存储时使用默认值。各项数值转换后非有限时使用默认值（比例 1、视野 90°），有限但越界时夹到最近的边界；`sound` 默认关闭，只有存过 `true` 才打开。面板打开时如果鼠标还被锁定，会先释放锁定。
 
 ## 性能面板 `perfStats.js`
 
@@ -88,7 +88,7 @@ update(dt, moving = false)
 
 返回 `{ beginFrame, endFrame }`，在主循环里包住一帧：`beginFrame()` 重置 `renderer.info` 并记下 JS 起点，`endFrame(now)` 记录本帧 JS 耗时和与上一帧的间隔。开启时 `renderer.info.autoReset` 置为 `false`，一帧里的多次 `render` 都累加进同一帧。
 
-- 统计窗口是最近 120 帧的环形缓冲；超过 300 毫秒的帧间隔（切后台、重新聚焦）不计入帧时间。
+- 统计窗口是最近 120 帧的环形缓冲；帧时间只统计大于 0 且小于 300 毫秒的帧间隔；这项过滤不影响该帧的 JS 耗时记录。
 - 面板是左上角固定的 `#perf-stats`，不接收指针事件，攒够 8 帧后约每 250 毫秒刷一次 DOM。内容为帧率、平均 / P95 / 最大帧时间、JS 平均 / P95、绘制调用、三角面、几何体、贴图数量、像素比和绘制缓冲尺寸。
 - 包一层 `renderer.render`，把最后一次渲染的场景和相机挂到 `window.__perfScene`、`window.__perfCamera`，渲染器本身挂到 `window.__perfRenderer`。
 - `window.__perf.snapshot()` 返回当前统计的数值对象（fps、帧时间和 JS 时间的均值 / P95、调用数、三角面、几何体、贴图、像素比和缓冲尺寸），供控制台 A/B 测量。[perf/baseline.md](../perf/baseline.md) 里的基线就是这样采集的。
